@@ -6,11 +6,10 @@
 */
 
 // Define as opções para o vue2-sfc-loader
-function load(path) {
+ function load(path) {
     const options = {
         moduleCache: {
-            vue: Vue,
-            //router: router
+            //vue: Vue
         },
         async getFile(url) {
             const resp = await fetch(url);
@@ -29,3 +28,4 @@ function load(path) {
     };
     return window["vue2-sfc-loader"].loadModule(path, options);
   }
+ 

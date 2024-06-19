@@ -1,7 +1,6 @@
 Vue.use(Vuex);
-
+ 
 const store = new Vuex.Store({
-    devtools: true,
     state: {
         baseRecord: null
     },
@@ -12,13 +11,14 @@ const store = new Vuex.Store({
     },
     actions: {
         baseAction({ commit }, data) {
-            commit('baseMutation');
+            commit('baseMutation',data);
         }
     },
     getters: {
         /** modificadores , filtros dos state*/
 
-    }
+    },
 });
+
 
 export default store;

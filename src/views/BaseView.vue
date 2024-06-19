@@ -1,6 +1,6 @@
 <template>
   <div>
-    <base-component></base-component>
+    <BaseComponent/>
   </div>
 </template>
 
@@ -13,10 +13,13 @@ export default {
   data() {
     return {};
   },
+  mounted(){
+    alert('Base View mounted')
+  },
   head: {
     //for vue-head use
     title: {
-      inner: "Vue2 NoCLI StarterKit Template",
+      inner: "Vue2 Local StarterKit",
       separator: "-",
       complement: "BaseView",
     },
