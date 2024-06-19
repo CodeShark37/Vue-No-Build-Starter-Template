@@ -1,5 +1,7 @@
-import router from "./src/router/routerIndex.js";
-import store from "./src/store/storeIndex.js";
+//import router from "./src/router/routerIndex.js";
+//import store from "./src/store/storeIndex.js";
+
+
 
 //Injectando plugins dentro do vue
 Vue.use(VueHead);
@@ -14,12 +16,11 @@ axios.defaults.baseURL = 'http://localhost/api/';
 
 //Vue Single File Component Loader Setup
 
-/* 
-function load(path) {
+/*function load(path) {
     const options = {
         moduleCache: {
             vue: Vue,
-            router: router
+            //router: router
         },
         async getFile(url) {
             const resp = await fetch(url);
@@ -37,18 +38,13 @@ function load(path) {
         }
     };
     return window["vue2-sfc-loader"].loadModule(path, options);
-  } */
+  }
+*/
 
-/* load("./App.vue").then(App => {
-    router.routes = [
-        // dynamic segments start with a colon
-        //{ path: '*', redirect: '/' },
-        { path: '/', name:'BaseView',component: () => load("./src/views/BaseView.vue")}
-    ];
-
-    new Vue({...App,router,store,data(){return{a:"teste"}}}).$mount("#app");
-}); */
-app = new Vue({
-    router,
-    store
+var app = new Vue({
+    //router,
+    //store,
+    components:{
+        BaseView: () => load('./src/views/BaseView.vue')
+    }
 }).$mount("#app");

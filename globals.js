@@ -5,11 +5,12 @@
 * (register globals with care, only when itmakes since to be accessible app
 */
 
-export default loadModule = Vue.prototype.$loadModule = (path) => {
+// Define as opções para o vue2-sfc-loader
+function load(path) {
     const options = {
         moduleCache: {
             vue: Vue,
-            router: router
+            //router: router
         },
         async getFile(url) {
             const resp = await fetch(url);
@@ -27,4 +28,4 @@ export default loadModule = Vue.prototype.$loadModule = (path) => {
         }
     };
     return window["vue2-sfc-loader"].loadModule(path, options);
-};
+  }

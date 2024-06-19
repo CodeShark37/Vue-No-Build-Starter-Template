@@ -5,11 +5,11 @@
 </template>
 
 <script>
-import BaseComponent from '../components/BaseComponent.vue';
+//import BaseComponent from '../components/BaseComponent.vue';
 
 export default {
   components: {
-    BaseComponent
+    BaseComponent:() => load('./src/components/BaseComponent.vue') 
   },
   data() {
     return {};
