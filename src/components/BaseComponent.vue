@@ -18,8 +18,7 @@ export default {
         //for vue-head use
     },
     mounted() {
-        debugger
-        alert('Vue Base Component mounted');
+        console.log('Vue Base Component mounted');
     }, computed: {
         baseRecord() {
             return this.$store.state.baseRecord;

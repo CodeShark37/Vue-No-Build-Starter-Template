@@ -5,16 +5,16 @@
 </template>
 
 <script>
-
+import BaseComponent from '../components/BaseComponent.vue';
 export default {
   components: {
-    BaseComponent:() => load('./src/components/BaseComponent.vue') 
+    BaseComponent
   },
   data() {
     return {};
   },
   mounted(){
-    alert('Base View mounted')
+    console.log('Base View mounted')
   },
   head: {
     //for vue-head use

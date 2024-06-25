@@ -1,19 +1,18 @@
 <template>
     <div>
+        <router-view></router-view>
     </div>
 </template>
 
 <script>
+
 export default {
-    components:{
-        
+    components: {
     },
-    mounted(){
-        alert("mounted app")
+    mounted() {
+        alert("App mounted")
     }
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

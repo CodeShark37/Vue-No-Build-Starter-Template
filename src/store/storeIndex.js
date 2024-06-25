@@ -1,6 +1,5 @@
-Vue.use(Vuex);
  
-const store = new Vuex.Store({
+const stores = {
     state: {
         baseRecord: null
     },
@@ -18,7 +17,6 @@ const store = new Vuex.Store({
         /** modificadores , filtros dos state*/
 
     },
-});
+};
 
-
-export default store;
+export default stores;
