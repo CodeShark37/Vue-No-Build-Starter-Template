@@ -1,6 +1,6 @@
 # Vue Local Starter Kit
 
-The Vue Local Starter Kit is a development template for Vue 2.x applications with SFC (Single File Components .vue*) directly in the browser, No build steps, No Vue-CLI and Nodejs.
+The [Vue Local Starter Kit](https://github.com/CodeShark37/Vue-Local-Starter-Kit) is a development template for Vue 2.x applications with SFC (Single File Components .vue*) directly in the browser, No build steps, No Vue-CLI and Nodejs.
 
 
 # Dependencies
@@ -19,3 +19,6 @@ The Vue Local Starter Kit is a development template for Vue 2.x applications wit
 ## Quick start
 
  - ![launcing on VScode](docs/img/quick-start.jpg)
+
+## Contribuition
+ - Be free to **open issues** for requesting *new features*, or **pull requests** to add a *new features*.
