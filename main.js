@@ -1,8 +1,9 @@
-import routes from "./src/router/routerIndex.js";
-import stores from "./src/store/storeIndex.js"; 
+import routes from "./src/router/index.js";
+import stores from "./src/store/index.js"; 
 
 // Definindo o VueJS para o ambiente de desenvolvimento
 Vue.config.productionTip = false;
+Vue.config.devtools = true;
 
 // Configurações iniciais do axios para requisições http 
 axios.defaults.withCredentials = true;
@@ -22,13 +23,21 @@ const router = new VueRouter({
     mode: "history",
     strict: true,
     routes : routes
+})
+//verifica se o usuario pode acessar uma rota que requer autenticação
+router.beforeEach((to,from,next) => {
+    if(to.meta.requiresAuth && !window.localStorage.getItem('token')){
+        next('NotFound');
+    }else{
+        next();
+    }
 });
-
+/* Instanciando o Vue */
 var app = new Vue({
     components:{
         App: ()=>load('./App.vue')
     },
     template:'<App/>',
-    router,
-    store
+    store,
+    router
 }).$mount('#app');

@@ -10,7 +10,7 @@ export default {
     components: {
     },
     mounted() {
-        alert("App mounted")
+        console.log("App mounted")
     }
 }
 </script>

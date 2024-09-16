@@ -19,7 +19,7 @@ export default {
   head: {
     //for vue-head use
     title: {
-      inner: "Vue2 Local StarterKit",
+      inner: "Vue2 No Build Starter Template",
       separator: "-",
       complement: "BaseView",
     },

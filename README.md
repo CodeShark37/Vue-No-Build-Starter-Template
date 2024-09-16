@@ -18,4 +18,4 @@ The Vue Local Starter Kit is a development template for Vue 2.x applications wit
 
 ## Quick start
 
- - ![launcing on VScode](https://github.com/CodeShark37/Vue-Local-Starter-Kit/blob/master/docs/img/quick-start.jpg)
+ - ![launcing on VScode](docs/img/quick-start.jpg)
