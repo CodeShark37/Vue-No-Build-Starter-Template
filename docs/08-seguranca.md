@@ -1,8 +1,8 @@
 # 08 — Segurança (auditoria OWASP Top 10, rotas e sessão)
 
-Auditoria de segurança do template (v12.11, estendida na **v12.12**), feita como **hacker
-ético**: cada achado foi PROVADO com um exploit executado contra a app a correr (as
-provas EXP1–EXP6 em baixo) e, na v12.12, o ciclo de identidade/sessão passou a ser
+Auditoria de segurança do template (histórico v12.11–v12.16; estado actual
+**v12.17.1**), feita como **hacker ético**: cada achado foi PROVADO com um exploit
+executado contra a app a correr (as provas EXP1–EXP7 em baixo) e o ciclo de identidade/sessão passou a ser
 validado por uma **matriz de testes de intrusão T01–T12** executada contra o mock
 (harness em Node que importa o código real — ver secção em baixo). O template tem
 uma doutrina clara que a auditoria confirmou: **a UI esconde, a API decide** — e
@@ -54,8 +54,10 @@ isso a auditoria separa três planos:
   ROLE admin — 403 antes de qualquer validação de forma, mesmo para quem tem a
   regra `update User` (EXP7/T12: sem isto, o sub-admin tomava a conta do admin
   pela password nova).
-- Zona admin (`/api/admin/users`, `/api/admin/stats`, `/api/rules`) exige role
-  admin NO SERVIDOR (`guard {admin:true}`), re-verificado em cada rota.
+- `/api/admin/stats` e `/api/rules` exigem role `admin` no servidor
+  (`guard {admin:true}`), re-verificado em cada rota. `/api/admin/users` é
+  governado pela política CASL do subject `User`: `subadmin` pode ler e editar
+  contas comuns, mas não criar, eliminar, alterar roles ou editar contas admin.
 - Política como DADO: apagar a regra `read Post` de um role tranca o `GET
   /posts` desse role no pedido seguinte (lida da BD a cada pedido, fail-closed
   sem vendor CASL).
@@ -363,12 +365,12 @@ O que a matriz FECHOU (e como):
 | Demos 401 via endpoints `POST /api/__demo/expire|revoke` (só `debug`) | `dev/mock/routes/auth.js` | demos agem sobre o estado REAL da sessão |
 | `$auth.demo*()` removidos (o cliente já não reescreve tokens) | `src/core/session.js` | última porta de falsificação de sessão no cliente |
 | SessionPanel pede expiração/revogação ao servidor; ProfileView sai para o login quando a password muda | `src/features/auth/SessionPanel.vue`, `src/features/auth/ProfileView.vue` | UX coerente com o ciclo de vida do servidor |
-| Matriz de intrusão T01–T10 (baseline 5/10 → 10/10) | harness Node contra `dev/mock/` | prova executável, re-runnable a cada mudança |
+| Matriz de intrusão T01–T12 (baseline histórico 5/10 → estado actual 12/12) | harness Node contra `dev/mock/` | prova executável, re-runnable a cada mudança |
 
-Conclusão (v12.12): **não há vulnerabilidade explorável no plano cliente** (XSS,
+Conclusão histórica (v12.12): **não há vulnerabilidade explorável no plano cliente** (XSS,
 sort, paginação, CSRF de Bearer, contorno de guard — todos provados seguros) e o
-ciclo de identidade/sessão passou a ser **autoridade do servidor**, provado pela
-matriz T01–T10 (forjar, adulterar, reviver sessões mortas — tudo 401). O que
+ciclo de identidade/sessão passou a ser **autoridade do servidor**, provado nessa
+fase pela matriz T01–T10 (forjar, adulterar, reviver sessões mortas — tudo 401). O que
 resta são (1) limitações de desenho do mock que só existem em dev (passwords em
 claro, sem rate limiting) e (2) requisitos do backend real, documentados com
 checklist em cima.
@@ -388,7 +390,7 @@ da v12.12 evoluiu para o PAR access/refresh que um backend real emite:
 | Logout revoga a FAMÍLIA (access + refresh de uma vez) | `dev/mock/routes/auth.js`, `sessions.js revokeSession/revokeFamily` | T04 com o par — nenhuma credencial sobrevive ao logout |
 | Cliente guarda o par (`core/session.js`, chave `refreshToken`), interceptor manda o refresh no `/refresh` e sobrescreve SEMPRE o access nas rotas normais | `src/core/session.js`, `src/core/http.js`, `src/core/config.js` (chave `auth.refreshTokenKey`) | refresh single-flight fiel; fix do retry com header stale (refresh 200 + retry 401 provado em browser antes do fix) |
 | `refreshTtl` no config (7 dias; access continua 120s) | `src/core/config.js`, `dev/mock/index.js` | TTLs separados como em produção |
-| Matriz T03 reescrita (5 cenários de refresh); T04/T05 validam access E refresh | `scripts/intrusion-matrix.mjs` | prova executável do par — 10/10 |
+| Matriz T03 reescrita (5 cenários de refresh); T04/T05 validam access E refresh | `scripts/intrusion-matrix.mjs` | prova executável do par nessa fase — 10/10 |
 
 Verificação em browser real: access expirado naturalmente (120s) → `GET /books` 401
 → `POST /refresh` 200 (par rodado) → retry 200 — localStorage com access e refresh

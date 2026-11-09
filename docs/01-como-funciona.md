@@ -92,7 +92,7 @@ src/
 
 ## Desempenho em dispositivos fracos
 
-- **Cache de compilação** (`core/cache.js`) — **DESLIGADA por omissão**: observou-se com o loader 0.8.4 que o get/set da cache usava chaves assimétricas (o `get` devolvia a 1.ª compilação de cada ficheiro mesmo depois de o conteúdo mudar — o sintoma eram células "undefined" que sobreviviam a reloads). O vendored actual é 0.9.5: só reactivar (`config.compiledCache = true`) depois de revalidar o contrato com a versão em `vendor/`. O `config.version` (agora `'11'`) é a chave da cache: bump manual ao mover/renomear um `.vue` sem mudar o conteúdo (o código compilado antigo tem os URLs absolutos dos filhos embutidos).
+- **Cache de compilação** (`core/cache.js`) — **LIGADA por omissão** (`config.compiledCache = true`) com o loader vendored 0.9.5. Ao actualizar o loader, revalidar o contrato da cache antes de manter esta opção activa. O `config.version` (agora `'11'`) é a chave da cache: bump manual ao mover/renomear um `.vue` sem mudar o conteúdo (o código compilado antigo tem os URLs absolutos dos filhos embutidos).
 - **Cache de módulos partilhada**: cada `.vue` é pedido e compilado 1× por página, mesmo importado por várias rotas.
 - **Rotas lazy**: uma vista só se pede/compila quando visitada.
 - **`defer` em tudo**: o shell HTML pinta imediatamente; devtools/strict/logging só em `localhost` (`config.debug`).

@@ -7,7 +7,7 @@ Nos `.vue` NÃO se importam `.js` locais (o loader compilaria uma 2ª cópia do 
 | Serviço | Módulo | Uso típico |
 | --- | --- | --- |
 | `this.$api.content.posts.list(...)` | `makeApi('/posts')` em `features/content/index.js` | endpoints do domínio (CRUD canónico) |
-| `this.$api.books.remove(id)` | `makeApi('/books')` em `features/content/index.js` | idem |
+| `this.$api.content.books.remove(id)` | `makeApi('/books')` em `features/content/index.js` | idem |
 | `this.$api.admin.updateRule(...)` | `features/admin/api.js` | zona admin (domínio não canónico — funções à mão) |
 | `this.$http` | `core/http.js` | só chamadas fora do `$api` (ex.: `/profile` usa `$http` directo) |
 | `this.$auth` | `core/session.js` | `isLoggedIn()`, `user`, `hasRole()`, `setSession()`, `clearSession()` |

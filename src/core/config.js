@@ -35,11 +35,9 @@ export default {
     // código compilado antigo tem os URLs ABSOLUTOS dos filhos embutidos e serviria
     // caminhos que já não existem.)
     version: '11',
-    // Cache de compilação DESLIGADA: com o vue2-sfc-loader 0.8.4 o get/set da
-    // cache usa chaves assimétricas (o get devolve a 1.ª compilação de cada
-    // ficheiro mesmo depois de o conteúdo mudar) — editores ficavam "presos" a
-    // código velho. O custo de compilar em cada visita é aceitável; cache.js
-    // fica no código, pronta a reactivar quando o loader corrigir o contrato.
+    // Cache de compilação activa com o loader vendored 0.9.5. O custo e o
+    // contrato da cache devem ser revalidados ao actualizar o loader; o bump de
+    // version continua a invalidar a cache globalmente.
     compiledCache: true,
 
     // Base da API: vem do env.js (deploy). Com o mock activo nem sequer é usada —

@@ -18,7 +18,7 @@
 - **Avisos completos do Vue**: `vueDebug: true` em `env.js` (usa `vendor-dev/vue.dev.js` em vez do minificado — não se toca no `index.html`).
 - **Mock on/off**: `mock: true/false` em `env.js` (ver `06-mock-api.md`).
 - **Latência simulada / TTLs dos tokens**: `timing`, `tokenTtl` (access, 120s) e `refreshTtl` (refresh, 7 dias) em `src/core/config.js`.
-- **Verificação**: `npm run check` = `node scripts/syntax-check.mjs` + `node scripts/intrusion-matrix.mjs` (só um atalho; `npm install` não é preciso para correr nada — o `package.json` é proveniência, não instalação).
+- **Verificação**: requer Node.js >= 18; `npm run check` = `node scripts/syntax-check.mjs` + `node scripts/intrusion-matrix.mjs` (só um atalho; `npm install` não é preciso para correr nada — o `package.json` é proveniência, não instalação).
 
 ## Utilizadores demo
 

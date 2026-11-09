@@ -390,11 +390,11 @@ if (!adminLogin.token || !userLogin.token) throw new Error('setup: login demo fa
     const rProf = call('PUT', '/api/profile', { token: s.token, body: { id: '1', name: 'Hijack' } });
     const adminName = schema.users.find('1').name;
     const pass = rPut.status === 403 && rDel.status === 403 && authorUntouched
-        && rProf.status === 200 && adminName === 'Alice Admin' && String(schema.users.find('2').name) === 'Hijack';
+        && rProf.status === 200 && adminName === 'Josue Andre Admin' && String(schema.users.find('2').name) === 'Hijack';
     record('T10', 'Alteração de ID em recursos alheios', '403/404 + body ignorado',
         'PUT alheio ' + rPut.status + ' · DELETE alheio ' + rDel.status +
         ' · POST authorId=' + (authorUntouched ? 'da sessão ✓' : 'do body ✗') +
-        ' · profile id no body ' + (rProf.status === 200 && adminName === 'Alice Admin' ? 'ignorado ✓' : 'aplicado ✗'),
+        ' · profile id no body ' + (rProf.status === 200 && adminName === 'Josue Andre Admin' ? 'ignorado ✓' : 'aplicado ✗'),
         pass ? PASS : FAIL,
         pass ? 'owner rule (403) + listas brancas editable + profile self-scoped' : '');
 })();
