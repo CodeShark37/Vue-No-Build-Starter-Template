@@ -1,0 +1,24 @@
+// Configuração do EDITOR (VSCode/IntelliJ/VSCodium) — não é build: nenhum
+// browser nem bundler lê este ficheiro. Existe para o JSDoc e os
+// módulos ES de src/ e dev/ terem IntelliSense, "Go to Definition" e
+// autocomplete entre ficheiros, sem TypeScript nem toolchain.
+//   - module ESNext: os imports './x.js' resolvem como na app real (ES nativo
+//     no browser);
+//   - checkJs desligado: o JSDoc ENRIQUECE o autocomplete mas não vira erro —
+//     este template não tem build e não vai começar a "compilar" no editor;
+//   - exclude: vendors (libs UMD minificadas, globais `Vue`/`axios`/`casl`…)
+//     — os globais chegam via index.html, não via módulos.
+// As libs globais não têm tipos a instalar (não há npm aqui): a tipagem útil
+// está em JSDoc nos nossos módulos (@typedef User, RuleSpec, Paginated…).
+{
+    "compilerOptions": {
+        "target": "ES2017",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowJs": true,
+        "checkJs": false,
+        "noEmit": true
+    },
+    "include": ["src/**/*.js", "dev/**/*.js", "env.js"],
+    "exclude": ["vendor", "vendor-dev"]
+}
