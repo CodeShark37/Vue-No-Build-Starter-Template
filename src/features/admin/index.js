@@ -4,7 +4,8 @@
 //
 //   /admin/users        -> meta.perm { read User }  — abre por POLÍTICA (sub-admin
 //                          entra; admin entra; user comum não). A API re-verifica
-//                          com a MESMA política (403) — subject 'User' na fábrica.
+//                          com a MESMA política (403) — subject 'User' na fábrica;
+//                          não é uma rota reservada exclusivamente ao admin.
 //   /admin/stats        -> meta.roles ['admin']       — contagens do sistema, role admin.
 //   /admin/permissions  -> meta.roles ['admin']       — a política edita-se a si mesma:
 //                          só admin (T07: a API nega com 403 a quem não for).

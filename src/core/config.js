@@ -35,9 +35,9 @@ export default {
     // código compilado antigo tem os URLs ABSOLUTOS dos filhos embutidos e serviria
     // caminhos que já não existem.)
     version: '11',
-    // Cache de compilação activa com o loader vendored 0.9.5. O custo e o
-    // contrato da cache devem ser revalidados ao actualizar o loader; o bump de
-    // version continua a invalidar a cache globalmente.
+    // Cache de compilação activa com o loader vendored 0.9.5. A cache guarda
+    // módulos compilados em IndexedDB/memória; o contrato deve ser revalidado
+    // ao actualizar o loader. O bump de version invalida a cache globalmente.
     compiledCache: true,
 
     // Base da API: vem do env.js (deploy). Com o mock activo nem sequer é usada —

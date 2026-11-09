@@ -11,8 +11,9 @@
 //
 // A POLÍTICA GOVERNA: cada verbo pergunta à Ability CASL da sessão (lida da BD
 // a cada pedido) — o seed dá ao role admin 'manage User' e ao SUB-ADMIN
-// 'read + update User'. Um subadmin vê e edita contas COMUNS; criar/eliminar
-// dão 403 por não terem regra.
+// 'read + update User'. Assim, /admin/users não é admin-only: um subadmin vê
+// e edita contas COMUNS; criar/eliminar dão 403 por não terem regra. Stats e
+// regras continuam reservados ao role admin nas rotas próprias.
 //
 // DEFESAS por cima da política (no validateUpdate/validateDelete):
 //   - alterar o campo `roles` de QUALQUER conta exige o ROLE admin (403) — um
