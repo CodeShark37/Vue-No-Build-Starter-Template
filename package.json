@@ -1,0 +1,28 @@
+{
+    "name": "vue-no-build-starter-template",
+    "version": "12.17.1",
+    "private": true,
+    "description": "Starter template Vue 2 sem build step: SFCs (.vue) compilados no browser pelo vue2-sfc-loader.",
+    "type": "module",
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "check": "npm run check:syntax && npm run test:matrix",
+        "check:syntax": "node scripts/syntax-check.mjs",
+        "test:matrix": "node scripts/intrusion-matrix.mjs"
+    },
+    "dependencies": {
+        "vue": "2.6.12",
+        "vue-router": "3.0.0",
+        "vuex": "3.6.2",
+        "vue-head": "2.2.0",
+        "vue3-sfc-loader": "0.9.5",
+        "@casl/ability": "6.7.1",
+        "axios": "1.21.0"
+    },
+    "devDependencies": {
+        "miragejs": "0.1.48"
+    },
+    "x-vendor": "As dependências acima são PROVENIÊNCIA, não instalação: os builds UMD reais vivem em vendor/ (produção) e vendor-dev/ (mock, só dev) com SHA-256 em vendor/VERSIONS.md. npm install NÃO é preciso para correr a app — só para conferir a versão upstream. Um backend real substitui o MirageJS (devDependencies) sem tocar nas outras."
+}
