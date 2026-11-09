@@ -1,4 +1,5 @@
 # 00 — Arranque
+> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Seguinte](01-como-funciona.md) · [English](00-arranque.en.md)
 
 ## 3 passos
 

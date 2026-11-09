@@ -1,4 +1,5 @@
 # 01 — Como funciona
+> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](00-arranque.md) · [Seguinte](02-nova-pagina.md) · [English](01-como-funciona.en.md)
 
 ## Árvore
 

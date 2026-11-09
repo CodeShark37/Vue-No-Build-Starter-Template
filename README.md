@@ -1,98 +1,134 @@
+<div align="center">
+
 # Vue No-Build Starter Template
 
-**Versão:** v12.17.1
+**Português** · [English](README.en.md)
 
-Starter template para apps **Vue 2.x** com Single File Components (`.vue`) carregados
-directamente no browser. **Sem build step, sem Vue-CLI, sem Node.js** — só vendors UMD
-em `vendor/` e módulos ES nativos em `src/`.
+**Versão:** `v12.17.1`
 
-Inclui de origem: **sessão com autoridade no servidor e PAR access/refresh**
-(registry de sessões: token como referência `jti` + hash de integridade; o access
-curto vai em todos os pedidos e o refresh longo só no `/refresh`, com ROTAÇÃO e
-detecção de reutilização; revogação no logout (família inteira) e na mudança de
-password — matriz de intrusão T01–T12 verde,
-re-runnable com `node scripts/intrusion-matrix.mjs`), refresh
-automático single-flight, RBAC/ABAC server-driven (CASL) com política **editável
-e reordenável** (drag & drop — a última regra que casa vence), CRUD factory no
-mock para TODOS os recursos com seed, rota de
-**Perfil** (o clique no nome na navbar: token, tempo de sessão, simular expirado e
-gestão da própria conta), zonas de rotas com guard único, layout por feature (com
-sidebar própria na zona admin), mock API completa (MirageJS) e uma **tabela genérica**
-(`ui/DataTable.vue` — a ÚNICA tabela de listas do template: posts, books E o
-painel de utilizadores do admin; ordenação/paginação server-side, edição inline guiada por
-`meta.editable` e colunas ordenáveis/numéricas guiadas por `meta.sorts` — o
-contrato todo vem do servidor —, tipos e reservas de input (`fieldTypes`/
-`fieldDisabled`), slots para células/acções à medida e `meta.roleCounts` para
-agregados do conjunto inteiro). Navbar com UM link por zona (`Recursos`
-funde posts+books — as abas da zona fazem a sub-navegação) e a conta alvo ADMIN
-só se edita pelo role admin (T12 — 403 antes da forma; a regra `update User`
-gere contas comuns, não toma credenciais de administradores).
-JSDoc nos módulos + `jsconfig.json`: IntelliSense no VSCode sem build nem TypeScript.
+</div>
 
-## Arranque em 3 passos
+> [!NOTE]
+> Um starter Vue 2 sem build step: servir a pasta por HTTP, abrir `index.html` e explorar
+> sessões, permissões, CRUD e rotas com a API mock MirageJS.
 
-1. Clonar o repositório.
-2. Servir a pasta por HTTP desde a **raiz do site** (ex.: Live Server). `file://` não funciona.
-3. Abrir e entrar com `admin / admin123` ou `user / user123` (demo: também `editor / editor123`, `viewer / viewer123` e `subadmin / subadmin123` — o sub-admin gere utilizadores pela POLÍTICA, sem ser admin).
+## Índice
 
-Para `history` é preciso *fallback* para `index.html`; em sub-caminho, `<base href="/">`.
-Detalhes: [`docs/00-arranque.md`](docs/00-arranque.md)
+- [O que é este template?](#o-que-é-este-template)
+- [Features](#features)
+- [Instalação](#instalação)
+- [Início rápido](#início-rápido)
+- [Estrutura](#estrutura)
+- [Documentação](#documentação)
+- [Dependências](#dependências)
+- [Showcase](#showcase)
+- [Contribuição](#contribuição)
 
-## Estrutura (mapa)
+## O que é este template?
 
+Um starter para aplicações **Vue 2.x** com Single File Components (`.vue`) carregados
+directamente no browser. **Não existe build step, Vue-CLI ou requisito de Node.js para
+servir a aplicação**: os vendors de produção vivem em `vendor/` e os módulos ES nativos
+em `src/`.
+
+## Features
+
+- sessões com autoridade no servidor, par access/refresh, rotação, deteção de reutilização
+  e revogação por família;
+- refresh automático single-flight;
+- RBAC/ABAC server-driven com CASL e política editável/reordenável;
+- CRUD factory no mock para todos os recursos com seed;
+- rota de Perfil, guards de rotas e layouts por feature;
+- API mock MirageJS completa;
+- `ui/DataTable.vue`, tabela genérica com ordenação, paginação, edição inline,
+  colunas numéricas, slots e agregados;
+- matriz de intrusão T01–T12 e verificação de sintaxe.
+
+## Instalação
+
+### Pré-requisitos
+
+- um servidor HTTP local, como VS Code Live Server ou `python3 -m http.server`;
+- Node.js `>=18` apenas para executar `npm run check`.
+
+### Clonar
+
+```bash
+git clone https://github.com/CodeShark37/Vue-No-Build-Starter-Template.git
+cd Vue-No-Build-Starter-Template
 ```
+
+## Início rápido
+
+1. Servir a pasta pela **raiz do site**. `file://` não funciona porque o browser bloqueia
+   o carregamento dos ficheiros `.vue`.
+2. Abrir a aplicação no browser.
+3. Entrar com `admin / admin123` ou `user / user123`. Existem também `editor / editor123`,
+   `viewer / viewer123` e `subadmin / subadmin123`.
+
+Em `history mode`, o servidor deve fazer fallback para `index.html`. Para um sub-caminho,
+definir `<base href="/">`.
+
+Detalhes: [`docs/00-arranque.md`](docs/00-arranque.md) ·
+[portal da documentação](docs/README.md)
+
+## Estrutura
+
+```text
 index.html  env.js    shell + vendors (defer); env.js é o ÚNICO ficheiro do deploy
-jsconfig.json          IntelliSense/JSDoc no editor — não é build, o browser ignora-o
-vendor/     vendor-dev/           libs de produção vs libs/mock só de desenvolvimento
+jsconfig.json          IntelliSense/JSDoc; não é build e o browser ignora-o
+vendor/     vendor-dev/           libs de produção vs libs mock só de desenvolvimento
 src/
-  main.js                 raiz de composição: mock -> router -> permissões -> serviços -> store
-  app/                    App.vue (<router-view> + estilos base), router.js, guards.js,
-                          services.js ($http/$config/$auth/$perm/$api), store.js
-  core/                   infra sem negócio: config, session, ability, http, loader, cache
-  ui/                     genéricos: layouts/ (LayoutDefault, LayoutAuth, AdminLayout,
-                          AppNavbar) + Ui* + DataTable (tabela genérica das listas)
-  features/               UMA pasta por funcionalidade; index.js é o ÚNICO registo
-    site/  auth/  content/  admin/   (content = posts + books numa zona)
+  main.js                 composição: mock -> router -> permissões -> serviços -> store
+  app/                    App.vue, router.js, guards.js, services.js, store.js
+  core/                   config, session, ability, http, loader, cache
+  ui/                     layouts, componentes Ui* e DataTable partilhada
+  features/               uma pasta por feature; index.js é o registo único
+    site/  auth/  content/  admin/   (content = posts + books)
 dev/
-  mock/                   servidor Mirage (index, token, sessions, helpers, crud, routes/, seeds/) — apagar em produção
-docs/                     a documentação, um ficheiro por assunto
+  mock/                   Mirage, tokens, sessões, CRUD, rotas e seeds — apagar em produção
+docs/                     documentação, um ficheiro por assunto
 scripts/
-  intrusion-matrix.mjs    matriz T01–T12 contra o código real (correr após cada mudança — doc 08)
-  syntax-check.mjs        verificação de sintaxe dos .vue/.js (npm run check corre os dois)
+  intrusion-matrix.mjs    matriz T01–T12 contra o código real
+  syntax-check.mjs        verificação de sintaxe dos .vue/.js
 ```
 
-Regra de colocação de componentes: usado por **1 feature** → vive dentro dela;
-usado por **2 ou mais** → sobe para `src/ui/`.
+Um componente usado por **uma feature** fica dentro dela. Um componente usado por **duas
+ou mais features** pertence a `src/ui/`.
 
 ## Documentação
 
-| Doc | Assunto |
+| Documento | Conteúdo |
 | --- | --- |
-| [`00-arranque.md`](docs/00-arranque.md) | 3 passos, servidor, debug, utilizadores demo |
-| [`01-como-funciona.md`](docs/01-como-funciona.md) | árvore, boot, camadas, doutrinas, desempenho |
-| [`02-nova-pagina.md`](docs/02-nova-pagina.md) | acrescentar uma página a uma feature |
-| [`03-nova-feature.md`](docs/03-nova-feature.md) | o contrato de feature e o registo único |
-| [`04-falar-com-a-api.md`](docs/04-falar-com-a-api.md) | `$api` por feature, `$http`, 401/403/422 |
-| [`05-login-e-permissoes.md`](docs/05-login-e-permissoes.md) | sessão, guard, política CASL como dado |
-| [`06-mock-api.md`](docs/06-mock-api.md) | MirageJS, seeds, tabela completa de endpoints |
-| [`07-producao.md`](docs/07-producao.md) | deploy: `env.js`, o que apagar, cache, VERSIONS |
-| [`08-seguranca.md`](docs/08-seguranca.md) | auditoria OWASP Top 10, segurança de rotas e de sessão |
-| [`09-convencoes-de-rotas.md`](docs/09-convencoes-de-rotas.md) | convenção de zonas/rotas/meta e o estudo por trás |
+| [`docs/README.md`](docs/README.md) | portal e percurso recomendado |
+| [`docs/00-arranque.md`](docs/00-arranque.md) | servidor, debug e utilizadores demo |
+| [`docs/01-como-funciona.md`](docs/01-como-funciona.md) | árvore, boot, camadas e desempenho |
+| [`docs/02-nova-pagina.md`](docs/02-nova-pagina.md) | acrescentar uma página |
+| [`docs/03-nova-feature.md`](docs/03-nova-feature.md) | contrato e registo de feature |
+| [`docs/04-falar-com-a-api.md`](docs/04-falar-com-a-api.md) | `$api`, `$http` e erros HTTP |
+| [`docs/05-login-e-permissoes.md`](docs/05-login-e-permissoes.md) | sessões, guards e CASL |
+| [`docs/06-mock-api.md`](docs/06-mock-api.md) | MirageJS, seeds e endpoints |
+| [`docs/07-producao.md`](docs/07-producao.md) | deploy, `env.js` e cache |
+| [`docs/08-seguranca.md`](docs/08-seguranca.md) | OWASP, rotas e sessões |
+| [`docs/09-convencoes-de-rotas.md`](docs/09-convencoes-de-rotas.md) | convenções de rotas |
 
-## Dependências (vendored)
+Todas as páginas têm uma versão inglesa correspondente.
+
+## Dependências
 
 Vue 2.6.12 · VueRouter 3.0.0 · Vuex 3.6.2 · VueHead 2.2.0 · vue2-sfc-loader 0.9.5 ·
-Axios 1.21.0 (CVE-2025-27152 corrigida) · CASL 6.7.1 · MirageJS 0.1.48 (dev). Origem + SHA-256: [`vendor/VERSIONS.md`](vendor/VERSIONS.md).
+Axios 1.21.0 · CASL 6.7.1 · MirageJS 0.1.48 (apenas desenvolvimento).
+
+Origem e SHA-256: [`vendor/VERSIONS.md`](vendor/VERSIONS.md).
 
 ## Showcase
 
-![login view](docs/img/LoginView.png)
+![Login](docs/img/LoginView.png)
 
-![content view](docs/img/PostsView.png)
+![Conteúdo](docs/img/PostsView.png)
 
-![profile view](docs/img/ProfileView.png)
+![Perfil](docs/img/ProfileView.png)
 
+## Contribuição
 
-## Contribution
-
-Be free to **open issues** for requesting *new features*, or **pull requests** to add *new features*.
+Abra **issues** para propor funcionalidades ou envie **pull requests** com melhorias.

@@ -1,4 +1,5 @@
 # 05 — Login e permissões
+> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](04-falar-com-a-api.md) · [Seguinte](06-mock-api.md) · [English](05-login-e-permissoes.en.md)
 
 ## Sessão: uma fonte única
 

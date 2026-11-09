@@ -1,4 +1,5 @@
 # 04 — Falar com a API
+> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](03-nova-feature.md) · [Seguinte](05-login-e-permissoes.md) · [English](04-falar-com-a-api.en.md)
 
 ## Um só padrão de acesso nos componentes
 

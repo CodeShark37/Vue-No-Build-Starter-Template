@@ -1,6 +1,9 @@
 # Documentation
 
-> **Recommended path:** startup → architecture → API → sessions and permissions → mock → production → security.
+> **Recommended path:** startup → architecture → API → sessions and permissions →
+> mock → production → security.
+
+[Português](README.md) · **English**
 
 ## Start here
 
@@ -20,4 +23,4 @@
 ## Navigation
 
 - [Portuguese README](../README.md) · [English README](../README.en.md)
-- Each guide links to both README versions and to its English neighbor in the top navigation.
+- Each guide links to both README versions and to its English counterpart.

@@ -1,4 +1,5 @@
 # 03 — Nova feature
+> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](02-nova-pagina.md) · [Seguinte](04-falar-com-a-api.md) · [English](03-nova-feature.en.md)
 
 Uma feature é UMA pasta com um contrato pequeno:
 
@@ -96,7 +97,15 @@ Não há "caminho didáctico" vs. "caminho rápido" no código — posts e books
 
 3. O resto é igual: vistas à medida sobre os componentes genéricos de `ui/` (tabelas: `ui/DataTable.vue` — colunas por config, edição inline guiada por `meta.editable`), registo em `features/index.js`. O link da ZONA no navbar fica SEMPRE visível: a política governa o RECURSO (a tabela mostra/esconde por `$perm.can`, a API responde 403), não o link de navegação.
 
-Quando **não** usar os atalhos: domínios não-CRUD com semântica própria — a política em `/api/rules` (reordenação, auto-protecções) é o exemplo deliberado de rota escrita à mão no mock, e `features/admin/api.js` o de cliente. Para recursos canónicos com validações/auto-protecções, a fábrica aceita hooks (`validate`, `validateUpdate`, `validateDelete`, `coerce`, `serialize`, `enrich`, `guardOpts` — ver `routes/users.js`, que passa pela fábrica com o subject `User` NA POLÍTICA e as defesas em hooks: sub-admin gere contas comuns, `roles` reservado ao role admin, conta admin só se edita pelo role admin).
+## Quando não usar os atalhos
+
+Domínios não-CRUD com semântica própria — a política em `/api/rules` (reordenação,
+auto-protecções) é o exemplo deliberado de rota escrita à mão no mock, e
+`features/admin/api.js` o de cliente. Para recursos canónicos com validações e
+auto-protecções, a fábrica aceita hooks (`validate`, `validateUpdate`, `validateDelete`,
+`coerce`, `serialize`, `enrich`, `guardOpts` — ver `routes/users.js`, que passa pela
+fábrica com o subject `User` na política e as defesas em hooks: sub-admin gere contas
+comuns, `roles` reservado ao role admin, conta admin só se edita pelo role admin).
 
 ## Regras
 
