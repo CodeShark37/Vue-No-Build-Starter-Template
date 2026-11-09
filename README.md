@@ -4,6 +4,12 @@
 
 **Português** · [English](README.en.md)
 
+![Language](https://img.shields.io/github/languages/top/CodeShark37/Vue-No-Build-Starter-Template?label=language)
+![Version](https://img.shields.io/badge/version-v12.17.1-blue)
+[![Release](https://img.shields.io/github/v/release/CodeShark37/Vue-No-Build-Starter-Template?label=release)](https://github.com/CodeShark37/Vue-No-Build-Starter-Template/releases)
+
+**Autor:** [Josué André](https://github.com/CodeShark37)
+
 **Versão:** `v12.17.1`
 
 </div>
