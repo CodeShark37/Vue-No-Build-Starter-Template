@@ -7,6 +7,7 @@
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e?logo=javascript&logoColor=black)
 ![Version](https://img.shields.io/badge/version-v12.17.1-blue)
 [![Release](https://img.shields.io/github/v/release/CodeShark37/Vue-No-Build-Starter-Template?label=release)](https://github.com/CodeShark37/Vue-No-Build-Starter-Template/releases)
+[![Made with love in Angola](https://madewithlove.now.sh/ao?heart=true&template=for-the-badge)](#)
 
 **Author:** [Josué André](https://github.com/CodeShark37)
 
