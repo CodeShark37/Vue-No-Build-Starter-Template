@@ -16,8 +16,6 @@
 
 **Autor:** [Josué André](https://github.com/CodeShark37)
 
-**Versão:** `v12.17.1`
-
 </div>
 
 > [!NOTE]
@@ -128,8 +126,16 @@ Todas as páginas têm uma versão inglesa correspondente.
 
 ## Dependências
 
-Vue 2.6.12 · VueRouter 3.0.0 · Vuex 3.6.2 · VueHead 2.2.0 · vue2-sfc-loader 0.9.5 ·
-Axios 1.21.0 · CASL 6.7.1 · MirageJS 0.1.48 (apenas desenvolvimento).
+- [Vue](https://github.com/vuejs/vue) `2.6.12`
+- [Vue Router](https://github.com/vuejs/router) `3.0.0`
+- [Vuex](https://github.com/vuejs/vuex) `3.6.2`
+- [VueHead](https://github.com/ktquez/vue-head) `2.2.0`
+- [vue3-sfc-loader](https://github.com/FranckFreiburger/vue3-sfc-loader) `0.9.5`
+  (build para Vue 2)
+- [Axios](https://github.com/axios/axios) `1.21.0`
+- [CASL](https://github.com/stalniy/casl) `6.7.1`
+- [MirageJS](https://github.com/miragejs/miragejs) `0.1.48`
+  (apenas desenvolvimento)
 
 Origem e SHA-256: [`vendor/VERSIONS.md`](vendor/VERSIONS.md).
 
