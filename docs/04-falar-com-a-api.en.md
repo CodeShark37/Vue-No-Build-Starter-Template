@@ -15,6 +15,7 @@ module. Everything is available through `this`:
 | `this.$auth` | `core/session.js` | `isLoggedIn()`, `user`, `hasRole()`, `setSession()`, `clearSession()` |
 | `this.$perm` | `core/ability.js` | `can(action, subject, object?)` |
 | `this.$config` | `core/config.js` | derived values, including guard destinations |
+| `this.$theme` | `core/theme.js` | reactive theme: `current`, `set(value)`, `toggle()` |
 | `this.$store` | `app/store.js` | shared namespaced Vuex state |
 
 ## Domain API: `makeApi` is the standard

@@ -14,6 +14,7 @@ Nos `.vue` NÃO se importam `.js` locais (o loader compilaria uma 2ª cópia do 
 | `this.$auth` | `core/session.js` | `isLoggedIn()`, `user`, `hasRole()`, `setSession()`, `clearSession()` |
 | `this.$perm` | `core/ability.js` | `can(action, subject, object?)` |
 | `this.$config` | `core/config.js` | valores derivados (destinos do guard, etc.) |
+| `this.$theme` | `core/theme.js` | tema reactivo: `current`, `set(value)`, `toggle()` |
 | `this.$store` | `app/store.js` | estado global partilhado (módulos namespaced) |
 
 ## API do domínio: `makeApi` é o padrão
