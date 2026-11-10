@@ -1,5 +1,5 @@
 # 09 — Convenção de rotas: zonas, meta e nomes
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](08-seguranca.md) · [English](09-convencoes-de-rotas.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](08-seguranca.md) · [English](09-convencoes-de-rotas.en.md)
 
 Estudo feito na v12.14, quando o template ganhou três pressões ao mesmo tempo:
 juntar posts e books numa zona única (como o Admin), tornar `User` um recurso da

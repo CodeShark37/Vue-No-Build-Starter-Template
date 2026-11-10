@@ -1,6 +1,6 @@
 # 01 — How It Works
 
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](00-arranque.en.md) · [Next](02-nova-pagina.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](00-arranque.en.md) · [Next](02-nova-pagina.en.md)
 
 ## Project tree
 

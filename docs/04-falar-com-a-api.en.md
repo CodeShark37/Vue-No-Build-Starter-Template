@@ -1,5 +1,5 @@
 # 04 — Talking to the API
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](03-nova-feature.en.md) · [Next](05-login-e-permissoes.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](03-nova-feature.en.md) · [Next](05-login-e-permissoes.en.md)
 
 ## The only access pattern in components
 

@@ -1,5 +1,5 @@
 # 00 — Startup
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Next](01-como-funciona.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Next](01-como-funciona.en.md)
 
 ## 3 steps
 

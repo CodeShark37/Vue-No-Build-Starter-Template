@@ -1,5 +1,5 @@
 # 09 — Route conventions: areas, META, and names
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](08-seguranca.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](08-seguranca.en.md)
 
 This study was made in v12.14, when the template faced three requirements at once: combine
 posts and books in one area (like Admin), make `User` a CASL policy subject so sub-admin access

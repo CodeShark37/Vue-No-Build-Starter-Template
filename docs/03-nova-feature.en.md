@@ -1,5 +1,5 @@
 # 03 — New feature
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](02-nova-pagina.en.md) · [Next](04-falar-com-a-api.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](02-nova-pagina.en.md) · [Next](04-falar-com-a-api.en.md)
 
 A feature is a folder with a small contract:
 

@@ -1,5 +1,5 @@
 # 03 — Nova feature
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](02-nova-pagina.md) · [Seguinte](04-falar-com-a-api.md) · [English](03-nova-feature.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](02-nova-pagina.md) · [Seguinte](04-falar-com-a-api.md) · [English](03-nova-feature.en.md)
 
 Uma feature é UMA pasta com um contrato pequeno:
 

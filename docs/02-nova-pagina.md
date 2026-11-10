@@ -1,5 +1,5 @@
 # 02 — Nova página (numa feature existente)
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](01-como-funciona.md) · [Seguinte](03-nova-feature.md) · [English](02-nova-pagina.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](01-como-funciona.md) · [Seguinte](03-nova-feature.md) · [English](02-nova-pagina.en.md)
 
 Para acrescentar uma página a um domínio que já existe, só se toca na pasta da feature.
 

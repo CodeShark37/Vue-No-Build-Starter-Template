@@ -1,5 +1,5 @@
 # 08 — Segurança (auditoria OWASP Top 10, rotas e sessão)
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](07-producao.md) · [Seguinte](09-convencoes-de-rotas.md) · [English](08-seguranca.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](07-producao.md) · [Seguinte](09-convencoes-de-rotas.md) · [English](08-seguranca.en.md)
 
 Auditoria de segurança do template (histórico v12.11–v12.16; estado actual
 **v12.17.1**), feita como **hacker ético**: cada achado foi PROVADO com um exploit

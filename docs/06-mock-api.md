@@ -1,5 +1,5 @@
 # 06 — Mock API (MirageJS)
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](05-login-e-permissoes.md) · [Seguinte](07-producao.md) · [English](06-mock-api.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](05-login-e-permissoes.md) · [Seguinte](07-producao.md) · [English](06-mock-api.en.md)
 
 Com `mock: true` no `env.js` a app arranca um servidor falso que **interpreta os XHR do axios antes de chegarem à rede** — `this.$api` / `this.$http` desenvolvem-se e testam-se de ponta a ponta sem backend, e o resto da app não distingue. (`vendor-dev/mirage.min.js` é injectado pelo `env.js`; a fábrica vive em `dev/mock/index.js` — o único módulo que conhece o MirageJS, tal como `core/loader.js` é o único que conhece o sfc-loader.)
 

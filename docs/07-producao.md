@@ -1,5 +1,5 @@
 # 07 — Produção
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](06-mock-api.md) · [Seguinte](08-seguranca.md) · [English](07-producao.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](06-mock-api.md) · [Seguinte](08-seguranca.md) · [English](07-producao.en.md)
 
 ## O único ficheiro a mudar: `env.js`
 

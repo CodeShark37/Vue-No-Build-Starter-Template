@@ -1,5 +1,5 @@
 # 02 — New page (in an existing feature)
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](01-como-funciona.en.md) · [Next](03-nova-feature.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](01-como-funciona.en.md) · [Next](03-nova-feature.en.md)
 
 To add a page to an existing domain, work only in that feature’s folder.
 

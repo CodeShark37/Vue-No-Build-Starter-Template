@@ -1,5 +1,5 @@
 # 05 — Login and permissions
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](04-falar-com-a-api.en.md) · [Next](06-mock-api.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](04-falar-com-a-api.en.md) · [Next](06-mock-api.en.md)
 
 ## Session: the single source
 
