@@ -27,31 +27,29 @@
 
 ## Boot sequence
 
-1. `env.js` decides which Vue build to load and whether to inject
-   `vendor-dev/mirage.min.js`, using `document.write` at its own position so deferred
-   scripts retain their order.
-2. `main.js` completes the bootstrap in this order:
+1. `theme-boot.js` (a synchronous classic script in `<head>`) applies the stored or
+   system theme before the first paint.
+2. `env.js` decides which Vue build to load (`vue.min.js` or `vue.dev.js`) and whether
+   to include MirageJS, using `document.write` at its own position.
+3. Deferred vendors download in parallel and execute in written order. The `main.js`
+   module runs after them and completes the bootstrap in this sequence:
 
    ```text
-   theme-boot.js
+   main.js
        │
-       └── Applies the stored or system theme before the first paint
-           │
-           └── main.js
-               │
-               ├── theme.init()
-               ├── startMirage(config)
-               │   └── Intercepts XHR before the first request
-               ├── createRouter(routes)
-               │   └── Routes from features/index.js
-               ├── ability.sync()
-               │   └── First permissions load
-               ├── installServices()
-               ├── createStore()
-               ├── load('src/app/App.vue')
-               └── $mount('#app')
+       ├── theme.init()
+       ├── startMirage(config)
+       │   └── Intercepts XHR before the first request
+       ├── createRouter(routes)
+       │   └── Routes from features/index.js
+       ├── ability.sync()
+       │   └── First permissions load
+       ├── installServices()
+       ├── createStore()
+       ├── load('src/app/App.vue')
+       └── $mount('#app')
    ```
-3. In production, set `mock: false`; the same client then sends requests to `apiBase`.
+4. In production, set `mock: false`; the same client then sends requests to `apiBase`.
 
 ## Architectural principles
 

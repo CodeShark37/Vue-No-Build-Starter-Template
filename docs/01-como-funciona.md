@@ -26,28 +26,27 @@
 
 ## Boot, por ordem
 
-1. `env.js` (script clássico) decide QUE vue entra na fila (`vue.min.js` ou `vue.dev.js`) e se `vendor-dev/mirage.min.js` vem para produção — via `document.write` na própria posição, por isso a ordem dos `defer` fica garantida.
-2. Vendors `defer` executam pela ordem escrita; o `main.js` (módulo) corre por último.
-3. `main.js` conclui o arranque nesta sequência:
+1. `theme-boot.js` (script clássico e síncrono no `<head>`) aplica o tema guardado ou o
+   tema do sistema antes da primeira pintura.
+2. `env.js` decide qual build do Vue carregar (`vue.min.js` ou `vue.dev.js`) e se deve
+   incluir o MirageJS, usando `document.write` na sua própria posição.
+3. Os vendors `defer` descarregam em paralelo e executam pela ordem escrita. O módulo
+   `main.js` corre depois deles e conclui o arranque nesta sequência:
 
    ```text
-   theme-boot.js
+   main.js
        │
-       └── Aplica o tema guardado ou o tema do sistema antes da primeira pintura
-           │
-           └── main.js
-               │
-               ├── theme.init()
-               ├── startMirage(config)
-               │   └── Intercepta XHR antes do primeiro pedido
-               ├── createRouter(routes)
-               │   └── Rotas de features/index.js
-               ├── ability.sync()
-               │   └── Primeiro carregamento das permissões
-               ├── installServices()
-               ├── createStore()
-               ├── load('src/app/App.vue')
-               └── $mount('#app')
+       ├── theme.init()
+       ├── startMirage(config)
+       │   └── Intercepta XHR antes do primeiro pedido
+       ├── createRouter(routes)
+       │   └── Rotas de features/index.js
+       ├── ability.sync()
+       │   └── Primeiro carregamento das permissões
+       ├── installServices()
+       ├── createStore()
+       ├── load('src/app/App.vue')
+       └── $mount('#app')
    ```
 
 ## Camadas e doutrinas
