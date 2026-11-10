@@ -1,21 +1,20 @@
 # 09 — Route conventions: areas, META, and names
 > **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](08-seguranca.en.md)
 
-This study was made in v12.14, when the template faced three requirements at once: combine
-posts and books in one area (like Admin), make `User` a CASL policy subject so sub-admin access
-to the admin area is determined by server permissions rather than role alone, and preserve
-maintainability as features grow. The convention below is the one the template follows.
+This convention organizes the template’s areas, route metadata, names, and legacy redirects.
+Its goal is to keep authorization centralized, avoid collisions, and let features grow without
+scattering configuration.
 
-## 1. Inventory (before → after v12.14)
+## 1. Current inventory
 
 | area | Path | Layout | Parent META | children |
 | --- | --- | --- | --- | --- |
 | site | `/` | LayoutDefault | — (public) | Home, 403; catch-all `*` (404) |
 | auth | `/login` | LayoutAuth | `guest` | Login |
 | auth | `/app/profile` | LayoutDefault | `requiresAuth` | Profile |
-| content (v12.14) | `/content` | **ContentLayout** | `requiresAuth` | posts, books (`''` → posts) |
+| content | `/content` | **ContentLayout** | `requiresAuth` | posts, books (`''` → posts) |
 | admin | `/admin` | AdminLayout | `requiresAuth` | users (`perm`), stats (`roles`), permissions (`roles`); `''` → users |
-| legacy | `/app/feed`, `/app/books` | — | `requiresAuth` | redirects to `/content/…` (v12.5 and v12.14) |
+| legacy | `/app/feed`, `/app/books` | — | `requiresAuth` | redirects to `/content/…` |
 
 ## 2. Evaluation criteria
 
@@ -37,21 +36,23 @@ maintainability as features grow. The convention below is the one the template f
 
 | option | description | C1 | C2 | C3 | C4 | C5 | C6 | Verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **A. Separate `/app` parents per feature** (state through v12.13) | posts and books each declared their own `/app` parent | medium (META scattered across two `index.js` files) | risk of child collisions and duplicate parents | okay | okay | new page okay; new area duplicates the parent | `/app/feed` hides the area | **rejected** — the design works, but an “application” area does not exist conceptually; this motivated the merge |
+| **A. Separate `/app` parents per feature** | posts and books each declared their own `/app` parent | medium (META scattered across two `index.js` files) | risk of child collisions and duplicate parents | okay | okay | new page okay; new area duplicates the parent | `/app/feed` hides the area | **rejected** — the application area remains implicit and configuration is duplicated |
 | **B. Area per feature with a top-level path** (**adopted**) | one feature = one top-level path (`/content`, `/admin`) + one layout + parent META | high — everything is in `index.js` | zero collisions (one path per area) | high | legacy redirects | page = one child; domain = one folder | `/content/posts` | **adopted** |
 | **C. Single `/app` shell with a shared parent** | one `/app` parent with LayoutDefault and all children inside it | low — feature `index.js` files would no longer be the source of truth | different features share one parent (registration/import order matters) | high | okay | every feature writes to the same parent; the central registry grows | okay | **rejected** — violates “one folder per feature; the registry is the single contact point” |
 | **D. Resource routes with parameters** (`/posts/:id`, `/books/:id`) | detail pages by ID | high | okay | okay | okay | okay | high | **reserved for when detail pages exist** — DataTable currently covers the use cases without detail pages; `api.get(id)` already exists for that future need |
 
 ## 4. The convention
 
-1. **One area per feature:** one top-level path, one layout in `ui/layouts/`, and one `index.js`
-   declaring everything. Areas with several sections provide navigation in their layout
+1. **One primary area per feature:** one top-level path, one layout in `ui/layouts/`, and one
+   `index.js` declaring everything. Legacy routes may remain in a compatible area only to redirect
+   to the current address. Areas with several sections provide navigation in their layout
    (AdminLayout uses a sidebar; ContentLayout uses tabs).
 2. **Put META on the area parent.** A child declares META only for an exception inside the area
    (for example, `/admin/users` uses `perm` while sibling routes require `roles`). The guard
    walks `to.matched`, so the parent covers its children.
 3. **Guard requirements** (evaluation order in `app/guards.js`): `requiresAuth` → session;
-   `roles: [...]` → static area role; `perm: { action, subject }` → the server’s **CASL ability**.
+   `roles: [...]` → static area role; `perm: { action, subject }` → the server-synchronized
+   **CASL ability**.
    This is dynamic: anyone who can read `User` may enter user management, regardless of role.
    A 403 does not log the user out: “forbidden” is not “unauthenticated.”
 4. **Paths:** area paths are lowercase (`/content`, `/admin`); resources use plural kebab-case
@@ -71,7 +72,7 @@ maintainability as features grow. The convention below is the one the template f
 - **New page in an area:** add one child to the feature’s `index.js` and one link in the area
   layout. Nothing else.
 - **New domain:** add `features/<name>/` with `{ name, routes, api? }` and register it in
-  `features/index.js`. If it shares chrome with another feature (for example, `/app/profile`
-  shares LayoutDefault), declare the complete parent/children pair; children must not collide.
+  `features/index.js`. If it shares a layout with another feature (for example, `/app/profile`),
+  declare the complete parent/children pair and keep paths collision-free.
 - **New permission-restricted area:** add `META.perm` to the parent and add rules to the policy
   (`/admin/permissions` edits the policy at runtime). Do not modify the guard code.

@@ -1,23 +1,20 @@
 # 09 — Convenção de rotas: zonas, meta e nomes
 > **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](08-seguranca.md) · [English](09-convencoes-de-rotas.en.md)
 
-Estudo feito na v12.14, quando o template ganhou três pressões ao mesmo tempo:
-juntar posts e books numa zona única (como o Admin), tornar `User` um recurso da
-política CASL (sub-admins — quem pode entrar na zona admin passa a ser uma
-PERMISSÃO do servidor, não só um role) e manter a manutenibilidade quando as
-features crescem. A convenção abaixo é o resultado — o que o template segue daqui
-para a frente.
+Esta convenção organiza as zonas, os metadados de rota, os nomes e os redirects
+legados do template. O objetivo é manter a autorização centralizada, evitar
+colisões e permitir que as features cresçam sem espalhar a configuração.
 
-## 1. Inventário (antes → depois da v12.14)
+## 1. Inventário actual
 
 | Zona | Path | Layout | Meta do PAI | Filhos |
 | --- | --- | --- | --- | --- |
 | site | `/` | LayoutDefault | — (pública) | Home, 403; catch-all `*` (404) |
 | auth | `/login` | LayoutAuth | `guest` | Login |
 | auth | `/app/profile` | LayoutDefault | `requiresAuth` | Profile |
-| content (v12.14) | `/content` | **ContentLayout** | `requiresAuth` | posts, books (`''` → posts) |
+| content | `/content` | **ContentLayout** | `requiresAuth` | posts, books (`''` → posts) |
 | admin | `/admin` | AdminLayout | `requiresAuth` | users (`perm`), stats (`roles`), permissions (`roles`); `''` → users |
-| legado | `/app/feed`, `/app/books` | — | `requiresAuth` | redirects para `/content/…` (v12.5 e v12.14) |
+| legado | `/app/feed`, `/app/books` | — | `requiresAuth` | redirects para `/content/…` |
 
 ## 2. Critérios de avaliação
 
@@ -31,7 +28,7 @@ para a frente.
   níveis; o array de um nível é OR de alternativas) — o filho aperta, nunca
   afrouxa.
 - **C4 — Estabilidade de URL**: bookmarks sobrevivem a reorganizações via
-  redirects de legado declarados NA zona antiga (precedente `/app/data` → `/app/feed`).
+  redirects de legado declarados na zona antiga (`/app/data` → `/app/feed`).
 - **C5 — Custo de acrescentar**: uma página nova = 1 filho na zona existente;
   um domínio novo = 1 feature nova (pasta + registo em `features/index.js`).
 - **C6 — Legibilidade**: URL descreve a zona e o recurso; nada de abreviações.
@@ -40,22 +37,24 @@ para a frente.
 
 | Opção | Descrição | C1 | C2 | C3 | C4 | C5 | C6 | Veredicto |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **A. Vários pais `/app` por feature** (estado até v12.13) | posts e books declaravam cada um o seu pai `/app` | média (meta espalhada por 2 index.js) | risco de colisão de filhos e pais duplicados | ok | ok | página nova ok; zona nova duplica o pai | `/app/feed` esconde a zona | **rejeitada** — funciona, mas a zona "aplicação" não existe como conceito; foi o que motivou o merge |
+| **A. Vários pais `/app` por feature** | posts e books declaravam cada um o seu pai `/app` | média (meta espalhada por 2 index.js) | risco de colisão de filhos e pais duplicados | ok | ok | página nova ok; zona nova duplica o pai | `/app/feed` esconde a zona | **rejeitada** — a zona de aplicação fica implícita e a configuração duplica-se |
 | **B. Zona por feature com path de topo** (**adoptada**) | 1 feature = 1 path de topo (`/content`, `/admin`) + 1 layout próprio + meta no pai | alta — tudo num index.js | zero colisões (um path por zona) | alta | redirects de legado | página = 1 filho; domínio = 1 pasta | `/content/posts` | **ADOPTADA** |
 | **C. Shell único `/app` com pai comum** | um único pai `/app` com LayoutDefault e TODOS os filhos lá dentro | baixa — o index.js das features deixaria de ser a fonte | filhos de features diferentes partilham o mesmo pai (ordem/import) | alta | ok | cada feature escreve no MESMO pai — registo central inchado | ok | rejeitada — viola "UMA pasta por funcionalidade; o registo é o único ponto de contacto" |
-| **D. Rotas de recurso com params** (`/posts/:id`, `/books/:id`) | páginas de detalhe por id | alta | ok | ok | ok | ok | alta | **reservada para quando existir detalhe** — a DataTable já serve os casos actuais sem página de detalhe; o contrato `api.get(id)` (v12.9) já existe para o dia em que fizer sentido |
+| **D. Rotas de recurso com params** (`/posts/:id`, `/books/:id`) | páginas de detalhe por id | alta | ok | ok | ok | ok | alta | **reservada para quando existir detalhe** — a DataTable já serve os casos actuais sem página de detalhe; o contrato `api.get(id)` já existe para o dia em que fizer sentido |
 
 ## 4. A convenção (o que o template segue)
 
-1. **Uma ZONA por feature**: 1 path de topo, 1 layout de `ui/layouts/`, 1
-   `index.js` que declara tudo. Zonas com várias secções ganham navegação da
-   zona no layout (AdminLayout: sidebar; ContentLayout: abas).
+1. **Uma zona principal por feature**: 1 path de topo, 1 layout de
+   `ui/layouts/` e 1 `index.js` que declara tudo. Rotas legadas podem permanecer
+   numa zona compatível, apenas para redireccionar para o endereço actual.
+   Zonas com várias secções ganham navegação no layout (AdminLayout: sidebar;
+   ContentLayout: abas).
 2. **Meta no PAI da zona**; filho declara meta só para EXCEÇÕES dentro da zona
    (ex.: `/admin/users` abre por `perm` enquanto os irmãos exigem `roles`).
    O guard percorre `to.matched` — o pai cobre os filhos.
 3. **Exigências do guard** (ordem de avaliação em `app/guards.js`):
    `requiresAuth` → sessão; `roles: [...]` → role (zona estática);
-   `perm: { action, subject }` → **abilidade CASL do servidor** (v12.14) — zona
+   `perm: { action, subject }` → **abilidade CASL sincronizada com o servidor** — zona
    dinâmica: quem pode ler `User` entra na gestão de utilizadores, seja qual
    for o role. 403 sem logout ("sem permissão" ≠ "sem sessão").
 4. **Paths**: zona em minúsculas de uma palavra (`/content`, `/admin`); recursos
@@ -77,8 +76,8 @@ para a frente.
 - Nova página numa zona: acrescentar 1 filho ao `index.js` da feature + link no
   layout da zona. Nada mais.
 - Novo domínio: nova pasta `features/<nome>/` com `{ name, routes, api? }` +
-  registo em `features/index.js`. Se partilha cromo com outra feature (como
-  `/app/profile` partilha LayoutDefault), declarar o par pai/filhos completo —
-  filhos nunca colidem.
+  registo em `features/index.js`. Se partilha o layout com outra feature
+  (como `/app/profile`), declarar o par pai/filhos completo e manter os paths
+  sem colisões.
 - Nova zona restrita por permissão: `meta.perm` no pai + regras na política
   (`/admin/permissions` edita em runtime) — sem tocar no código do guard.
