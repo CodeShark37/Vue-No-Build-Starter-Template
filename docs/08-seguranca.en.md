@@ -61,9 +61,9 @@ The audit therefore separates three layers:
   primitives), so injected prototypes and expressions are rejected. Placeholders accept only
   `${user.<field>}` (regex `\w+`) and are materialized from the current session user.
 
-**Limitations (documented mock design):**
-- The mock token uses a detection hash, not a cryptographic signature. A real backend must sign tokens (HS256/RS256) and verify them against a session or denylist.
-- localStorage integrity checks are a UX defense; the API remains authoritative and revalidates the token.
+**Mock characteristics and limits:**
+- The token uses a detection hash over the complete string, not a cryptographic signature. A real backend must sign tokens (HS256/RS256) and verify them against a session or denylist.
+- localStorage integrity checks trigger early local logout; the API remains authoritative and revalidates the token.
 - The mock is development-only and must be removed from deployment.
 
 ### A02 — Cryptographic Failures
@@ -81,8 +81,7 @@ The audit therefore separates three layers:
 - FNV-1a in the dump signature and **hashToken (FNV-1a+DJB2)** for token integrity are
   explicitly non-cryptographic. They detect changes (stale dumps or a tampered token in
   ANY segment) but do not prevent deliberate 64-bit collisions. The code comment states
-  this; the real signature belongs to the backend (HS256/RS256). (earlier state hashed the
-  payload; current state hashes the COMPLETE token.)
+  this; the real signature belongs to the backend (HS256/RS256).
 - No secrets are stored in client code. The client has no API keys; all sensitive material belongs
   to the real backend.
 - Transport: production requires HTTPS and HSTS (`docs/07`); the token is sent in the

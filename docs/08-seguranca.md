@@ -63,10 +63,10 @@ isso a auditoria separa três planos:
   aceitam `${user.<campo>}` (regex `\w+`) materializados com dados do PRÓPRIO
   user da sessão.
 
-**Limitações (desenho do mock, documentadas):**
-- O token do mock usa um hash de detecção, não uma assinatura criptográfica. Um backend real deve assinar o token (HS256/RS256) e verificar a sessão ou denylist.
-- A proteção de `localStorage` é uma defesa de UX: a API continua a ser a autoridade e revalida o token.
-- O mock é development-only e deve ser removido do deploy.
+**Características e limites do mock:**
+- O token usa um hash de detecção sobre a string completa, não uma assinatura criptográfica. Um backend real deve assinar o token (HS256/RS256) e verificar a sessão ou denylist.
+- A proteção de `localStorage` antecipa a expulsão local; a API continua a ser a autoridade e revalida o token.
+- O mock é exclusivo de desenvolvimento e deve ser removido do deploy.
 
 ### A02 — Cryptographic Failures
 
@@ -81,7 +81,7 @@ isso a auditoria separa três planos:
 - `publicUser()` é a única forma de saída do user: a password e o seu hash
   NUNCA saem por nenhuma rota (listas, detalhes, login, refresh, profile).
 - FNV-1a na assinatura do dump e o **hashToken (FNV-1a+DJB2)** da integridade
-  do token (estado anterior no payload; estado actual sobre o TOKEN COMPLETO) são explicitamente
+  do token sobre o TOKEN COMPLETO são explicitamente
   NÃO-criptográficos: detectam alteração (dump stale / token adulterado em
   QUALQUER segmento), não impedem colisão deliberada de 64 bits — o comentário
   no código diz-o. A assinatura REAL é do backend (HS256/RS256).
