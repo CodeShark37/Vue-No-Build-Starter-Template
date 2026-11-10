@@ -4,10 +4,16 @@
 // Política de transporte (toda a app depende disto e não sabe repeti-la):
 //  - pedido:  anexa 'Authorization: Bearer <access token>' lido de core/session.js
 //    (o REFRESH token nunca vai nos pedidos normais — só no /refresh).
-//  - 401 num pedido normal => tenta POST /refresh UMA vez (single-flight: pedidos
-//    paralelos partilham a mesma promessa) COM O REFRESH TOKEN no header, repete
-//    o pedido original com o access novo e só se o refresh falhar limpa a sessão
-//    e navega para o login.
+//  - 401 token_expired num pedido normal => tenta POST /refresh UMA vez
+//    (single-flight: pedidos paralelos partilham a mesma promessa) COM O REFRESH
+//    TOKEN no header, repete o pedido original com o access novo e só se o
+//    refresh falhar limpa a sessão e navega para o login.
+//  - 401 invalid_token (credencial QUEBRADA — adulterada, forjada, revogada,
+//    jti desconhecido, utilizador eliminado) => SEM refresh: clearSession() +
+//    login imediato. Renovar uma credencial quebrada só esconderia a
+//    adulteração: alterar o token no localStorage não deve ser "curado" em
+//    silêncio pelo refresh, mantendo o intruso dentro —
+//    RFC 6750 §3.1: invalid_token ≠ token expirado).
 //  - 401 no próprio /refresh (ou no 2º try) => sessão morta (refresh expirado,
 //    revogado, reutilizado — a rotação mata a família): clearSession() + navegação
 //    para config.auth.redirect (router importado em baixo).
@@ -126,6 +132,18 @@ http.interceptors.response.use(
         }
 
         const request = err.config;
+
+        // CREDENCIAL QUEBRADA, não expirada: invalid_token = adulterada/forjada/
+        // revogada/desconhecida. O refresh devolveria um par NOVO e escondia a
+        // quebra (o intruso ficava dentro com a sessão "curada") — fail-closed:
+        // sessão fora e re-autenticação. O canRefresh em cima já garantiu que
+        // há sessão e que este pedido não é o próprio /refresh nem o login.
+        if (res.data && res.data.error === 'invalid_token') {
+            auth.clearSession();
+            redirectToLogin();
+            return Promise.reject(err);
+        }
+
         request.__retried = true; // no máximo 1 refresh + retry por pedido
 
         return refreshOnce()
@@ -147,6 +165,25 @@ http.interceptors.response.use(
             });
     }
 );
+
+// Sufixo de mensagem de erro por status, UMA vez para toda a app (antes
+// duplicado como detailOf() em 4 painéis e como '(HTTP n)' à mão em cada catch).
+// Devolve SÓ o sufixo — quem chama acrescenta o prefixo ('GET /posts falhou'):
+//   sem resposta ................ ''                     (rede, cancelamento)
+//   422 com message ............. ' (422 — <message>)'   (validação do mock)
+//   422 com field ............... ' (422 validação: campo <field>)'
+//   qualquer outro .............. ' (HTTP <status>)'     (403 incluído — a
+//     política "sem permissão" a escrever é da vista; aqui é só o formato)
+http.describe = function (err) {
+    const res = err && err.response;
+    if (!res) return '';
+    const d = res.data || {};
+    if (res.status === 422) {
+        if (d.message) return ' (422 — ' + d.message + ')';
+        if (d.field) return ' (422 validação: campo ' + d.field + ')';
+    }
+    return ' (HTTP ' + res.status + ')';
+};
 
 /**
  * Fábrica de módulos api.js para domínios CRUD canónicos: os 5 verbos finos

@@ -33,7 +33,7 @@
              fieldDisabled quando é campo reservado — a API re-verifica por si
              (403/422). -->
         <DataTable
-            :rows="users" :columns="userColumns" :loading="loading"
+            :rows="rows" :columns="userColumns" :loading="loading"
             :editing-id="editingId" :editable-fields="editable"
             :sorts-allowed="sorts.allowed" :sorts-numeric="sorts.numeric"
             :page="page" :per-page="perPage" :total="total" :total-pages="totalPages"
@@ -41,7 +41,7 @@
             noun="utilizadores" empty-text="Sem utilizadores."
             :field-labels="fieldLabels" :field-types="fieldTypes" :field-disabled="fieldDisabled"
             :can-edit="canEditUser" :can-remove="canRemoveUser"
-            @sort="setSort" @per-page="setPerPage" @refresh="reloadUsers"
+            @sort="setSort" @per-page="setPerPage" @refresh="reloadRows"
             @edit="startEdit" @cancel="cancelEdit" @save="saveEdit" @delete="removeUser">
             <template v-slot:cell-name="{ row }">
                 <strong>{{ row.name }}</strong>
@@ -53,7 +53,7 @@
             </template>
         </DataTable>
         <UiPager :page="page" :total-pages="totalPages"
-            :info="'Mostrando ' + users.length + ' de ' + total" @go="goTo" />
+            :info="'Mostrando ' + rows.length + ' de ' + total" @go="goTo" />
 
         <!-- Criação: roles como texto livre separado por vírgulas (o datalist só
              SUGERE roles que o servidor conhece — meta.roleCounts do conjunto
@@ -106,10 +106,10 @@
 //    sem botão de eliminar (canRemoveUser); uma conta com o ROLE admin só se
 //    edita pelo role admin (a API responde 403 — T12; canEditUser esconde o
 //    botão na linha, UX que acompanha o servidor).
-// Cada mutação é seguida de 1 GET (reloadUsers — a lista volta ao estado REAL
-// do servidor, ids incluídos) e os erros mostram-se inline — a sessão nunca é
-// limpa num 403 (ver core/http.js). isSelf() lê a sessão por this.$auth (nunca
-// localStorage).
+// Cada mutação é seguida de 1 GET (reloadRows do mixin — a lista volta ao
+// estado REAL do servidor, ids incluídos) e os erros mostram-se inline — a
+// sessão nunca é limpa num 403 (ver core/http.js). isSelf() lê a sessão por
+// this.$auth (nunca localStorage).
 import UiPanel from '../../ui/UiPanel.vue';
 import DataTable from '../../ui/DataTable.vue';
 import UiPager from '../../ui/UiPager.vue';
@@ -120,25 +120,23 @@ export default {
         DataTable,
         UiPager,
     },
+    // Máquina de leitura server-driven (ui/list-page.js) — a MESMA dos posts e
+    // livros, com a ordem inicial 'asc' (a listagem admin nasce do id menor,
+    // defaultOrder do recurso) e o extra da meta desta zona: roleCounts.
+    mixins: [Vue.listPage({
+        label: 'GET /admin/users',
+        order: 'asc',
+        fetch: function (query) { return this.$api.admin.listUsers(query); },
+        // Resumo de roles (meta.roleCounts): contagem POR ROLE sobre o
+        // CONJUNTO INTEIRO de utilizadores, publicada pelo SERVIDOR na meta da
+        // listagem (não derivável de uma página paginada). Alimenta o resumo
+        // acima da tabela e as sugestões do <datalist> do form de criação.
+        apply: function (self, meta) { self.roleCounts = meta.roleCounts || []; },
+    })],
     data() {
         return {
-            users: [],
-            page: 1,
-            perPage: 6,
-            total: 0,
-            totalPages: 1,
-            sort: 'id', // ?sort= activo — tem de estar em meta.sorts.allowed
-            order: 'asc', // a listagem admin nasce do id menor (defaultOrder do recurso)
-            loading: false,
+            roleCounts: [], // meta.roleCounts (via apply do mixin) — resumo + datalist
             saving: false,
-            error: '',
-            editingId: null,
-            // Contratos publicados pelo servidor na meta da listagem — a UI
-            // segue-os sem os repetir (mudar a fábrica do mock reflecte-se
-            // aqui sem tocar neste .vue).
-            editable: [], // meta.editable — a lista branca do PUT
-            sorts: { allowed: [], numeric: [] }, // meta.sorts — setas de ordenação
-            roleCounts: [], // meta.roleCounts — contagem por role do conjunto inteiro
             // Rótulos/tipos dos inputs de edição (fieldLabels/fieldTypes da
             // DataTable): o QUE é editável vem do servidor; COMO se mostra, da
             // vista. Password vazio = manter a actual (placeholder explica).
@@ -163,9 +161,6 @@ export default {
             return this.roleCounts.map(function (rs) { return rs.role; });
         },
     },
-    created() {
-        this.loadUsers(1);
-    },
     methods: {
         // Sou eu? Aceita o row da linha OU o id cru (o username é editável em
         // outros utilizadores, o id não).
@@ -178,69 +173,6 @@ export default {
             return String(text || '').split(',')
                 .map(function (r) { return r.trim(); })
                 .filter(function (r) { return r; });
-        },
-        queryFor(page) {
-            return { page: page, per_page: this.perPage, sort: this.sort, order: this.order };
-        },
-        applyPage(res) {
-            const self = this;
-            self.users = res.data.data;
-            self.page = res.data.meta.page;
-            self.total = res.data.meta.total;
-            self.totalPages = res.data.meta.totalPages;
-            // O contrato de interface chega com a lista — a UI segue o servidor.
-            self.editable = res.data.meta.editable || [];
-            self.sorts = res.data.meta.sorts || { allowed: [], numeric: [] };
-            self.roleCounts = res.data.meta.roleCounts || [];
-        },
-        loadUsers(page) {
-            const self = this;
-            self.loading = true;
-            self.error = '';
-            self.$api.admin.listUsers(self.queryFor(page))
-                .then(function (res) { self.applyPage(res); })
-                .catch(function (err) {
-                    self.error = 'GET /admin/users falhou' + self.detailOf(err);
-                })
-                .then(function () { self.loading = false; });
-        },
-        // Re-lê a página actual (depois de criar/editar/apagar). Se a página
-        // deixou de existir (apagou-se o último utilizador dela), cai para a
-        // última página válida da meta.
-        reloadUsers() {
-            const self = this;
-            self.loading = true;
-            self.error = '';
-            return self.$api.admin.listUsers(self.queryFor(self.page))
-                .then(function (res) {
-                    if (!res.data.data.length && self.page > 1) {
-                        return self.goTo(res.data.meta.totalPages);
-                    }
-                    self.applyPage(res);
-                    return res;
-                })
-                .catch(function (err) {
-                    self.error = 'GET /admin/users (reload) falhou' + self.detailOf(err);
-                })
-                .then(function () { self.loading = false; });
-        },
-        goTo(page) {
-            // Clamps: entrada do "Ir para página" pode ser vazia/0/fora do intervalo.
-            const target = Math.min(Math.max(1, parseInt(page, 10) || 1), Math.max(1, this.totalPages));
-            if (target !== this.page || target === 1) this.loadUsers(target);
-        },
-        setPerPage(n) {
-            this.perPage = n;
-            this.loadUsers(1);
-        },
-        setSort(col) {
-            if (this.sort === col) {
-                this.order = this.order === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sort = col;
-                this.order = 'asc';
-            }
-            this.loadUsers(1);
         },
         addUser() {
             const self = this;
@@ -262,10 +194,10 @@ export default {
                     self.form.name = '';
                     self.form.password = '';
                     self.form.roles = '';
-                    return self.loadUsers(1);
+                    return self.loadRows(1);
                 })
                 .catch(function (err) {
-                    self.error = 'POST /admin/users falhou' + self.detailOf(err);
+                    self.error = 'POST /admin/users falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.saving = false; });
         },
@@ -292,9 +224,9 @@ export default {
         fieldDisabled(f, row) {
             return f === 'roles' && (this.isSelf(row) || !this.$auth.hasRole('admin'));
         },
-        startEdit(row) {
-            this.editingId = row.id; // o buffer preenche-se na DataTable (meta.editable)
-        },
+        // A sessão de edição (editingId) é do mixin listPage — startEdit/
+        // cancelEdit vêm de lá; o buffer dos inputs preenche-se na DataTable
+        // (meta.editable).
         // A DataTable emite { id, values } (só campos editáveis, aparados). O
         // PUT vive aqui: o editor só fecha quando o PUT teve sucesso (ou
         // cancelamento) — num 403/422 fica aberto com o que o utilizador
@@ -311,64 +243,34 @@ export default {
             self.$api.admin.updateUser(payload.id, body)
                 .then(function () {
                     self.editingId = null;
-                    return self.reloadUsers();
+                    return self.reloadRows();
                 })
                 .catch(function (err) {
-                    self.error = 'PUT /admin/users/' + payload.id + ' falhou' + self.detailOf(err);
+                    self.error = 'PUT /admin/users/' + payload.id + ' falhou' + self.$http.describe(err);
                 });
         },
         removeUser(row) {
             const self = this;
             self.error = '';
             self.$api.admin.removeUser(row.id)
-                .then(function () { return self.reloadUsers(); })
+                .then(function () { return self.reloadRows(); })
                 .catch(function (err) {
-                    self.error = 'DELETE /admin/users/' + row.id + ' falhou' + self.detailOf(err);
+                    self.error = 'DELETE /admin/users/' + row.id + ' falhou' + self.$http.describe(err);
                 });
-        },
-        // Mensagem curta por status: 422 mostra o campo e, se existir, a mensagem do
-        // mock (ex.: "o username já existe"); 403 é "sem permissão" (sessão mantida).
-        detailOf(err) {
-            const res = err && err.response;
-            if (!res) return '';
-            const d = res.data || {};
-            if (res.status === 422) {
-                if (d.message) return ' (422 — ' + d.message + ')';
-                if (d.field) return ' (422 validação: campo ' + d.field + ')';
-            }
-            return ' (HTTP ' + res.status + ')';
         },
     },
 };
 </script>
 
 <style scoped>
-/* Apresentação própria das células (slots cell-name/cell-roles) e do resumo —
-   o resto da tabela (bordas, th uppercase, edição inline, td-actions) é CSS da
-   própria DataTable: uma só fonte de estilo, como de contrato. */
+/* Apresentação própria das células (slots cell-name/cell-roles) — o resto da
+   tabela (bordas, th uppercase, edição inline, td-actions) é CSS da própria
+   DataTable e os badges são globais do App.vue: uma só fonte, como de contrato. */
 .user-line {
     display: block;
-    color: #667085;
+    color: var(--text-soft);
     font-size: 0.82rem;
     margin-top: 0.1rem;
-}
-.roles-summary .badge {
-    margin-left: 0.3rem;
-}
-.badge {
-    display: inline-block;
-    padding: 0.1rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-.badge-admin {
-    background: #ede9fe;
-    color: #6d28d9;
-}
-.badge-user {
-    background: #e0f2fe;
-    color: #0369a1;
 }
 .user-form {
     display: flex;
@@ -382,5 +284,4 @@ export default {
 }
 .user-form input[placeholder*="roles"] {
     flex: 1.5 1 170px;
-}
-</style>
+}</style>

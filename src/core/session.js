@@ -144,6 +144,33 @@ const auth = {
         setRefreshToken(null);
         setUser(null);
     },
+
+    /**
+     * Integridade sessão-memória vs. localStorage (current behavior): se ALGUÉM editou o
+     * token/refresh/perfil no DevTools COM a app a correr, a memória continua a
+     * carregar o token ORIGINAL (lido só no arranque) e os pedidos saem válidos
+     * — a adulteração ficaria invisível até ao próximo F5. Esta comparação
+     * detecta a divergência NO ACTO e é fail-closed: qualquer byte diferente
+     * (ou chave apagada) => clearSession() + false. O guard do router chama-a
+     * em CADA navegação e o watcher de app/router.js também a cada 1.5s, para
+     * apanhar a adulteração mesmo sem navegar. O servidor continua a ser a
+     * autoridade (hash no registry): isto é apenas para expulsar a sessão
+     * local cedo, sem esperar pelo 401.
+     * @returns {boolean} true = storage coerente com a memória (ou sem sessão)
+     */
+    storageIntact() {
+        if (!state.token) return true; // sem sessão em memória: nada a proteger
+        const intact = storageGet(config.auth.tokenKey) === state.token
+            && storageGet(config.auth.refreshTokenKey) === (state.refreshToken || null)
+            && storageGet(config.auth.userKey) === (state.user ? JSON.stringify(state.user) : null);
+        if (!intact) {
+            // Divergência => a sessão local já não é fiável: fora, sem esperar
+            // pelo 401 do servidor (que também viria — o hash não casa).
+            this.clearSession();
+            return false;
+        }
+        return true;
+    },
 };
 
 export default auth;

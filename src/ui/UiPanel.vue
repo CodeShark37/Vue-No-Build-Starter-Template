@@ -21,8 +21,8 @@ export default {
 
 <style scoped>
 .panel {
-    background: #fff;
-    border: 1px solid #e8e8e8;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 0.9rem 1.1rem;
     margin: 0 0 1rem;
@@ -31,7 +31,6 @@ export default {
 .card {
     border: none;
     border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(16, 24, 40, 0.09);
+    box-shadow: 0 2px 12px var(--shadow-color);
     padding: 1.1rem 1.25rem 1rem;
-}
-</style>
+}</style>

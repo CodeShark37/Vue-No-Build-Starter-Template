@@ -53,8 +53,7 @@ export default {
                 .then(function (res) { self.stats = res.data.data; })
                 .catch(function (err) {
                     // Não devia acontecer (o guard já filtrou), mas a API é a autoridade.
-                    self.error = 'GET /admin/stats falhou'
-                        + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
+                    self.error = 'GET /admin/stats falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.loading = false; });
         },

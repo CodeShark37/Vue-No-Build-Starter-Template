@@ -11,7 +11,7 @@
 </div>
 
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e?logo=javascript&logoColor=black)
-![Version](https://img.shields.io/badge/version-v12.17.1-blue)
+![Version](https://img.shields.io/badge/version-v12.18-blue)
 [![Release](https://img.shields.io/github/v/release/CodeShark37/Vue-No-Build-Starter-Template?label=release)](https://github.com/CodeShark37/Vue-No-Build-Starter-Template/releases)
 
 **Autor:** [Josué André](https://github.com/CodeShark37)
@@ -43,22 +43,22 @@ em `src/`.
 
 ## Features
 
-- sessões com autoridade no servidor, par access/refresh, rotação, deteção de reutilização
-  e revogação por família;
-- refresh automático single-flight;
+- Sessões com autoridade no servidor, par access/refresh, rotação, deteção de reutilização,
+  revogação por família e integridade do token completo (hash de emissão — token adulterado
+  no localStorage = 401 e logout imediato);
+- Refresh automático single-flight — só para `token_expired`; credencial quebrada (`invalid_token`) não se "cura": expulsa;
 - RBAC/ABAC server-driven com CASL e política editável/reordenável;
 - CRUD factory no mock para todos os recursos com seed;
-- rota de Perfil, guards de rotas e layouts por feature;
+- Rota de Perfil, guards de rotas e layouts por feature;
+- Tema claro/escuro;
 - API mock MirageJS completa;
-- `ui/DataTable.vue`, tabela genérica com ordenação, paginação, edição inline,
-  colunas numéricas, slots e agregados;
-- matriz de intrusão T01–T12 e verificação de sintaxe.
+- Matriz de intrusão T01–T13 e verificação de sintaxe.
 
 ## Instalação
 
 ### Pré-requisitos
 
-- um servidor HTTP local, como VS Code Live Server ou `python3 -m http.server`;
+- um servidor HTTP local, como VS Code Live Server, `python3 -m http.server` ou `php -S localhost:8080`;
 - Node.js `>=18` apenas para executar `npm run check`.
 
 ### Clonar
@@ -85,22 +85,27 @@ Detalhes: [`docs/00-arranque.md`](docs/00-arranque.md) ·
 ## Estrutura
 
 ```text
-index.html  env.js    shell + vendors (defer); env.js é o ÚNICO ficheiro do deploy
-jsconfig.json          IntelliSense/JSDoc; não é build e o browser ignora-o
-vendor/     vendor-dev/           libs de produção vs libs mock só de desenvolvimento
-src/
-  main.js                 composição: mock -> router -> permissões -> serviços -> store
-  app/                    App.vue, router.js, guards.js, services.js, store.js
-  core/                   config, session, ability, http, loader, cache
-  ui/                     layouts, componentes Ui* e DataTable partilhada
-  features/               uma pasta por feature; index.js é o registo único
-    site/  auth/  content/  admin/   (content = posts + books)
-dev/
-  mock/                   Mirage, tokens, sessões, CRUD, rotas e seeds — apagar em produção
-docs/                     documentação, um ficheiro por assunto
-scripts/
-  intrusion-matrix.mjs    matriz T01–T12 contra o código real
-  syntax-check.mjs        verificação de sintaxe dos .vue/.js
+├── index.html
+├── env.js                 Shell, vendors e configuração de ambiente
+├── jsconfig.json          IntelliSense/JSDoc; não é usado pelo browser
+├── vendor/                Bibliotecas de produção
+├── vendor-dev/            Bibliotecas usadas apenas no desenvolvimento
+├── src/
+│   ├── main.js               Composição: mock -> router -> permissões -> serviços
+│   ├── app/                  App.vue, router.js, guards.js, services.js e store.js
+│   ├── core/                 Configuração, sessão, permissões, HTTP, loader e cache
+│   ├── ui/                   Layouts e componentes genéricos
+│   └── features/             Uma pasta por feature; index.js é o registo único
+│       ├── site/
+│       ├── auth/
+│       ├── content/          Posts e books
+│       └── admin/
+├── dev/
+│   └── mock/                 Mirage, tokens, sessões, CRUD, rotas e seeds
+├── docs/                     Documentação, um ficheiro por assunto
+└── scripts/
+    ├── intrusion-matrix.mjs  Matriz T01–T13 contra o código real
+    └── syntax-check.mjs      Verificação de sintaxe dos .vue/.js
 ```
 
 Um componente usado por **uma feature** fica dentro dela. Um componente usado por **duas

@@ -18,7 +18,7 @@
              compilador do sfc-loader e a vista deixa de renderizar. -->
         <UiPanel v-if="!$perm.ability || $perm.can('read', 'Post')" card>
             <DataTable
-                :rows="posts" :columns="postColumns" :loading="loading"
+                :rows="rows" :columns="postColumns" :loading="loading"
                 :editing-id="editingId" :editable-fields="editable"
                 :sorts-allowed="sorts.allowed" :sorts-numeric="sorts.numeric"
                 :page="page" :per-page="perPage" :total="total" :total-pages="totalPages"
@@ -26,7 +26,7 @@
                 noun="posts" empty-text="Sem posts — cria um em baixo."
                 :field-labels="postFieldLabels"
                 :can-edit="canEditPost" :can-remove="canRemovePost"
-                @sort="setSort" @per-page="setPerPage" @refresh="reloadCurrent"
+                @sort="setSort" @per-page="setPerPage" @refresh="reloadRows"
                 @edit="startEdit" @cancel="cancelEdit" @save="saveEdit" @delete="removePost">
                 <!-- Célula do autor: apresentação própria desta vista (nome + badges do
                      ROLE REAL do autor — post.authorRoles, juntado pelo servidor em
@@ -37,12 +37,12 @@
                     <span class="author-name">{{ row.author }}</span>
                     <span class="role-badges">
                         <span v-for="role in (row.authorRoles || [])" :key="role" class="badge"
-                            :class="'badge-role-' + role">{{ role }}</span>
+                            :class="'badge-' + role">{{ role }}</span>
                     </span>
                 </template>
             </DataTable>
             <UiPager :page="page" :total-pages="totalPages"
-                :info="'Mostrando ' + posts.length + ' de ' + total" @go="goTo" />
+                :info="'Mostrando ' + rows.length + ' de ' + total" @go="goTo" />
             <p class="hint">Os botões de editar/apagar aparecem conforme as permissões do utilizador
                 (<code>GET /api/permissions</code> → <code>this.$perm.can(...)</code>): admin pode tudo;
                 o user só nos próprios posts. Os CAMPOS do formulário de edição vêm do servidor
@@ -70,9 +70,12 @@
 
 <script>
 // Vista da zona /content (meta.requiresAuth no PAI, declarada em
-// features/content/index.js) — um ORQUESTRADOR fino: detém o estado dos dados
-// e fala com a API por this.$api.content.posts (makeApi('/posts')); toda a
-// apresentação vive em componentes:
+// features/content/index.js) — um ORQUESTRADOR fino. A MÁQUINA DE LEITURA
+// (estado de paginação/ordenação, GET ?page&per_page&sort&order, recarga
+// pós-mutação, sessão de edição) vem do mixin Vue.listPage (ui/list-page.js,
+// partilhado com BooksView e UsersPanel); aqui fica só o DOMÍNIO: colunas,
+// mutações (POST/PUT/DELETE) e os textos 403 da política. Toda a apresentação
+// vive em componentes:
 //   UiPanel       — caixa/painel padrão (ui/)
 //   DataTable     — TABELA GENÉRICA (ui/): toolbar, ordenação, edição
 //                   inline e acções — colunas por config, células por slot
@@ -80,10 +83,11 @@
 //   PostForm      — criação (v-model + @create)
 //
 // Reactividade — quem depende do quê:
-//  - Tabela e paginação: o GET é a fonte da verdade. Paginação numerada, linhas por
-//    página e ordenação vivem NO SERVIDOR (?page, ?per_page, ?sort, ?order). Depois
-//    de CRIAR, EDITAR ou APAGAR, `reloadCurrent()` re-lê do servidor a página actual
-//    (1 GET): totais, páginas e badges passam a reflectir o estado REAL da API.
+//  - Tabela e paginação: o GET é a fonte da verdade (mixin listPage). Paginação
+//    numerada, linhas por página e ordenação vivem NO SERVIDOR (?page,
+//    ?per_page, ?sort, ?order). Depois de CRIAR, EDITAR ou APAGAR,
+//    reloadRows() re-lê do servidor a página actual (1 GET): totais, páginas
+//    e badges passam a reflectir o estado REAL da API.
 //  - EDIÇÃO server-driven: os campos do formulário de edição são os que o
 //    servidor publica em meta.editable (a lista branca do PUT) — mudar
 //    `editable` em dev/mock/routes/posts.js muda a UI aqui, sem tocar na vista.
@@ -107,26 +111,18 @@ export default {
         UiPager,
         PostForm,
     },
+    // Máquina de leitura server-driven (ui/list-page.js, partilhada com
+    // BooksView e UsersPanel): rows/page/sort/order/loading/error/editingId/
+    // editable/sorts + loadRows/reloadRows/goTo/setPerPage/setSort/startEdit/
+    // cancelEdit. A vista só diz QUE endpoint ler (fetch) e COMO rotular os
+    // erros (label); o texto 403 próprio vem do readError sobreposto a baixo.
+    mixins: [Vue.listPage({
+        label: 'GET /posts',
+        fetch: function (query) { return this.$api.content.posts.list(query); },
+    })],
     data() {
         return {
-            posts: [],
             newTitle: '',
-            page: 1,
-            perPage: 6,
-            total: 0,
-            totalPages: 1,
-            sort: 'id', // coluna activa (?sort=) — tem de estar em meta.sorts.allowed
-            order: 'desc', // 'asc' | 'desc'
-            editingId: null,
-            // Campos editáveis PUBLICADOS pelo servidor (meta.editable da listagem):
-            // a fonte de verdade do formulário de edição é a API, nunca a vista.
-            editable: [],
-            // Contrato de ORDENAÇÃO publicado pelo servidor (meta.sorts):
-            // que ?sort= é aceite e o que compara como número. Define as setas e
-            // a formatação numérica da DataTable — mudar allowedSorts/
-            // numericSorts em dev/mock/routes/posts.js reflecte-se aqui sem
-            // tocar nesta vista.
-            sorts: { allowed: [], numeric: [] },
             // Configuração DAS COLUNAS (só APRESENTAÇÃO): key é o
             // campo exibido (e o ?sort= pedido ao clicar — aceites em
             // meta.sorts.allowed); sub põe o corpo como 2.ª linha; editFields
@@ -138,88 +134,18 @@ export default {
                 { key: 'author', label: 'Autor', width: '10rem' },
             ],
             postFieldLabels: { title: 'Título', body: 'Corpo' },
-            loading: false,
             saving: false,
-            error: '',
         };
     },
-    created() {
-        this.loadPosts(1);
-    },
     methods: {
-        // Parâmetros de leitura: paginação + ordenação, tudo resolvido no servidor.
-        queryFor(page) {
-            return { page: page, per_page: this.perPage, sort: this.sort, order: this.order };
-        },
-        applyPage(res) {
-            const self = this;
-            self.posts = res.data.data;
-            self.page = res.data.meta.page;
-            self.total = res.data.meta.total;
-            self.totalPages = res.data.meta.totalPages;
-            // O contrato de edição chega com a lista — a UI segue o servidor.
-            self.editable = res.data.meta.editable || [];
-            // Idem para a ordenação (setas) e o formato numérico.
-            self.sorts = res.data.meta.sorts || { allowed: [], numeric: [] };
-        },
-        loadPosts(page) {
-            const self = this;
-            self.loading = true;
-            self.error = '';
-            self.$api.content.posts.list(self.queryFor(page))
-                .then(function (res) { self.applyPage(res); })
-                .catch(function (err) {
-                    self.error = self.readError('GET /posts', err);
-                })
-                .then(function () { self.loading = false; });
-        },
-        // Mensagem de falha de leitura: 403 é POLÍTICA (sem regra 'read' — ver
-        // dev/mock/routes/posts.js), com texto próprio; os restantes, o formato geral.
+        // Mensagem de falha de leitura (SOBREPÕE a do mixin): 403 é POLÍTICA
+        // (sem regra 'read' — ver dev/mock/routes/posts.js), com texto próprio;
+        // os restantes, o formato geral (prefixo + $http.describe).
         readError(prefix, err) {
             if (err.response && err.response.status === 403) {
                 return prefix + ' devolveu 403 — a política não dá "read" sobre "Post" ao teu role. Sessão mantida.';
             }
-            return prefix + ' falhou' + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
-        },
-        goTo(page) {
-            // Clamps: entrada do "Ir para página" pode ser vazia/0/fora do intervalo.
-            const target = Math.min(Math.max(1, parseInt(page, 10) || 1), Math.max(1, this.totalPages));
-            if (target !== this.page || target === 1) this.loadPosts(target);
-        },
-        setPerPage(n) {
-            this.perPage = n;
-            this.loadPosts(1);
-        },
-        setSort(col) {
-            if (this.sort === col) {
-                this.order = this.order === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sort = col;
-                this.order = 'asc';
-            }
-            this.loadPosts(1);
-        },
-        // Re-lê do servidor a página actual e SUBSTITUI a lista. É a API quem diz
-        // quantas páginas existem AGORA: nada de adivinhar total/páginas localmente
-        // depois de criar, editar ou apagar. Serve também de botão "Actualizar (GET)".
-        // Se a página actual deixou de existir (ex.: apagou-se o último post dela),
-        // cai para a última página válida devolvida pela meta.
-        reloadCurrent() {
-            const self = this;
-            self.loading = true;
-            self.error = '';
-            return self.$api.content.posts.list(self.queryFor(self.page))
-                .then(function (res) {
-                    if (!res.data.data.length && self.page > 1) {
-                        return self.goTo(res.data.meta.totalPages);
-                    }
-                    self.applyPage(res);
-                    return res;
-                })
-                .catch(function (err) {
-                    self.error = self.readError('GET /posts (reload)', err);
-                })
-                .then(function () { self.loading = false; });
+            return prefix + ' falhou' + this.$http.describe(err);
         },
         createPost(title) {
             const self = this;
@@ -235,7 +161,7 @@ export default {
                     return self.goTo(1);
                 })
                 .catch(function (err) {
-                    self.error = 'POST /posts falhou' + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
+                    self.error = 'POST /posts falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.saving = false; });
         },
@@ -245,15 +171,15 @@ export default {
             self.$api.content.posts.remove(post.id)
                 .then(function () {
                     // Feedback imediato; o GET de recarga confirma o estado real.
-                    self.posts = self.posts.filter(function (p) { return p.id !== post.id; });
-                    return self.reloadCurrent();
+                    self.rows = self.rows.filter(function (p) { return p.id !== post.id; });
+                    return self.reloadRows();
                 })
                 .catch(function (err) {
                     // 403 = sem permissão (a política não dá 'delete' sobre o post): sessão mantida.
                     if (err.response && err.response.status === 403) {
                         self.error = 'DELETE /posts/' + post.id + ' devolveu 403 — a política não dá "delete" sobre este post. Sessão mantida.';
                     } else {
-                        self.error = 'DELETE /posts falhou' + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
+                        self.error = 'DELETE /posts falhou' + self.$http.describe(err);
                     }
                 });
         },
@@ -266,15 +192,10 @@ export default {
             return this.$perm.can('delete', 'Post', post);
         },
         // Edição inline: a DataTable emite intenções ({ id, values }); o PUT vive
-        // aqui. O editingId é CONTROLADO por esta vista — o editor só fecha quando
-        // o PUT teve sucesso (ou cancelamento); num 403 fica aberto com o que o
-        // utilizador escreveu. Sem título não há PUT (o servidor devolveria 422).
-        startEdit(post) {
-            this.editingId = post.id;
-        },
-        cancelEdit() {
-            this.editingId = null;
-        },
+        // aqui (o estado da sessão — editingId — é do mixin listPage). O editor
+        // só fecha quando o PUT teve sucesso (ou cancelamento); num 403 fica
+        // aberto com o que o utilizador escreveu. Sem título não há PUT (o
+        // servidor devolveria 422).
         saveEdit(payload) {
             const self = this;
             if (!payload.values.title) return;
@@ -283,13 +204,13 @@ export default {
                 .then(function () {
                     self.editingId = null;
                     // O estado real chega pelo GET de recarga da página actual.
-                    return self.reloadCurrent();
+                    return self.reloadRows();
                 })
                 .catch(function (err) {
                     if (err.response && err.response.status === 403) {
                         self.error = 'PUT /posts/' + payload.id + ' devolveu 403 — a política não dá "update" sobre este post. Sessão mantida.';
                     } else {
-                        self.error = 'PUT /posts/' + payload.id + ' falhou' + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
+                        self.error = 'PUT /posts/' + payload.id + ' falhou' + self.$http.describe(err);
                     }
                 });
         },
@@ -306,13 +227,10 @@ export default {
 </script>
 
 <style scoped>
-.tag {
-    font-weight: 400;
-    font-size: 0.8rem;
-    color: #888;
-}
+/* .tag/.explain (contexto do h2) e os badges (.badge/.badge-<role>) são
+   globais do App.vue; aqui só a apresentação própria da célula do autor. */
 .explain {
-    color: #555;
+    color: var(--text-soft);
 }
 
 /* ---------- célula do autor (slot cell-author da DataTable) ---------- */
@@ -322,34 +240,4 @@ export default {
 }
 .role-badges {
     display: inline;
-}
-.badge {
-    display: inline-block;
-    padding: 0.28rem 0.7rem;
-    border-radius: 999px;
-    font-size: 0.76rem;
-    font-weight: 600;
-    line-height: 1.2;
-    background: #eef0f3; /* neutro: role desconhecido (sem paleta própria) */
-    color: #475467;
-}
-.badge + .badge {
-    margin-left: 0.25rem;
-}
-.badge-role-admin {
-    background: #f3e8ff;
-    color: #9333ea;
-}
-.badge-role-user {
-    background: #e0f2fe;
-    color: #0284c7;
-}
-.badge-role-editor {
-    background: #fef3c7;
-    color: #b45309;
-}
-.badge-role-viewer {
-    background: #f1f5f9;
-    color: #64748b;
-}
-</style>
+}</style>

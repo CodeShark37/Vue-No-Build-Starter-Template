@@ -12,6 +12,7 @@
 // (requiresAuth/roles/guest) e o guard AVALIA — as vistas nunca verificam sessão.
 
 import config from '../core/config.js';
+import auth from '../core/session.js';
 import { requireAuth } from './guards.js';
 
 /**
@@ -44,5 +45,22 @@ export function createRouter(routes) {
     });
     router.beforeEach(requireAuth);
     router.onError(function (err) { console.error('[router]', err); });
+
+    // Watcher de integridade (current behavior): o guard só corre em navegação — um token
+    // adulterado no DevTools SEM navegar passaria despercebido até à próxima rota.
+    // Este intervalo (1.5s) chama storageIntact() sempre: detectou divergência
+    // localStorage <-> memória => a sessão já foi limpa dentro dele e o utilizador
+    // é levado ao login NO ACTO, sem F5 e sem esperar pelo 401 do servidor. Não
+    // navega se já estamos no login (mesma regra do redirectToLogin em http.js).
+    setInterval(function () {
+        if (auth.storageIntact() || auth.isLoggedIn()) return;
+        if (router.currentRoute.path !== config.auth.redirect) {
+            router.push({
+                path: config.auth.redirect,
+                query: { redirect: router.currentRoute.fullPath },
+            });
+        }
+    }, 1500);
+
     return router;
 }

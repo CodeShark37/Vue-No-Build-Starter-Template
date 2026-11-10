@@ -1,5 +1,5 @@
 # 02 — New page (in an existing feature)
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](01-como-funciona.en.md) · [Next](03-nova-feature.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](01-como-funciona.en.md) · [Next](03-nova-feature.en.md)
 
 To add a page to an existing domain, work only in that feature’s folder.
 
@@ -26,13 +26,13 @@ children: [
   the URL in the table remains relative to the area.
 - **Page title:** views use `vue-head` with `head: { title: { inner, separator, complement } }`.
 - **Route names:** use PascalCase with the area prefix (`ContentPosts`, `AdminUsers`); see the
-  complete convention in `09-convencoes-de-rotas.en.md`.
+  complete convention in [`09-convencoes-de-rotas.en.md`](09-convencoes-de-rotas.en.md).
 
 ## Golden rules
 
 - Keep the **catch-all `*`** (404) last in the route table. It is the site fallback and is
   appended last in `features/index.js`; never add routes after it.
 - A component used by **one feature** stays in that feature. A component used by **two or more**
-  features belongs in `src/ui/` (see `01-como-funciona.en.md`).
+  features belongs in `src/ui/` (see [`01-como-funciona.en.md`](01-como-funciona.en.md)).
 - Do not implement authorization by hand: use `this.$auth.isLoggedIn()` and
-  `this.$perm.can(action, subject, object?)` as appropriate; see `05-login-e-permissoes.en.md`.
+  `this.$perm.can(action, subject, object?)` as appropriate; see [`05-login-e-permissoes.en.md`](05-login-e-permissoes.en.md).

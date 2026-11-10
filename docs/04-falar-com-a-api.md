@@ -1,5 +1,5 @@
 # 04 — Falar com a API
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](03-nova-feature.md) · [Seguinte](05-login-e-permissoes.md) · [English](04-falar-com-a-api.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](03-nova-feature.md) · [Seguinte](05-login-e-permissoes.md) · [English](04-falar-com-a-api.en.md)
 
 ## Um só padrão de acesso nos componentes
 
@@ -14,11 +14,12 @@ Nos `.vue` NÃO se importam `.js` locais (o loader compilaria uma 2ª cópia do 
 | `this.$auth` | `core/session.js` | `isLoggedIn()`, `user`, `hasRole()`, `setSession()`, `clearSession()` |
 | `this.$perm` | `core/ability.js` | `can(action, subject, object?)` |
 | `this.$config` | `core/config.js` | valores derivados (destinos do guard, etc.) |
+| `this.$theme` | `core/theme.js` | tema reactivo: `current`, `set(value)`, `toggle()` |
 | `this.$store` | `app/store.js` | estado global partilhado (módulos namespaced) |
 
 ## API do domínio: `makeApi` é o padrão
 
-**No código fica só a melhor forma.** Para um domínio CRUD canónico (lista/detalhe/criar/editar/apagar sobre um path), o módulo de API nasce de uma linha — `api: makeApi('/posts')` no `index.js` da feature — e nada se escreve à mão:
+**No código fica só a melhor forma.** Para cada domínio CRUD canónico (lista/detalhe/criar/editar/apagar sobre um path), a API nasce de uma linha `makeApi(...)` no `index.js` da feature — e nada se escreve à mão:
 
 ```js
 // features/content/index.js — na zona, cada domínio é uma chave do namespace
@@ -41,7 +42,7 @@ O `makeApi` gera os 5 verbos finos sobre o MESMO axios de `core/http.js` — log
 | `remove(id)` | `DELETE <path>/:id` |
 
 - **URLs vivem num sítio só**: mudar `/posts` é mudar a linha do `makeApi`.
-- **Registo**: `features/index.js` junta as `api` das features num objecto por nome — `this.$api.posts`, `this.$api.admin`. Adicionar uma feature é 1 linha; não há `$api` registado em mais nenhum sítio.
+- **Registo**: `features/index.js` junta as `api` das features num objecto por nome — `this.$api.content.posts`, `this.$api.content.books`, `this.$api.admin`. Adicionar uma feature é 1 linha; não há `$api` registado em mais nenhum sítio.
 - **`auth` não entra no `$api`**: login/refresh/logout/me são ciclo de SESSÃO — vivem em `core/session.js` e o interceptor do `core/http.js` usa-os directamente. Se houvesse `$api.auth`, o core teria de importar features (doutrina: core não conhece nada).
 
 ## Quando o domínio NÃO é canónico: `api.js` à mão
@@ -82,8 +83,8 @@ Regras do api.js à mão:
 - **401** — "não sei quem és": o interceptor tenta `POST /refresh` UMA vez COM O REFRESH TOKEN (single-flight: 401 paralelos partilham o mesmo refresh), repete o pedido com o access novo; se falhar, limpa a sessão e vai para `/login?redirect=…`. Nada disto é código da vista.
 - **403** — "sei quem és, mas não podes": **nunca** limpa sessão nem navega; a vista mostra mensagem inline.
 - **422** — validação: o corpo traz `{error, field, message?}`; os painéis mostram-no inline.
-- **Edição server-driven**: a listagem traz `meta.editable` — os campos que o PUT aceita. A UI desenha os formulários a partir daí (`ui/DataTable.vue`); mudar a lista branca no mock muda a UI sem tocar em vistas. Esconder um botão com `$perm.can(...)` é **UX**; a API continua a responder 403 a quem não pode — defesa em profundidade (ver `05-login-e-permissoes.md`).
+- **Edição server-driven**: a listagem traz `meta.editable` — os campos que o PUT aceita. A UI desenha os formulários a partir daí (`ui/DataTable.vue`); mudar a lista branca no mock muda a UI sem tocar em vistas. Esconder um botão com `$perm.can(...)` é **UX**; a API continua a responder 403 a quem não pode — defesa em profundidade (ver [`05-login-e-permissoes.md`](05-login-e-permissoes.md)).
 
 ## Lista completa de endpoints
 
-Ver `06-mock-api.md` (tabela com auth, respostas e validações).
+Ver [`06-mock-api.md`](06-mock-api.md) (tabela com auth, respostas e validações).

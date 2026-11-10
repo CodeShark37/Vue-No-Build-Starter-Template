@@ -4,9 +4,14 @@
 // razões:
 //   1. UX do cliente: core/session.js descodifica (sub/username/roles/exp) sem
 //      ir à rede;
-//   2. integridade: cada sessão guarda o hash do payload EXACTO emitido
-//      (hashPayload) — qualquer byte alterado já não casa com o registry
-//      => 401 invalid_token (T01/T09 da matriz de intrusão).
+//   2. integridade: cada sessão guarda o hash do TOKEN EXACTO emitido
+//      (hashToken sobre a STRING COMPLETA — invólucro 'mrg', payload e sufixo
+//      'mock') — QUALQUER byte alterado em QUALQUER segmento já não casa com o
+//      registry => 401 invalid_token (T01/T09/T13 da matriz de intrusão).
+//      O hash é sobre o token inteiro e não só sobre o payload porque o
+//      payloadOf ignora o segmento-3: um hash só do payload deixaria passar um
+//      token com o sufixo trocado — exactamente a adulteração "inofensiva" que
+//      seria aceite sem esta validação.
 // A assinatura é fixa ('mock') por ser um mock; num backend real seria assinado
 // (HS256/RS256) E verificado contra a sessão/denylist. Base64url no padrão
 // clássico (compatível com WebViews antigos sem TextEncoder).
@@ -37,19 +42,22 @@ export function payloadOf(token) {
 }
 
 /**
- * Hash de integridade do payload (FNV-1a + DJB2 combinados, 2x32 bits):
- * DETECÇÃO de adulteração, NÃO é criptografia — qualquer byte alterado no JSON
- * muda o hash; forçar colunação de 64 bits é impraticável para um intruso de
- * página. É o equivalente dev de "o servidor só confia no payload que assinou":
- * um backend real usa HS256/RS256 sobre o mesmo princípio.
- * @param {string} json o JSON EXACTO embutido no token (mesma ordem de chaves)
+ * Hash de integridade de uma STRING (FNV-1a + DJB2 combinados, 2x32 bits):
+ * DETECÇÃO de adulteração, NÃO é criptografia — qualquer byte alterado muda o
+ * hash; forçar colisão de 64 bits é impraticável para um intruso de página. É
+ * o equivalente dev de "o servidor só confia no token que emitiu": um backend
+ * real usa HS256/RS256 sobre o mesmo princípio. Aplica-se ao TOKEN COMPLETO
+ * ('mrg.<payload>.mock') e não só ao payload: o payloadOf ignora o segmento-3,
+ * logo um hash só do payload deixaria passar um token com o sufixo trocado —
+ * a adulteração "inofensiva" que seria aceite sem esta validação.
+ * @param {string} s a string exacta a proteger (o token na forma emitida)
  * @returns {string} hash hex 'h1:h2'
  */
-export function hashPayload(json) {
+export function hashToken(s) {
     let h1 = 0x811c9dc5; // FNV-1a 32-bit
     let h2 = 5381;       // DJB2 32-bit
-    for (let i = 0; i < json.length; i++) {
-        const c = json.charCodeAt(i);
+    for (let i = 0; i < s.length; i++) {
+        const c = s.charCodeAt(i);
         h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
         h2 = (Math.imul(h2, 33) + c) >>> 0;
     }
@@ -67,8 +75,8 @@ export function hashPayload(json) {
  * @param {number} ttlSeconds vida útil do token (config.mirage.tokenTtl / refreshTtl)
  * @param {string} jti identificador da sessão (gerado por sessions.js)
  * @param {string} [type] 'access'|'refresh' — vai no payload como typ
- * @returns {{token: string, payloadHash: string}} token pronto para o header
- *          Authorization + hash do payload EXACTO (guardar no registry)
+ * @returns {{token: string, tokenHash: string}} token pronto para o header
+ *          Authorization + hash do TOKEN EXACTO, invólucro incluído (guardar no registry)
  */
 export function issueToken(user, ttlSeconds, jti, type) {
     const now = Math.floor(Date.now() / 1000);
@@ -82,5 +90,8 @@ export function issueToken(user, ttlSeconds, jti, type) {
         exp: now + ttlSeconds,
     };
     const json = JSON.stringify(payload);
-    return { token: 'mrg.' + b64urlEncode(json) + '.mock', payloadHash: hashPayload(json) };
+    // O hash cobre a STRING COMPLETA do token: qualquer byte alterado no
+    // payload OU no invólucro ('mrg'/'mock') invalida a sessão no registry.
+    const token = 'mrg.' + b64urlEncode(json) + '.mock';
+    return { token: token, tokenHash: hashToken(token) };
 }

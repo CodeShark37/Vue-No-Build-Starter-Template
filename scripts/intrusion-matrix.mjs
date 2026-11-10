@@ -1,6 +1,6 @@
-// Matriz de testes de intrusão T01–T12 — baseline do Vue-No-Build-Starter-Template.
+// Matriz de testes de intrusão T01–T13 — estado actual do Vue-No-Build-Starter-Template.
 //
-// CORRER A CADA MUDANÇA em dev/mock/ ou src/core/ (o verde 12/12 é parte do
+// CORRER A CADA MUDANÇA em dev/mock/ ou src/core/ (o verde 13/13 é parte do
 // contrato do template). Resolve a raiz do template a partir do PRÓPRIO
 // ficheiro — funciona onde o template estiver, sem configuração.
 //
@@ -13,7 +13,7 @@
 //      registra as rotas reais (routes/*.js + crud.js) e dispara pedidos contra elas;
 //   4. imprime a matriz: esperado vs. obtido vs. veredicto.
 //
-// Os testes do lado SERVIDOR são executados (T01–T07, T09–T12); T08 é de navegação
+// Os testes do lado SERVIDOR são executados (T01–T07, T09–T13); T08 é de navegação
 // cliente (vue-router) e fica marcado como "code review" com a justificação.
 //
 // Uso:  node scripts/intrusion-matrix.mjs   (a partir da raiz do template)
@@ -210,7 +210,7 @@ let clockShiftMs = 0;
 const realDateNow = Date.now;
 Date.now = function () { return realDateNow() + clockShiftMs; };
 
-// ---------- 6. a matriz T01–T12 ----------
+// ---------- 6. a matriz T01–T13 ----------
 const results = [];
 function record(id, test, expected, actual, verdict, detail) {
     results.push({ id: id, test: test, expected: expected, actual: actual, verdict: verdict, detail: detail || '' });
@@ -235,7 +235,7 @@ if (!adminLogin.token || !userLogin.token) throw new Error('setup: login demo fa
     record('T01', 'Token adulterado (roles elevadas / exp prolongada)', '401 / 401',
         statuses + (rA.status === 200 || rB.status === 200 ? ' (pedido ACEITE)' : ''),
         pass ? PASS : FAIL,
-        pass ? 'integridade do payload verificada pelo servidor' : 'servidor aceita payload que não emitiu');
+        pass ? 'integridade do token verificada pelo servidor' : 'servidor aceita token que não emitiu');
 })();
 
 // T02 — Token com ID de administrador -> 401
@@ -440,11 +440,11 @@ if (!adminLogin.token || !userLogin.token) throw new Error('setup: login demo fa
     const s = login('subadmin', 'subadmin123');
     const adminBefore = schema.users.find('1');
     const nameBefore = adminBefore.name;
-    const passBefore = adminBefore.password;
+    const hashBefore = adminBefore.passwordHash; // hash PHC — a BD não guarda password
     const rName = call('PUT', '/api/admin/users/1', { token: s.token, body: { name: 'Hijacked Admin' } });
     const rPass = call('PUT', '/api/admin/users/1', { token: s.token, body: { password: 'sub-owned-99' } });
     const admin = schema.users.find('1');
-    const intact = admin.name === nameBefore && admin.password === passBefore;
+    const intact = admin.name === nameBefore && admin.passwordHash === hashBefore;
     // O ADMIN continua a poder editar uma conta admin (a própria incluída):
     const a = login('admin', 'admin123');
     const rAdminSelf = call('PUT', '/api/admin/users/1', { token: a.token, body: { name: nameBefore } });
@@ -461,11 +461,38 @@ if (!adminLogin.token || !userLogin.token) throw new Error('setup: login demo fa
         pass ? 'conta com o role admin só se edita pelo role admin (users.js validateUpdate, 403 antes da forma)' : 'sub-admin toma contas admin pela password nova (escalada de credencial)');
 })();
 
+// T13 — Adulteração do INVÓLUCRO: bytes FORA do payload.
+// O payloadOf só lê o segmento-2 do 'mrg.<payload>.mock': com o hash limitado
+// ao payload (earlier behavior e antes), um token com o sufixo trocado ou o payload
+// re-codificado em base64 padrão era ACEITE (mesmas afirmações, bytes
+// diferentes) — a adulteração "inofensiva" que o devtools deixava passar.
+// O hashToken cobre a STRING COMPLETA do token: qualquer byte fora do
+// lugar já não casa com o registry => 401 invalid_token.
+(function () {
+    const s = login('user', 'user123'); // sessão FRESCA
+    // A) sufixo alterado ('.mock' -> '.moCK'): payload intacto
+    const tSuffix = s.token.replace(/\.mock$/, '.moCK');
+    const rSuffix = call('GET', '/api/me', { token: tSuffix });
+    // B) payload re-codificado em base64 PADRÃO (+/ e padding =): a
+    //    descodificação devolve o MESMO objecto — só os bytes mudam
+    let seg = s.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (seg.length % 4 !== 0) seg += '=';
+    const tB64 = 'mrg.' + seg + '.mock';
+    const rB64 = call('GET', '/api/me', { token: tB64 });
+    const denied = function (r) { return r.status === 401 && r.body && r.body.error === 'invalid_token'; };
+    const pass = denied(rSuffix) && denied(rB64);
+    record('T13', 'Adulteração do invólucro (sufixo / re-codificação b64)', '401 invalid_token nos dois',
+        'sufixo ' + rSuffix.status + (rSuffix.status === 200 ? ' (ACEITE — invólucro não verificado!)' : '')
+        + ' · b64 re-codificado ' + rB64.status + (rB64.status === 200 ? ' (ACEITE — hash só do payload!)' : ''),
+        pass ? PASS : FAIL,
+        pass ? 'hashToken cobre o TOKEN COMPLETO (invólucro incluído): qualquer byte alterado invalida a sessão' : 'servidor só verifica o payload — o invólucro altera-se à vontade');
+})();
+
 // ---------- 7. relatório ----------
 const width = 108;
 const line = '-'.repeat(width);
 console.log(line);
-console.log('MATRIZ DE TESTES DE INTRUSÃO T01–T12 — baseline (' + new Date().toISOString() + ')');
+console.log('MATRIZ DE TESTES DE INTRUSÃO T01–T13 — estado actual (' + new Date().toISOString() + ')');
 console.log('Código sob teste: dev/mock/ (cópia fresca de ' + TEMPLATE + ')');
 console.log(line);
 for (const r of results) {

@@ -28,6 +28,7 @@
 //                               => clearSession + redirect ao login.
 // Até os helpers de demo respeitam "o servidor é a autoridade".
 import { send, parseBody, sessionOf, guard, publicUser, tokenOf } from '../helpers.js';
+import { verifyPassword } from '../password.js';
 import {
     createSessionPair, rotateSession, revokeSession, revokeFamily,
     sessionRowByJti,
@@ -53,7 +54,11 @@ export function register(server, ctx) {
         for (let i = 0; i < users.length; i++) {
             if (users[i].username === body.username) { user = users[i]; break; }
         }
-        if (!user || user.password !== body.password) {
+        // A password viaja em claro no CORPO do pedido (como num backend real —
+        // lá protegida por TLS) e verifica-se contra o `passwordHash` do record
+        // (PBKDF2 com os parâmetros da própria string PHC). Username inexistente
+        // e password errada dão o MESMO 401: nunca dizer qual dos dois falhou.
+        if (!user || !verifyPassword(body.password, user.passwordHash)) {
             return send(Mirage, 401, { error: 'invalid_credentials' });
         }
         // Cada login cria uma sessão e um novo par de tokens.

@@ -1,5 +1,5 @@
 # 03 — New feature
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](02-nova-pagina.en.md) · [Next](04-falar-com-a-api.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](02-nova-pagina.en.md) · [Next](04-falar-com-a-api.en.md)
 
 A feature is a folder with a small contract:
 
@@ -65,10 +65,9 @@ const features = [site, auth, content, admin];
 That is all: `main.js` passes the routes to the router, and `this.$api.<name>` is created
 here. No other file registers `$api` entries.
 
-## The fast path (add a second data resource)
+## Adding a second data resource
 
-The code has a deliberate “didactic path” and “fast path.” Posts and books use the same
-chain: `registerCrud` in the mock, `makeApi` on the client, and `ui/DataTable.vue` in the
+Posts and books use the same chain: `registerCrud` in the mock, `makeApi` on the client, and `ui/DataTable.vue` in the
 view. To add a resource:
 
 1. **Mock.** Instead of copying the policy chain into several files, register the five routes
@@ -134,6 +133,14 @@ automatic protections, the factory accepts `validate`, `validateUpdate`, `valida
   cells and `actions` for row actions. `UsersPanel` demonstrates `fieldTypes`, `fieldDisabled`,
   and `META.roleCounts`. Aggregates that a paginated page cannot derive belong in listing
   metadata via `extraMeta(schema)` in the mock factory.
+- **Read machine for list views:** use the `Vue.listPage` mixin (`ui/list-page.js`, registered in
+  `app/services.js`): pagination/sort state, `loadRows`/`reloadRows` (post-mutation reload with
+  empty-page fallback), `goTo`/`setPerPage`/`setSort`, and the inline-edit session (`editingId`)
+  written once for every list (PostsView, BooksView, and UsersPanel use it). A view declares
+  `mixins: [Vue.listPage({ fetch, label })]` (plus `apply` for metadata extras, e.g. `roleCounts`)
+  and keeps only its domain: columns, mutations, and its own 403 texts (override `readError`).
+  It is never an `import` inside `.vue` (second-module-copy rule): registration happens at boot,
+  on the native module graph.
 - **Components:** used by one feature → keep them there; used by two or more → `src/ui/`.
   Never import local `.js` modules from `.vue`; that would create a second module copy.
 - **Core:** `core/` does not know features. Features import `core/http.js` and `core/loader.js`,

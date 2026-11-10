@@ -11,7 +11,7 @@
 </div>
 
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e?logo=javascript&logoColor=black)
-![Version](https://img.shields.io/badge/version-v12.17.1-blue)
+![Version](https://img.shields.io/badge/version-v12.18-blue)
 [![Release](https://img.shields.io/github/v/release/CodeShark37/Vue-No-Build-Starter-Template?label=release)](https://github.com/CodeShark37/Vue-No-Build-Starter-Template/releases)
 
 **Author:** [Josué André](https://github.com/CodeShark37)
@@ -43,22 +43,22 @@ live in `src/`.
 
 ## Features
 
-- server-authoritative sessions with an access/refresh pair, rotation, reuse detection,
-  and family revocation;
-- automatic single-flight refresh;
-- server-driven RBAC/ABAC with CASL and an editable, reorderable policy;
-- a seeded CRUD factory in the mock API for every seeded resource;
-- a Profile route, route guards, and feature-based layouts;
-- a complete MirageJS mock API;
-- `ui/DataTable.vue`, a generic table with sorting, pagination, inline editing, numeric
-  columns, slots, and aggregates;
-- the T01–T12 intrusion matrix and syntax checks.
+- Server-authoritative sessions with an access/refresh pair, rotation, reuse detection,
+  family revocation, and complete-token integrity (issuance hash — a token tampered in
+  localStorage returns 401 and logs out immediately);
+- Automatic single-flight refresh — only for `token_expired`; a broken credential (`invalid_token`) is not silently “healed”: it logs out;
+- Server-driven RBAC/ABAC with CASL and an editable, reorderable policy;
+- A seeded CRUD factory in the mock API for every seeded resource;
+- A Profile route, route guards, and feature-based layouts;
+- Light/dark theme;
+- A complete MirageJS mock API;
+- The T01–T13 intrusion matrix and syntax checks.
 
 ## Installation
 
 ### Prerequisites
 
-- a local HTTP server, such as VS Code Live Server or `python3 -m http.server`;
+- a local HTTP server, such as VS Code Live Server, `python3 -m http.server`, or `php -S localhost:8080`;
 - Node.js `>=18` only for running `npm run check`.
 
 ### Clone
@@ -85,22 +85,27 @@ Details: [`docs/00-arranque.en.md`](docs/00-arranque.en.md) ·
 ## Structure
 
 ```text
-index.html  env.js    shell + vendors (defer); env.js is the ONLY deployment file
-jsconfig.json          IntelliSense/JSDoc; not a build and ignored by the browser
-vendor/     vendor-dev/           production libraries vs development-only mock libraries
-src/
-  main.js                 composition: mock -> router -> permissions -> services -> store
-  app/                    App.vue, router.js, guards.js, services.js, store.js
-  core/                   config, session, ability, http, loader, cache
-  ui/                     layouts, Ui* components, and the shared DataTable
-  features/               one folder per feature; index.js is the single registry
-    site/  auth/  content/  admin/   (content = posts + books)
-dev/
-  mock/                   Mirage, tokens, sessions, CRUD, routes, and seeds — delete in production
-docs/                     documentation, one file per topic
-scripts/
-  intrusion-matrix.mjs    T01–T12 matrix against the real code
-  syntax-check.mjs        syntax checks for .vue/.js
+├── index.html
+├── env.js                 Shell, vendors, and environment configuration
+├── jsconfig.json          IntelliSense/JSDoc; not used by the browser
+├── vendor/                Production libraries
+├── vendor-dev/            Development-only libraries
+├── src/
+│   ├── main.js               Composition: mock -> router -> permissions -> services
+│   ├── app/                  App.vue, router.js, guards.js, services.js, and store.js
+│   ├── core/                 Configuration, session, permissions, HTTP, loader, and cache
+│   ├── ui/                   Layouts and generic components
+│   └── features/             One folder per feature; index.js is the single registry
+│       ├── site/
+│       ├── auth/
+│       ├── content/          Posts and books
+│       └── admin/
+├── dev/
+│   └── mock/                 Mirage, tokens, sessions, CRUD, routes, and seeds
+├── docs/                     Documentation, one file per topic
+└── scripts/
+    ├── intrusion-matrix.mjs  T01–T13 matrix against the real code
+    └── syntax-check.mjs      Syntax checks for .vue/.js
 ```
 
 A component used by **one feature** stays inside that feature. A component used by **two

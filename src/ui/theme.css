@@ -1,0 +1,147 @@
+/* Tokens de tema — UMA fonte de verdade para toda a cor da app.
+ *
+ * Paleta conforme o guia de especificação de tema: light em escala Slate,
+ * dark em Slate/Dark Navy com profundidade por camadas (app < surface <
+ * elevated). Os hex da spec mapeiam nos tokens abaixo; os poucos tokens
+ * extra (faint, border-strong/soft, estado) derivam das MESMAS escalas.
+ *
+ * Como funciona: os componentes nunca escrevem hex; usam var(--token).
+ * O tema activo é o atributo data-theme em <html> ('light'|'dark'), definido
+ * pelo boot síncrono de core/theme-boot.js ANTES da 1.ª pintura (sem flash
+ * branco) e mantido por core/theme.js (toggle na navbar, persistência,
+ * follow do SO). Este ficheiro é CSS estático (<link> no head): não depende
+ * do loader nem do Vue — a cor certa está aplicada antes de a app existir.
+ */
+:root {
+    color-scheme: light;
+
+    /* Superfícies (bg-app, bg-surface, bg-subtle da spec) */
+    --bg: #f8fafc;             /* fundo da página (Slate 50) */
+    --surface: #ffffff;        /* cartões, navbar, botões (branco puro) */
+    --surface-hover: #f1f5f9;  /* hover de botão/aba */
+    --surface-sunken: #f1f5f9; /* th da tabela, inputs, segmented (bg-subtle) */
+    --surface-tint: #f8fafc;   /* hover de linha, caixas de detalhe */
+    --code-bg: #f1f5f9;
+
+    /* Linhas (border-color da spec + derivações Slate 300/para divisores) */
+    --border-strong: #cbd5e1;  /* arestas de controlos (inputs, botões) */
+    --border: #e2e8f0;         /* arestas de cromo (navbar, painéis, th) */
+    --border-soft: #eef2f6;    /* separadores de linha de tabela */
+
+    /* Texto (text-main, text-muted, text-disabled da spec) */
+    --text: #0f172a;
+    --text-soft: #64748b;
+    --text-faint: #94a3b8;
+    --text-disabled: #475569;
+
+    /* Primário (primary / primary-hover da spec) */
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-soft: #dbeafe;
+    --ring: rgba(37, 99, 235, 0.35); /* foco de inputs (focus ring) */
+    --inverse-bg: #0f172a;     /* fundo do elemento activo (ex.: página actual) */
+    --inverse-fg: #ffffff;
+
+    /* Controlos: inputs em "poço", botões secundários e pílulas activas
+       (aba da zona, página actual da paginação) — como no mockup de referência */
+    --input-bg: #ffffff;
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #f1f5f9;
+    --tab-active-bg: #ffffff;  --tab-active-fg: #2563eb;
+    --pill-active-bg: #0f172a; --pill-active-fg: #ffffff;
+
+    /* Estado — danger em vermelho Tailwind (red-600/700/50/100/200), como no mockup */
+    --danger: #dc2626;
+    --danger-strong: #b91c1c;
+    --danger-soft: #fef2f2;
+    --danger-soft-hover: #fee2e2;
+    --danger-border: #fecaca;
+    --ok: #15803d;
+    --ok-soft: #ecfdf3;
+    --accent: #7c3aed;
+    --accent-soft: #f5f3ff;
+    --info-soft: #f4f8ff;
+    --info-border: #dbe7fb;
+
+    /* Badges de role (paleta da spec, modo claro) */
+    --badge-admin-bg: #f3e8ff;  --badge-admin-fg: #6b21a8;
+    --badge-user-bg: #dbeafe;   --badge-user-fg: #1d4ed8;
+    --badge-editor-bg: #fef3c7; --badge-editor-fg: #b45309;
+    --badge-viewer-bg: #e0f2fe; --badge-viewer-fg: #0369a1;
+    --badge-neutral-bg: #f1f5f9; --badge-neutral-fg: #475569;
+
+    /* Sombra dos cartões "dashboard" */
+    --shadow-color: rgba(15, 23, 42, 0.09);
+
+    /* Estrutura do cromo (independente do tema): altura REAL do AppNavbar em
+       UMA linha — .nav padding 0.75rem×2 + item mais alto da linha
+       (theme-toggle 2rem) + border-bottom 1px = 57px. Consumida pelo sticky
+       do sidebar do AdminLayout, que tem de colar POR BAIXO da navbar
+       (sticky top: 0, z-index 20). Medido a 721/760/800/900px: 57px em
+       todas; ≤720px o sidebar do Admin volta a static (a navbar pode
+       empilhar linhas e o offset fixo deixaria de ser verdade). Se mudares
+       o padding ou a altura da linha da navbar, actualiza este token. */
+    --topbar-h: calc(3.5rem + 1px);
+}
+
+/* Tema escuro: Slate/Dark Navy da spec — profundidade por camadas
+   (bg < surface < elevated); só substitui tokens, nenhum componente muda. */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg: #090d16;             /* bg-app: navy profundo */
+    --surface: #111827;        /* bg-surface: cartões, tabelas */
+    --surface-hover: #1f2937;  /* bg-surface-elevated: modais, dropdown, hover */
+    --surface-sunken: #1f2937; /* th, inputs, segmented */
+    --surface-tint: #17202e;   /* hover de linha (mistura surface<elevated), detalhes */
+    --code-bg: #1f2937;
+
+    --border-strong: #4b5563;  /* derivação Gray 600 para controlos */
+    --border: #374151;         /* border-color da spec */
+    --border-soft: #262f3d;    /* separadores discretos sobre surface */
+
+    --text: #f3f4f6;           /* text-main: branco suave */
+    --text-soft: #9ca3af;      /* text-muted */
+    --text-faint: #6b7280;
+    --text-disabled: #6b7280;  /* text-disabled */
+
+    --primary: #3b82f6;
+    --primary-hover: #60a5fa;
+    --primary-soft: #1e3a8a;
+    --ring: rgba(59, 130, 246, 0.4);
+    --inverse-bg: #f3f4f6;
+    --inverse-fg: #111827;
+
+    --input-bg: #030712;       /* poço: mais fundo que o bg-app (mockup: slate-950) */
+    --btn-bg: #1f2937;         /* secundários elevados sobre os cartões */
+    --btn-bg-hover: #2b3648;
+    --tab-active-bg: #3b82f6;  --tab-active-fg: #ffffff;
+    --pill-active-bg: #3b82f6; --pill-active-fg: #ffffff;
+
+    --danger: #f87171;
+    --danger-strong: #fca5a5;
+    --danger-soft: #331a1d;
+    --danger-soft-hover: #402024;
+    --danger-border: #5c2327;
+    --ok: #52d188;
+    --ok-soft: #1d3d33;
+    --accent: #bb99f7;
+    --accent-soft: #352b50;
+    --info-soft: #1f2e46;
+    --info-border: #375079;
+
+    /* Badges de role (paleta da spec, modo escuro) */
+    --badge-admin-bg: #4c1d95;  --badge-admin-fg: #c084fc;
+    --badge-user-bg: #1e3a8a;   --badge-user-fg: #93c5fd;
+    --badge-editor-bg: #78350f; --badge-editor-fg: #fbbf24;
+    --badge-viewer-bg: #134e4a; --badge-viewer-fg: #2dd4bf;
+    --badge-neutral-bg: #374151; --badge-neutral-fg: #e5e7eb;
+
+    --shadow-color: rgba(0, 0, 0, 0.45);
+}
+
+/* O html pinta o fundo do tema desde o 1.º frame: sem faixa branca no boot
+   nem no overscroll. */
+html {
+    background: var(--bg);
+}

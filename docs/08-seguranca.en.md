@@ -1,13 +1,7 @@
 # 08 — Security (OWASP Top 10, routes, and session audit)
 > **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](07-producao.en.md) · [Next](09-convencoes-de-rotas.en.md)
 
-This security audit covers the template’s history from v12.11 through v12.16 and its current
-**v12.17.1** state. An **ethical hacker** performed each test against the running application;
-the evidence is recorded as EXP1–EXP7 below. The identity and session lifecycle was also
-validated with the **T01–T12 intrusion test matrix** against the mock API, using a Node harness
-that exercises the real code. The audit confirms the template’s central rule: **the UI hides,
-the API decides**. Since v12.12, the server-side session registry is authoritative for identity
-and session lifecycle.
+This is the template’s current security audit. An **ethical hacker** executed the documented exploit checks against the running application. Identity and session lifecycle are validated by the **T01–T13 intrusion matrix** against the mock API using a Node harness that imports the real code. The central rule is: **the UI hides, the API decides**; the server-side session registry is authoritative.
 
 ## Threat model for this template
 
@@ -25,15 +19,16 @@ The audit therefore separates three layers:
 
 ## exploit evidence (executed against the running app)
 
-| # | attack | result | classification |
+| # | Attack | Result | Classification |
 | --- | --- | --- | --- |
-| EXP1 | token forged `mrg.<payload>.mock` (sub=1, roles=[admin], signature invented) attempted `GET /api/admin/stats` | **v12.11: HTTP 200** with the data — the mock checked format, user, and expiration, but not issuance. **v12.12: HTTP 401** — a token without a registry-issued `jti` is rejected (T02 of the matrix) | **fixed in v12.12** (registry of sessions; only exists when `mock: true`) |
-| EXP2 | read the `mock-db-*` dump from localStorage | **Passwords in plaintext** (admin/admin123, …) | Dev-only by design (the demo seeds are text). It never reaches production because deployment removes `dev/`. |
-| EXP3 | Spoof roles in an ordinary user’s `localStorage.user` (`roles:["admin"]`) and reload | The navigation shows **Admin** and `[admin]`, but `GET /api/admin/users` with that user’s token returns **HTTP 403** | **The API re-verifies (defense in depth works).** The spoof misleads the UI but never changes data. |
-| EXP4 | Post created through the API with title `<img src=x onerror=…><b>bold</b>` | The cell renders escaped text (`payloadComoTexto: true`; no `<img>` or `<b>` elements are created) | **Not exploitable:** no `v-html` occurs in `src/` (grep: 0 occurrences); Vue escapes interpolation. |
-| EXP5 | `GET /api/posts?per_page=9999&sort=1%3D1&order=ASC` | `META.perPage` **is clamped to 50**; sort unknown falls back to the `defaultSort`; order invalid falls back to the default | **not exploitable**: whitelist `allowedSorts` + clamp `maxPerPage` on the server |
-| EXP6 | `POST /api/refresh` with a token that expired 60 seconds ago | **v12.11: HTTP 200** + a new token, indefinitely. **v12.12**: renewal occurs only when the session exists in the registry and has not been revoked; refresh also rotates the jti (the old token expires) | **fixed in v12.12** (rotation + registry; T03 of the matrix) |
-| EXP7 | A sub-admin (with `update User` but not the admin role) sends `PUT /api/admin/users/1` for the ADMIN account and changes the name and **password** | **v12.15: HTTP 200** — escalation protection covered only `roles`; the sub-admin could set a password and take over the target’s account. **v12.16: HTTP 403** — accounts with the admin role may be edited only by an administrator, before validation | **Fixed in v12.16** (`users.js` `validateUpdate`; T12 of the matrix) |
+| EXP1 | Forge `mrg.<payload>.mock` and call `GET /api/admin/stats` | HTTP 401: a token without a registry-issued `jti` is rejected | Not exploitable in the mock: registry-backed identity |
+| EXP2 | Read the `mock-db-*` localStorage dump | It contains only `passwordHash` values in PHC PBKDF2-HMAC-SHA256 format; plaintext exists only in provisioning and the login body | Controlled in the mock; a real backend must use argon2id/bcrypt with a random salt |
+| EXP3 | Spoof roles in `localStorage.user` | The UI may show Admin, but the API returns 403 without permission | The API revalidates server-side |
+| EXP4 | Put XSS markup in a post title | Text is escaped and no HTML element is created | Not exploitable: the app has no `v-html` |
+| EXP5 | Send out-of-range pagination and sorting parameters | `per_page` is capped at 50 and `sort`/`order` use allowlists | Not exploitable in the mock |
+| EXP6 | Refresh an expired session | Only an existing, non-revoked session renews; rotation invalidates the old pair | Not exploitable in the mock |
+| EXP7 | Sub-admin edits an administrator account | HTTP 403 before shape validation | Not exploitable: administrator accounts require an administrator |
+| EXP8 | Tamper with the token in localStorage | HTTP 401 `invalid_token` and immediate logout; broken credentials are never silently refreshed | Not exploitable in the mock |
 
 ## OWASP Top 10 (2021), item by item
 
@@ -49,7 +44,7 @@ The audit therefore separates three layers:
   (authorship is never editable), `['title','author']` in the books (`creatorId` never),
   `['name','password','roles']` in the users (only by an admin, with self-lockout: the
   admin not changes the own roles or delete their own account — 422).
-- **target administrator account (v12.16)**: an account with the admin ROLE only when edited by the
+- **target administrator account (current state)**: an account with the admin ROLE only when edited by the
   admin ROLE — 403 before validation. The same applies to anyone who only has the `update User`
   rule (EXP7/T12: without this check, a sub-admin could take over an administrator account by
   changing its password).
@@ -66,26 +61,27 @@ The audit therefore separates three layers:
   primitives), so injected prototypes and expressions are rejected. Placeholders accept only
   `${user.<field>}` (regex `\w+`) and are materialized from the current session user.
 
-**limitations (documented mock design):**
-- ~~EXP1: without signature verification, any JS of the page if does pass by
-  admin.~~ **Fixed in v12.12**: the server trusts only what it issues — the token
-  references the session in the registry (`sessions.js`) and the payload contains the hash recorded
-  at issuance. Forged or tampered tokens return 401. In a real backend, the token is signed
-  (HS256/RS256) and verified against the session or denylist.
-- The client guard reads `$auth.user` from localStorage, which is spoofable; this is a UX
-  limitation by design. The API makes the decision, as EXP3 demonstrates.
+**Mock characteristics and limits:**
+- The token uses a detection hash over the complete string, not a cryptographic signature. A real backend must sign tokens (HS256/RS256) and verify them against a session or denylist.
+- localStorage integrity checks trigger early local logout; the API remains authoritative and revalidates the token.
+- The mock is development-only and must be removed from deployment.
 
 ### A02 — Cryptographic Failures
 
-- Plaintext passwords in the mock (seeds + database + dump localStorage, EXP2): acceptable
-  development only; `docs/07` requires deleting `dev/` in the deployment. the backend
-  real uses argon2id/bcrypt with salt.
-- `publicUser()` is the only user-output formatter; passwords are never returned by any route
-  (lists, details, login, refresh, or profile).
-- FNV-1a in the dump signature and **hashPayload (FNV-1a+DJB2)** for token integrity are
-  explicitly non-cryptographic. They detect changes (stale dumps or tampered payloads) but do not
-  prevent deliberate 64-bit collisions. The code comment states this; the real signature belongs
-  to the backend (HS256/RS256).
+- Passwords: the database/dump stores ONLY `passwordHash` (PBKDF2-HMAC-SHA256,
+  PHC format `algo$iter$salt$hash`, current state — `dev/mock/password.js`); the plaintext
+  password exists only in the form field, the `POST /login` body and the provisioning
+  script (`seeds/users.js` `demoAccounts`, the equivalent of a `.env`). Accepted mock
+  limitations: synchronous PBKDF2 (Mirage handlers are synchronous — argon2id would
+  need async/WASM) and a deterministic per-account salt (the seeds are signed; a random
+  salt would break the dump persistence). A real backend uses argon2id/bcrypt with a
+  random salt.
+- `publicUser()` is the only user-output formatter; the password and its hash
+  are never returned by any route (lists, details, login, refresh, or profile).
+- FNV-1a in the dump signature and **hashToken (FNV-1a+DJB2)** for token integrity are
+  explicitly non-cryptographic. They detect changes (stale dumps or a tampered token in
+  ANY segment) but do not prevent deliberate 64-bit collisions. The code comment states
+  this; the real signature belongs to the backend (HS256/RS256).
 - No secrets are stored in client code. The client has no API keys; all sensitive material belongs
   to the real backend.
 - Transport: production requires HTTPS and HSTS (`docs/07`); the token is sent in the
@@ -124,7 +120,7 @@ The audit therefore separates three layers:
 
 ### A05 — Security Misconfiguration
 
-- **Fixed in v12.11:**
+- **Fixed in earlier state:**
   - `withCredentials: false` in `core/http.js` (previously `true`; that would send cookies
     automatically to the real API and unnecessarily expand the CSRF surface; the app authenticates with Bearer).
   - Login no longer pre-fills `admin/admin123` or shows the demo hint outside
@@ -142,7 +138,7 @@ The audit therefore separates three layers:
 
 ### A06 — Vulnerable and Outdated Components
 
-- **Fixed in v12.11: axios 1.6.0 → 1.21.0.** Version 1.6.0 was in the affected
+- **Fixed in earlier state: axios 1.6.0 → 1.21.0.** Version 1.6.0 was in the affected
   range for **CVE-2025-27152** (SSRF/credential leakage through an absolute URL
   that ignores `baseURL`; fixed in 1.8.2). The attack path is narrow in this template
   because user input is never passed as an absolute Axios URL, but outdated vendored
@@ -168,7 +164,7 @@ The audit therefore separates three layers:
   `autocomplete="new-password"` (ProfileView).
 - token mock: access TTL short (120s) + refresh (7 days), single-flight in the interceptor (the only
   POST /refresh for N requests parallel; retry single by request).
-- **Fixed in v12.12 (the server is authoritative for sessions):**
+- **Fixed in earlier state (the server is authoritative for sessions):**
   - Registry of sessions (`dev/mock/sessions.js`): only ISSUED sessions open the
     API — forged or tampered tokens return 401 (EXP1/T01/T02 closed).
   - Logout revokes the session (T04), and changing the password revokes all sessions
@@ -180,8 +176,8 @@ The audit therefore separates three layers:
     Roles come from the database on every request, while validity comes from the registry.
 - **remaining mock limitations (responsibility of the real backend):** without rate
   limiting/lockout in the `/login`; minimum password of 4 and in plaintext (A02); without MFA.
-- demo credentials are not suggested outside development (v12.11).
-- Logout has been **server-side** since v12.12 (revocation); the client clears its local
+- demo credentials are not suggested outside development (earlier state).
+- Logout has been **server-side** since earlier state (revocation); the client clears its local
   session at the same time. `POST /logout` tolerates an already-revoked token.
 
 ### A08 — Software and Data Integrity Failures
@@ -210,7 +206,7 @@ The audit therefore separates three layers:
   only loads paths declared in code (features/index.js, routes) the start
   of the root of the app (`config.root`), same-origin.
 - the API mock makes no outbound requests. (the CVE-2025-27152 of the axios old was
-  SSRF by absolute URL — deleted by the update v12.11.)
+  SSRF by absolute URL — deleted by the update earlier state.)
 
 ## Route security and retry behavior
 
@@ -239,71 +235,35 @@ The audit therefore separates three layers:
 | Storage | Access token, refresh token, and profile in `localStorage` (only `core/session.js` accesses them; the refresh token is sent only to `POST /refresh`) | readable by any XSS. In production, use `httpOnly; Secure; SameSite` cookies or short-TTL `sessionStorage`, according to the backend |
 | Issuance | `POST /login` → **new access/refresh pair in the registry** (`sessions.js`, same `family`) whose tokens reference them by `jti` | the server trusts only what it issues; a real backend uses a signed JWT and server-side verification |
 | Credential types | **access** (short, all the requests) and **refresh** (long, only `/refresh`) — the types must not be mixed on any route (`validateSession` expectType; omission = access) | Refresh used in an route common = 401; access in the `/refresh` = 401 (T03) |
-| Payload integrity | hash recorded in the Issuance (`hashPayload`); any byte changed = 401 | T01/T09: adulterar roles/sub/exp not changes nothing — 401 |
+| Token integrity | hash of the COMPLETE token recorded at issuance (`hashToken`, current state); any byte changed, payload OR wrapper, = 401 | T01/T09/T13: altering roles/sub/exp, changing the `.mock` suffix or re-encoding the b64 changes nothing — 401 `invalid_token` |
 | Expiration | Access 120s; refresh 7 days (`refreshTtl`); actual validity lives in the registry and uses the server clock; the client calculates access `exp` only for UX | `isExpired()` is a UX indicator; the server always makes the decision (401) |
-| Renewal | Interceptor: 401 → `POST /refresh` with the REFRESH token, single-flight → retries the request with the new access token; failure → logout + redirect | pair rotation — the old refresh token and the family access token are revoked; reuse the refresh already rotated kills the entire family (detection of theft, T03) |
-| Revocation | **Implemented:** logout revokes the family (access + refresh together, T04); change of password revokes all the sessions of the user (T05); the registry remains the denylist in the registry | unlike the previous stateless behavior (EXP6); now the lifecycle is server-controlled |
-| Account deletion | Deleting a user invalidates the token on the next request (`userById` failure → 401 → refresh failure → logout); the user’s sessions remain revoked | This behavior is demonstrated by the mock |
+| Renewal | Interceptor: 401 `token_expired` → `POST /refresh` with the REFRESH token, single-flight → retries the request with the new access token; failure → logout + redirect. **401 `invalid_token` does NOT trigger refresh: immediate logout** (fail-closed, current state — EXP8) | pair rotation — the old refresh token and the family access tokens are revoked; reusing a rotated refresh token kills the entire family (theft detection, T03); a BROKEN credential (tampered/forged/revoked) logs out instead of being “healed” |
+| Revocation | **Implemented:** logout revokes the family (access + refresh together, T04); change of password revokes all the sessions of the user (T05); the registry remains the denylist in the registry | the lifecycle is server-controlled |
+| Account deletion | Deleting a user invalidates the token on the next request (`userById` failure → 401 `invalid_token` → immediate client logout); the user’s sessions remain revoked | This behavior is demonstrated by the mock |
 | Fixation | Login always issues a new session (jti new, without reuse) | OK |
 | Spoof of profile | `localStorage.user` spoofable (EXP3) — UI misleads, API not | by design; “the UI hides, the API decides” is the security boundary |
 
-## intrusion test matrix T01–T12
+## Intrusion test matrix T01–T13
 
-Before each change, the identity/session lifecycle was measured with the intrusion
-matrix against the real code (a Node harness that exercises `dev/mock/`, loads the
-vendored CASL library, and builds Mirage/schema stubs).
+| ID | Test | Acceptance criterion | Current state |
+| --- | --- | --- | --- |
+| T01 | Tampered token (elevated roles / extended exp) | 401 | PASS — complete-token hash |
+| T02 | Forged administrator ID | 401 | PASS — unissued `jti` |
+| T03 | Refresh, rotation, and reuse | forged/wrong type 401; expired renews; reuse revokes family | PASS |
+| T04 | Old token after logout | 401 for access and refresh | PASS — family revoked |
+| T05 | Old token after password change | 401 | PASS — all sessions revoked |
+| T06 | Invalid login with an existing session | existing session remains intact | PASS |
+| T07 | Administrative API with insufficient role | 403 | PASS |
+| T08 | External redirect after login | never leave the origin | PASS by code review |
+| T09 | Elevated roles in token/localStorage | no API access | PASS — 401 |
+| T10 | Changing another resource’s ID | 403/404 and body ignored | PASS |
+| T11 | Sub-admin access to `User` | policy allows read/update only; no create/delete/role changes | PASS |
+| T12 | Administrator account edited by non-admin | 403 and record intact | PASS |
+| T13 | Token wrapper tampering | 401 `invalid_token` | PASS — complete-token hash |
 
-**Run the matrix** from the template root; it is part of the contract —
-run after each change in `dev/mock/` or `src/core/`, must remain 12/12):
+**Current result: 13/13 passed.** T08 is validated by code review; the remaining tests execute the real mock code in the Node harness.
 
-```bash
-node scripts/intrusion-matrix.mjs
-```
-
-It requires only Node >= 18; it does not start a server or browser. The harness copies
-`dev/mock/` to a temporary directory, stubs Mirage/schema, and sends requests directly to
-the real handlers (the same logic that Mirage executes in the page).
-
-**Baseline (v12.11, before the fix): 5/10 passed.** Authorization was server-side (T06–T10),
-but identity and session lifecycle were not (T01–T05): the token itself was treated as the
-credential, and the mock did not maintain session state.
-
-| id | Test | Acceptance criterion | Baseline v12.11 | current state |
-| --- | --- | --- | --- | --- |
-| T01 | tampered token (elevated roles / extended exp) | 401 | **failure** — 200 (payload accepted without issuance) | **passes** — 401 (payload hash recorded at issuance) |
-| T02 | token with an administrator’s ID (forged from scratch) | 401 | **failure** — 200 (ADMIN granted by forged token) | **passes** — 401 (jti not issued) |
-| T03 | Refresh: access/refresh pair, rotation, and reuse | forged or wrong-type token → 401 · real expired token renews · reuse revokes the family | **failure** — 200 (a new admin session was issued from the forged token) | **passes** — forged token 401 · access token on `/refresh` 401 · refresh token on a normal route 401 · real token renews with pair rotation · reuse of a rotated refresh token revokes the family |
-| T04 | old token after logout | 401 (access and refresh) | **failure** — 200 (logout was stateless) | **passes** — both return 401 (family revoked) |
-| T05 | old token after password change | 401 | **failure** — 200 (own account and admin update) | **passes** — 401 (all sessions revoked) |
-| T06 | Invalid login with an existing session | does not start refresh; the existing session remains intact | passes (`canRefresh` excludes login/refresh) | passes (same validation) |
-| T07 | administrative API with insufficient role | 403 | passes (guard `{admin:true}`) | passes (the same validation) |
-| T08 | Redirect external after login | never sign out of the origin | passes (code review: `router.push` never does `location.href`; pushState cross-origin is blocked by the browser; destination strange falls back to the catch-all `*`) | passes (the same validation) |
-| T09 | elevated roles in the token or localStorage | no API access (401/403) | passes — 403 (roles come from the database) | passes — 401 (tampering detected by the hash) |
-| T10 | changing the ID for someone else’s resource | 403/404 + body ignored | passes (owner rule + allowlists + self-scoped profile) | passes (same validation) |
-| T11 | Sub-admin: policy governs the `User` resource | read/update 200 · create/delete 403 · roles 403 · stats/rules 403 · ordinary user 403 | — (did not exist) | **passes** — `User` is enforced by the factory; the `roles` field is reserved for the admin role |
-| T12 | target administrator account edited by someone without the admin role | 403/403 · record intact · admin edits admin 200 · sub-admin edits ordinary user 200 | — (did not exist; **v12.15 returned 200** — credential escalation, EXP7) | **passes** — 403 before validation (`users.js` validateUpdate) |
-
-**Current result: 12/12 passed.** T08 was verified by code review because it concerns client-side
-navigation; the remaining tests run server-side in the harness. T11 (policy-controlled sub-admin)
-and T12 (administrator-account protection) were added as the surface grew.
-
-The matrix closed the following gaps:
-
-1. **Identity** — the token is no longer the credential by itself; its reference (`jti`)
-   identifies a registry session (`dev/mock/sessions.js`). A token not created by login or refresh has no valid `jti`; changing its payload breaks the issuance hash
-   (`hashPayload` in `token.js`). Identity comes from `session.userId` in the registry, never from `payload.sub`.
-2. **Lifecycle** — login issues a session; refresh rotates it (revokes the old jti
-   and issues another); logout revokes it; a password change revokes all sessions
-   for the user (`PUT /profile` and `PUT /admin/users/:id`, through the
-   `afterUpdate` hook in `crud.js`).
-3. **Single validation** — `sessions.validateSession()` is the arbiter for every
-   request (format → jti issued? → revoked? → payload intact? → expired?).
-   `helpers.js` calls it through `sessionOf()`; no route validates sessions independently.
-   Expiration follows the registry’s server clock, not the payload.
-4. **Consistent demos** — the `POST /api/__demo/expire|revoke` endpoints (debug only)
-   change session state on the server; the `$auth.demo*()` methods that rewrote the
-   token on the client were removed (they were the only way the client could forge
-   the session).
+The matrix confirms that identity comes from `session.userId` in the registry, expiry is decided by the server clock, rotation and revocation are server-side, and `401 invalid_token` never triggers refresh.
 
 ## Checklist of the real backend (that the template cannot give)
 
@@ -326,80 +286,3 @@ The matrix closed the following gaps:
    Strict) + an anti-forgery token in forms and requests.
 8. **dependencies**: keep the process `VERSIONS.md` (replace file +
    SHA-256 at the same time commit) and review CVEs for every library update.
-
-## What changed in v12.11 (hardening summary)
-
-| change | file | risk that closes |
-| --- | --- | --- |
-| `withCredentials: false` (before `true`) | `src/core/http.js` | A05/A01 — surface CSRF without requires |
-| Login without credentials demo otherwise dev | `src/features/auth/LoginView.vue` | A07 — suggestion of credentials in production |
-| buttons demo 401 only in `config.debug` | `src/features/auth/SessionPanel.vue` | A05 — UI of demo in production |
-| `$auth.demoExpireToken/demoRevokeToken` reject calls outside localhost | `src/core/session.js` | A05/A07 — prevents overwriting the real session with a demo token |
-| axios 1.6.0 → 1.21.0 + SHA-256 in VERSIONS.md | `vendor/` | A06 — CVE-2025-27152 |
-| Checklist of security in the deployment | `docs/07-producao.en.md` | A05 — headers/HTTPS/mock in the deployment |
-
-## What changed in v12.12 (the server became authoritative for sessions)
-
-| change | file | Test/risk that closes |
-| --- | --- | --- |
-| **Registry of sessions** (new module): createSession/rotateSession/revokeSession/revokeUserSessions/validateSession | `dev/mock/sessions.js` (new) | T01–T05 — identity and cycle of life on the server |
-| token = reference (`jti`) + hash of Payload integrity in the Issuance | `dev/mock/token.js` | T01/T02/T09 — forged or tampered = 401 |
-| `sessionOf()` validates against the registry (identity = `session.userId`, expiration of the server) | `dev/mock/helpers.js` | single validation for all the routes |
-| Login issues session; refresh with rotation; logout revokes | `dev/mock/routes/auth.js` | T03/T04 — EXP6 closed |
-| password new revokes all the sessions of the user | `dev/mock/routes/profile.js` + hook `afterUpdate` in `crud.js` used by `routes/users.js` | T05 (own and by admin) |
-| Model `session` + persistence of the sessions in the dump | `dev/mock/index.js` | sessions survive to the F5 (the restart of backend with store) |
-| Demos 401 through endpoints `POST /api/__demo/expire|revoke` (only `debug`) | `dev/mock/routes/auth.js` | demos operate on real server-side session state |
-| `$auth.demo*()` removed (the client no longer rewrites tokens) | `src/core/session.js` | closes the last client-side session-forgery path |
-| SessionPanel requests expiration/revocation from the server; ProfileView returns to login when the password changes | `src/features/auth/SessionPanel.vue`, `src/features/auth/ProfileView.vue` | UX consistent with the server lifecycle |
-| intrusion matrix T01–T12 (historical baseline 5/10 → current 12/12) | Node harness against `dev/mock/` | executable proof, rerunnable after every change |
-
-Historical conclusion (v12.12): the client-layer risks (XSS, sorting, pagination, Bearer-token
-CSRF, and guard bypass) were tested and found safe. The identity/session lifecycle became
-**server-authoritative**, demonstrated by matrix tests T01–T10: forged, tampered, or revived
-dead sessions all return 401. Remaining concerns are mock-only development limitations
-(plaintext passwords and no rate limiting) and requirements for the real backend, documented
-in the checklist above.
-
-## What changed in v12.13 (access/refresh pair faithful to the real backend)
-
-The goal of the mock is to faithfully reproduce the production server: “delete
-`dev/` and point to the real API” must not change the contract. Therefore the single token
-from v12.12 evolved into the access/refresh pair issued by the real backend:
-
-| change | file | that closes |
-| --- | --- | --- |
-| `createSessionPair()`: login returns `{token, refreshToken, user}` — two registry entries, same `family` | `dev/mock/sessions.js` | production-style pair (short-lived JWT + opaque refresh token in storage) |
-| entries with `type` ('access'/'refresh') and `family`; `validateSession(schema, token, ignoreExpiry, expectType)` | `dev/mock/sessions.js` | token types cannot be mixed: refresh on a normal route = 401; access on `/refresh` = 401 (T03) |
-| `sessionOf()`/`guard()` require access by default — no forgotten route accepts a refresh token | `dev/mock/helpers.js` | credential separation for future routes as well |
-| `/refresh` only accepts REFRESH; pair rotation + **reuse detection** (reusing a rotated refresh token revokes the family and requires login) | `dev/mock/routes/auth.js` | T03 with detection of theft classic |
-| Logout revokes the family (access + refresh together) | `dev/mock/routes/auth.js`, `sessions.js revokeSession/revokeFamily` | T04 with the pair — no credential survives logout |
-| client stores the pair (`core/session.js`, key `refreshToken`), interceptor sends the refresh token to `/refresh` and always overwrites the access token on normal requests | `src/core/session.js`, `src/core/http.js`, `src/core/config.js` (key `auth.refreshTokenKey`) | faithful single-flight refresh; fixes retries with a stale header (refresh 200 + retry 401 reproduced in the browser before the fix) |
-| `refreshTtl` in the config (7 days; access remains 120s) | `src/core/config.js`, `dev/mock/index.js` | separate production TTLs |
-| matrix T03 rewritten (5 scenarios of refresh); T04/T05 validate access and refresh | `scripts/intrusion-matrix.mjs` | proof executable of the pair in that phase — 10/10 |
-
-Browser verification: access expires naturally (120s) → `GET /books` 401
-→ `POST /refresh` 200 (pair rotated) → retry 200 — localStorage contains the new access and refresh tokens, without logout or an error flash.
-
-Conclusion (v12.13): the mock session contract matches the backend contract with **pair
-access/refresh, rotation, family revocation and detection of reuse** —
-only `dev/` is removed in the deployment; the client flow remains identical.
-
-## What changed in v12.16 (target administrator account protection)
-
-The v12.14 implementation (sub-admin governed by policy) left a path open that
-EXP7 showed: the defense of escalation of the v12.14 covered only the field `roles` — the
-A sub-admin (with `update User` but without the admin role) could still change the
-name and **password** of the ADMIN account. The impact is concrete: the new password is
-the credential that the EDITOR knows, and the factory’s `afterUpdate` hook revokes the
-sessions of the target — the admin loses the account on the next request.
-
-| change | file | Test/risk that closes |
-| --- | --- | --- |
-| **defense of the target administrator account**: target with the admin role + editor without that role? 403 (field `target`) before any validation in this path — covers name, password and roles | `dev/mock/routes/users.js` (validateUpdate) | T12 / EXP7 |
-| UX that follows the server: the administrator-account row remains without button of edit for who does not have the admin role (`canEditUser(u)` is determined per row) | `src/features/admin/UsersPanel.vue` | consistency UI/API (hide is UX; the API denies by itself) |
-| T12 was added to the matrix (12/12) | `scripts/intrusion-matrix.mjs` | regression executable of the defense |
-
-The documented business rule remains: **the `update User` rule manages ordinary accounts**;
-it does not grant administrator credentials. The admin retains control of administrator
-accounts (including peers); the sub-admin can update ordinary accounts, which is the purpose
-of that role.

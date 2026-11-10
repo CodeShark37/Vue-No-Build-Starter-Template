@@ -1,5 +1,5 @@
 # 05 — Login e permissões
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](04-falar-com-a-api.md) · [Seguinte](06-mock-api.md) · [English](05-login-e-permissoes.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](04-falar-com-a-api.md) · [Seguinte](06-mock-api.md) · [English](05-login-e-permissoes.en.md)
 
 ## Sessão: uma fonte única
 
@@ -10,7 +10,7 @@
 - **Login**: `POST /login` → PAR access/refresh NOVO no registry → `setSession(token, user, refreshToken)` → o guard devolve o utilizador a `?redirect=` (guardado pelo próprio guard).
 - **Logout real**: botão "Sair" na navbar (junto do nome) — `POST /logout` **REVOGA a sessão no servidor** (o token antigo dá 401 em qualquer pedido seguinte) + `clearSession()` + `/login`.
 - **Guest**: `meta: { guest: true }` no `/login` manda para a raiz quem já tem sessão.
-- **Perfil**: o NOME do utilizador na navbar é o link para `/app/profile` — a rota que concentra as informações da sessão (token, tempo que falta, simular expirado/revogado — o `SessionPanel` vive aqui) e a gestão da PRÓPRIA conta: `PUT /profile` muda nome, username e password (vazio = manter). Self-scoped por construção: o servidor escreve só no utilizador da sessão; as contas dos outros continuam na zona admin, e as roles são intocáveis por aqui (auto-escalada → 422). Mudar a password REVOGA todas as sessões da conta (inclusive a corrente) — a app sai limpa para o login.
+- **Perfil**: o NOME do utilizador na navbar é o link para `/profile` — a rota que concentra as informações da sessão (token, tempo que falta, simular expirado/revogado — o `SessionPanel` vive aqui) e a gestão da PRÓPRIA conta: `PUT /profile` muda nome, username e password (vazio = manter). Self-scoped por construção: o servidor escreve só no utilizador da sessão; as contas dos outros continuam na zona admin, e as roles são intocáveis por aqui (auto-escalada → 422). Mudar a password REVOGA todas as sessões da conta (inclusive a corrente) — a app sai limpa para o login.
 
 ## Fluxo do token (espelha um backend JWT real)
 

@@ -26,5 +26,4 @@ export default {
     max-width: 760px;
     margin: 0 auto;
     padding: 1.25rem 1rem 3rem;
-}
-</style>
+}</style>

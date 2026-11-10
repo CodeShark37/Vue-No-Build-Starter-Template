@@ -80,10 +80,9 @@ export default {
     font-size: 0.9rem;
 }
 .home-link a {
-    color: #0a58ca;
+    color: var(--primary);
     text-decoration: none;
 }
 .home-link a:hover {
     text-decoration: underline;
-}
-</style>
+}</style>

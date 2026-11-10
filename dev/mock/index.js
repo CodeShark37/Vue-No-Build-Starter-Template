@@ -2,7 +2,7 @@
 // usar this.$api / this.$http. A autenticação é server-side em sessions.js,
 // enquanto helpers.js e routes/ implementam as respostas e políticas.
 
-import { seedUsers } from './seeds/users.js';
+import { seedUsers, demoAccounts } from './seeds/users.js';
 import { seedPosts } from './seeds/posts.js';
 import { seedBooks } from './seeds/books.js';
 import { roleRules } from './seeds/permissions.js';
@@ -100,11 +100,12 @@ export function startMirage(cfg) {
         if (raw) {
             const d = JSON.parse(raw);
             if (d && d.users && d.posts && d.rules) {
-                // Dumps de modelos antigos do mock (sem type/family nas sessões):
-                // linhas inválidas fora — os tokens antigos não validam de
-                // qualquer forma (re-login).
+                // Dumps de modelos antigos do mock (sem type/family/tokenHash nas
+                // sessões): linhas inválidas fora — os tokens antigos não
+                // validam de qualquer forma (a current behavior passou a fazer o hash do
+                // TOKEN COMPLETO; linhas com o hash só do payload morrem aqui).
                 if (!d.sessions) d.sessions = [];
-                d.sessions = d.sessions.filter(function (s) { return s && s.type && s.family; });
+                d.sessions = d.sessions.filter(function (s) { return s && s.type && s.family && s.tokenHash; });
                 dumpToLoad = d;
             }
         }
@@ -213,7 +214,7 @@ export function startMirage(cfg) {
     }
 
     console.info('[mirage] mock API activa (' + mirageCfg.timing + 'ms de latência, token '
-        + ttl + 's) — utilizadores: ' + seedUsers.map(function (u) {
+        + ttl + 's) — utilizadores: ' + demoAccounts.map(function (u) {
             return u.username + '/' + u.password;
         }).join(', ')
         + (restoredRecords ? ' | BD RESTAURADA do dump (' + restoredRecords + ' records)' : ' | BD do seed')

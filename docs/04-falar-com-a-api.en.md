@@ -1,5 +1,5 @@
 # 04 — Talking to the API
-> **Navigation:** [Portuguese README](../README.md) · [English README](../README.en.md) · [Previous](03-nova-feature.en.md) · [Next](05-login-e-permissoes.en.md)
+> **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](03-nova-feature.en.md) · [Next](05-login-e-permissoes.en.md)
 
 ## The only access pattern in components
 
@@ -15,6 +15,7 @@ module. Everything is available through `this`:
 | `this.$auth` | `core/session.js` | `isLoggedIn()`, `user`, `hasRole()`, `setSession()`, `clearSession()` |
 | `this.$perm` | `core/ability.js` | `can(action, subject, object?)` |
 | `this.$config` | `core/config.js` | derived values, including guard destinations |
+| `this.$theme` | `core/theme.js` | reactive theme: `current`, `set(value)`, `toggle()` |
 | `this.$store` | `app/store.js` | shared namespaced Vuex state |
 
 ## Domain API: `makeApi` is the standard

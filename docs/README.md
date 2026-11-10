@@ -22,5 +22,5 @@
 
 ## Navegação
 
-- [README português](../README.md) · [README inglês](../README.en.md)
+- [README português](../README.md) · [README english](../README.en.md)
 - Cada guia liga para as duas versões do README e para a sua versão inglesa.

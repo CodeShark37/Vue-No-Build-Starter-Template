@@ -37,6 +37,7 @@
 // password >= 4 caracteres; roles = array com pelo menos um role não vazio.
 import { send, parseBody, guard, publicUser, usernameTaken, hasRole } from '../helpers.js';
 import { revokeUserSessions } from '../sessions.js';
+import { hashPassword } from '../password.js';
 import { registerCrud } from '../crud.js';
 
 const USERNAME_RE = /^[a-zA-Z0-9_.-]{3,24}$/;
@@ -127,19 +128,31 @@ export function register(server, ctx) {
             return {
                 username: body.username.trim(),
                 name: body.name.trim(),
-                password: body.password,
+                // SÓ o hash dorme na BD (PBKDF2, sal derivado do username —
+                // dev/mock/password.js): a password em claro existiu apenas no
+                // corpo do POST e morre aqui.
+                passwordHash: hashPassword(body.username.trim(), body.password),
                 roles: body.roles.map(function (r) { return r.trim(); }),
             };
         },
+        // Lista branca publicada na meta (contrato da UI: o PUT aceita estes
+        // campos do BODY). A transformação password -> passwordHash vive no
+        // updateAttrs em baixo — meta.editable fala de campos do pedido, nunca
+        // de colunas da BD.
         editable: ['name', 'password', 'roles'],
-        coerce: {
-            // roles é ARRAY (a String() por omissão a achataria em "admin,user");
-            // password vazia = manter a actual (undefined => o campo não entra).
-            roles: function (v) {
-                if (!Array.isArray(v)) return undefined;
-                return v.map(function (r) { return String(r).trim(); });
-            },
-            password: function (v) { return v === '' ? undefined : String(v); },
+        updateAttrs: function (body, record) {
+            const patch = {};
+            if (body.name !== undefined) patch.name = String(body.name);
+            if (body.roles !== undefined && Array.isArray(body.roles)) {
+                patch.roles = body.roles.map(function (r) { return String(r).trim(); });
+            }
+            // password vazia/ausente = manter o hash actual (nada a gravar);
+            // password nova = credencial rodada: hash novo (sal do username do
+            // ALVO) e as sessões dele morrem no afterUpdate em baixo (T05).
+            if (body.password !== undefined && body.password !== '') {
+                patch.passwordHash = hashPassword(record.attrs.username, String(body.password));
+            }
+            return patch;
         },
         validateUpdate: function (body, record, user) {
             // DEFESA DA CONTA ALVO ADMIN (T12): o ALVO tem o role admin e quem

@@ -1,5 +1,5 @@
 # 03 — Nova feature
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](02-nova-pagina.md) · [Seguinte](04-falar-com-a-api.md) · [English](03-nova-feature.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](02-nova-pagina.md) · [Seguinte](04-falar-com-a-api.md) · [English](03-nova-feature.en.md)
 
 Uma feature é UMA pasta com um contrato pequeno:
 
@@ -14,7 +14,7 @@ export default {
 > **Política do template: no código fica só a MELHOR forma.** Para um domínio
 > CRUD canónico, `api: makeApi('/<path>')` é a melhor forma (uma linha, zero funções)
 > e é o que a zona content usa para posts e books. A alternativa — funções finas à mão num
-> `api.js` — não existe no código como exemplo; está documentada em `04-falar-com-a-api.md`
+> `api.js` — não existe no código como exemplo; está documentada em [`04-falar-com-a-api.md`](04-falar-com-a-api.md)
 > e só se escreve quando o domínio REALMENTE não é canónico (o `features/admin/api.js`
 > é o exemplo vivo, porque `/admin` tem stats, `/permissions/:id` e `/rules/order`).
 
@@ -22,7 +22,7 @@ export default {
 
 1. **Pasta** `src/features/<nome>/` com:
    - `index.js` — o contrato acima (com `api: makeApi('/<path>')` se o domínio for CRUD canónico);
-   - `api.js` (só para domínios não canónicos — ver `04-falar-com-a-api.md`) — funções finas sobre o `core/http.js`:
+   - `api.js` (só para domínios não canónicos — ver [`04-falar-com-a-api.md`](04-falar-com-a-api.md)) — funções finas sobre o `core/http.js`:
 
      ```js
      import http from '../../core/http.js';
@@ -109,9 +109,10 @@ comuns, `roles` reservado ao role admin, conta admin só se edita pelo role admi
 
 ## Regras
 
-- **Rotas**: a meta vive no PAI da zona (`requiresAuth`, `roles: ['admin']`, `guest`); o guard avalia tudo (ver `05-login-e-permissoes.md`).
-- **API do domínio**: CRUD canónico ⇒ `makeApi('/<path>')` no `index.js`; só domínio não canónico ⇒ `api.js` à mão (forma e critérios em `04-falar-com-a-api.md`). Sessão (login/refresh/logout/me) **não** é `api.js`: é ciclo de sessão e vive em `core/session.js` — se houvesse `$api.auth`, o core teria de importar features (proibido).
+- **Rotas**: a meta vive no PAI da zona (`requiresAuth`, `roles: ['admin']`, `guest`); o guard avalia tudo (ver [`05-login-e-permissoes.md`](05-login-e-permissoes.md)).
+- **API do domínio**: CRUD canónico ⇒ `makeApi('/<path>')` no `index.js`; só domínio não canónico ⇒ `api.js` à mão (forma e critérios em [`04-falar-com-a-api.md`](04-falar-com-a-api.md)). Sessão (login/refresh/logout/me) **não** é `api.js`: é ciclo de sessão e vive em `core/session.js` — se houvesse `$api.auth`, o core teria de importar features (proibido).
 - **Tabelas**: usar `ui/DataTable.vue` — colunas por config (`{ key, label, width?, sub?, editFields? }`; **sortable/numeric NÃO se declaram na vista**: derivam de `meta.sorts` — os `allowedSorts`/`numericSorts` da fábrica do mock — tal como a edição deriva de `meta.editable`; o servidor é a autoridade, mudar a fábrica reflecte-se na UI sem tocar em `.vue`), ordenação/paginação server-side, edição inline guiada por `meta.editable`, células custom por slot `cell-<key>` (o PostsView é a referência com slot; o BooksView é a referência de coluna numérica e do slot `actions` para acções extra por linha — ex.: o botão Detalhe, que consome o `get(id)` do `makeApi`; o UsersPanel é a referência de edição com `fieldTypes`/`fieldDisabled` — tipo do input, ex. `password`, e um input desabilitado para campo reservado — e de `meta.roleCounts`, agregados do conjunto inteiro). Agregados que uma página paginada não consegue derivar (ex.: contagens por role) NÃO se calculam na vista: publica-os na meta da listagem com `extraMeta(schema)` na fábrica do mock.
+- **Máquina de leitura das vistas de lista**: usar o mixin `Vue.listPage` (`ui/list-page.js`, registado em `app/services.js`): estado de paginação/ordenação, `loadRows`/`reloadRows` (recarga pós-mutação com fallback de página vazia), `goTo`/`setPerPage`/`setSort` e a sessão de edição (`editingId`) escritos UMA vez para todas as listas (PostsView, BooksView e UsersPanel usam-no). A vista declara `mixins: [Vue.listPage({ fetch, label })]` (+ `apply` para extras da meta, ex.: `roleCounts`) e fica só com o domínio: colunas, mutações e os textos 403 próprios (sobreponha `readError`). Não é `import` nos `.vue` (regra da 2.ª cópia): o registo é feito no arranque, no grafo nativo de módulos.
 - **Componentes**: usados por 1 feature → dentro dela; por 2 ou mais → `src/ui/`. Nunca importar `.js` locais dentro de `.vue` (2ª cópia do módulo).
 - **core/ não conhece features**: a feature importa do core (`core/http.js`, `core/loader.js`), nunca o contrário.
 - Se a feature precisa de estado global partilhado, padrão Vuex: copiar o módulo demo e registar em `app/store.js` — mas primeiro perguntar se o estado não é só local (`data()`) ou de sessão (`core/session.js`, já reactivo).

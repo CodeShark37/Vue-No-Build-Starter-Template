@@ -26,10 +26,9 @@
 .auth-box {
     width: 100%;
     max-width: 430px;
-    background: #fff;
-    border: 1px solid #e8e8e8;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.5rem 1.6rem 1.3rem;
-    box-shadow: 0 2px 12px rgba(16, 24, 40, 0.09);
-}
-</style>
+    box-shadow: 0 2px 12px var(--shadow-color);
+}</style>
