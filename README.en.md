@@ -43,23 +43,20 @@ live in `src/`.
 
 ## Features
 
-- server-authoritative sessions with an access/refresh pair, rotation, reuse detection,
+- Server-authoritative sessions with an access/refresh pair, rotation, reuse detection,
   and family revocation;
-- automatic single-flight refresh;
-- server-driven RBAC/ABAC with CASL and an editable, reorderable policy;
-- a seeded CRUD factory in the mock API for every seeded resource;
-- a Profile route, route guards, and feature-based layouts;
-- a light/dark theme with CSS tokens (Slate/Navy spec), a sticky navbar with toggle, persistence, and OS-following;
-- a complete MirageJS mock API;
-- `ui/DataTable.vue`, a generic table with sorting, pagination, inline editing, numeric
-  columns, slots, and aggregates;
-- the T01–T12 intrusion matrix and syntax checks.
+- Automatic single-flight refresh;
+- Server-driven RBAC/ABAC with CASL and an editable, reorderable policy;
+- A seeded CRUD factory in the mock API for every seeded resource;
+- A Profile route, route guards, and feature-based layouts;
+- A complete MirageJS mock API;
+- The T01–T12 intrusion matrix and syntax checks.
 
 ## Installation
 
 ### Prerequisites
 
-- a local HTTP server, such as VS Code Live Server or `python3 -m http.server`;
+- A local HTTP server, such as VS Code Live Server or `python3 -m http.server`;
 - Node.js `>=18` only for running `npm run check`.
 
 ### Clone
@@ -86,22 +83,22 @@ Details: [`docs/00-arranque.en.md`](docs/00-arranque.en.md) ·
 ## Structure
 
 ```text
-index.html  env.js    shell + vendors (defer); env.js is the ONLY deployment file
-jsconfig.json          IntelliSense/JSDoc; not a build and ignored by the browser
-vendor/     vendor-dev/           production libraries vs development-only mock libraries
-src/
-  main.js                 composition: mock -> router -> permissions -> services -> store
-  app/                    App.vue, router.js, guards.js, services.js, store.js
-  core/                   config, session, ability, http, loader, cache
-  ui/                     layouts, Ui* components, and the shared DataTable
-  features/               one folder per feature; index.js is the single registry
-    site/  auth/  content/  admin/   (content = posts + books)
-dev/
-  mock/                   Mirage, tokens, sessions, CRUD, routes, and seeds — delete in production
-docs/                     documentation, one file per topic
-scripts/
-  intrusion-matrix.mjs    T01–T12 matrix against the real code
-  syntax-check.mjs        syntax checks for .vue/.js
+├── index.html  env.js    shell + vendors (defer); env.js is the ONLY deployment file
+├── jsconfig.json          IntelliSense/JSDoc; not a build and ignored by the browser
+├── vendor/     vendor-dev/           production libraries vs development-only mock libraries
+├── src/
+│   ├── main.js                 composition: mock -> router -> permissions -> services -> store
+│   ├── app/                    App.vue, router.js, guards.js, services.js, store.js
+│   ├── core/                   config, session, ability, http, loader, cache
+│   ├── ui/                     layouts, Ui* components, and the shared DataTable
+│   └── features/               one folder per feature; index.js is the single registry
+│       └── site/  auth/  content/  admin/   (content = posts + books)
+├── dev/
+│   └── mock/                   Mirage, tokens, sessions, CRUD, routes, and seeds — delete in production
+├── docs/                       Documentation, one file per topic
+└── scripts/
+    ├── intrusion-matrix.mjs    T01–T12 matrix against the real code
+    └── syntax-check.mjs        Syntax checks for .vue/.js
 ```
 
 A component used by **one feature** stays inside that feature. A component used by **two

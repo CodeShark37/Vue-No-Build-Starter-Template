@@ -43,23 +43,20 @@ em `src/`.
 
 ## Features
 
-- sessões com autoridade no servidor, par access/refresh, rotação, deteção de reutilização
+- Sessões com autoridade no servidor, par access/refresh, rotação, deteção de reutilização
   e revogação por família;
-- refresh automático single-flight;
+- Refresh automático single-flight;
 - RBAC/ABAC server-driven com CASL e política editável/reordenável;
 - CRUD factory no mock para todos os recursos com seed;
-- rota de Perfil, guards de rotas e layouts por feature;
-- tema claro/escuro com tokens CSS (spec Slate/Navy), navbar fixa no topo com toggle, persistência e follow do SO;
+- Rota de Perfil, guards de rotas e layouts por feature;
 - API mock MirageJS completa;
-- `ui/DataTable.vue`, tabela genérica com ordenação, paginação, edição inline,
-  colunas numéricas, slots e agregados;
-- matriz de intrusão T01–T12 e verificação de sintaxe.
+- Matriz de intrusão T01–T12 e verificação de sintaxe.
 
 ## Instalação
 
 ### Pré-requisitos
 
-- um servidor HTTP local, como VS Code Live Server ou `python3 -m http.server`;
+- Um servidor HTTP local, como VS Code Live Server ou `python3 -m http.server`;
 - Node.js `>=18` apenas para executar `npm run check`.
 
 ### Clonar
@@ -86,22 +83,22 @@ Detalhes: [`docs/00-arranque.md`](docs/00-arranque.md) ·
 ## Estrutura
 
 ```text
-index.html  env.js    shell + vendors (defer); env.js é o ÚNICO ficheiro do deploy
-jsconfig.json          IntelliSense/JSDoc; não é build e o browser ignora-o
-vendor/     vendor-dev/           libs de produção vs libs mock só de desenvolvimento
-src/
-  main.js                 composição: mock -> router -> permissões -> serviços -> store
-  app/                    App.vue, router.js, guards.js, services.js, store.js
-  core/                   config, session, ability, http, loader, cache
-  ui/                     layouts, componentes Ui* e DataTable partilhada
-  features/               uma pasta por feature; index.js é o registo único
-    site/  auth/  content/  admin/   (content = posts + books)
-dev/
-  mock/                   Mirage, tokens, sessões, CRUD, rotas e seeds — apagar em produção
-docs/                     documentação, um ficheiro por assunto
-scripts/
-  intrusion-matrix.mjs    matriz T01–T12 contra o código real
-  syntax-check.mjs        verificação de sintaxe dos .vue/.js
+├── index.html  env.js    shell + vendors (defer); env.js é o ÚNICO ficheiro do deploy
+├── jsconfig.json          IntelliSense/JSDoc; não é build e o browser ignora-o
+├── vendor/     vendor-dev/           libs de produção vs libs mock só de desenvolvimento
+├── src/
+│   ├── main.js                 composição: mock -> router -> permissões -> serviços -> store
+│   ├── app/                    App.vue, router.js, guards.js, services.js, store.js
+│   ├── core/                   config, session, ability, http, loader, cache
+│   ├── ui/                     layouts, componentes Ui* e DataTable partilhada
+│   └── features/               uma pasta por feature; index.js é o registo único
+│       └── site/  auth/  content/  admin/   (content = posts + books)
+├── dev/
+│   └── mock/                   Mirage, tokens, sessões, CRUD, rotas e seeds — apagar em produção
+├── docs/                       Documentação, um ficheiro por assunto
+└── scripts/
+    ├── intrusion-matrix.mjs    Matriz T01–T12 contra o código real
+    └── syntax-check.mjs        Verificação de sintaxe dos .vue/.js
 ```
 
 Um componente usado por **uma feature** fica dentro dela. Um componente usado por **duas
