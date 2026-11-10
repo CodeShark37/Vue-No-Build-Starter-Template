@@ -58,7 +58,7 @@
 - **`app/` is the composition layer:** router, services, and store.
 - **`features/` owns business behavior.** Each feature declares its route area and optional
   API module. Use `makeApi('/<path>')` for canonical CRUD (posts, books), and a custom
-  `api.js` only for non-canonical domains such as admin.
+  `api.js` only for non-canonical domains such as admin. See [`04-falar-com-a-api.en.md`](04-falar-com-a-api.en.md).
 - **`ui/` is generic.** A component used by one feature stays there; a component shared by
   two or more features belongs in `src/ui/`. AppNavbar and AdminLayout are documented
   exceptions because they form layout chrome; they never provide security.

@@ -22,7 +22,7 @@
 
 - **Full Vue warnings:** set `vueDebug: true` in `env.js` to use `vendor-dev/vue.dev.js` instead
   of the minified build. Do not edit `index.html`.
-- **Mock on/off:** set `mock: true` or `false` in `env.js` (see `06-mock-api.en.md`).
+- **Mock on/off:** set `mock: true` or `false` in `env.js` (see [`06-mock-api.en.md`](06-mock-api.en.md)).
 - **Simulated latency and token TTLs:** configure `timing`, `tokenTtl` (access: 120s), and
   `refreshTtl` (refresh: 7 days) in `src/core/config.js`.
 - **Verification:** Node.js >= 18 is required. `npm run check` runs `node scripts/syntax-check.mjs`
@@ -41,19 +41,19 @@
 
 The `/admin/users` panel can create accounts such as `carol / carol123`. They can sign in
 immediately with their role’s permissions; no additional code is required (see
-`05-login-e-permissoes.en.md`).
+[`05-login-e-permissoes.en.md`](05-login-e-permissoes.en.md)).
 
 ## Documentation map
 
 | Document | Topic |
 | --- | --- |
-| `00-arranque.en.md` | this guide |
-| `01-como-funciona.en.md` | tree, layers, principles, and performance |
-| `02-nova-pagina.en.md` | adding a page to an existing feature |
-| `03-nova-feature.en.md` | adding a feature and its contract |
-| `04-falar-com-a-api.en.md` | `$api`, `$http`, and 401/403 rules |
-| `05-login-e-permissoes.en.md` | sessions, guards, and CASL policy data |
-| `06-mock-api.en.md` | MirageJS, seeds, and endpoints |
-| `07-producao.en.md` | deployment, `env.js`, removed files, and cache |
-| `08-seguranca.en.md` | OWASP Top 10 and T01–T12 intrusion matrix |
-| `09-convencoes-de-rotas.en.md` | route-area, route, and META conventions |
+| [`00-arranque.en.md`](00-arranque.en.md) | This guide |
+| [`01-como-funciona.en.md`](01-como-funciona.en.md) | Tree, layers, principles, and performance |
+| [`02-nova-pagina.en.md`](02-nova-pagina.en.md) | Adding a page to an existing feature |
+| [`03-nova-feature.en.md`](03-nova-feature.en.md) | Adding a feature and its contract |
+| [`04-falar-com-a-api.en.md`](04-falar-com-a-api.en.md) | `$api`, `$http`, and 401/403 rules |
+| [`05-login-e-permissoes.en.md`](05-login-e-permissoes.en.md) | Sessions, guards, and CASL policy data |
+| [`06-mock-api.en.md`](06-mock-api.en.md) | MirageJS, seeds, and endpoints |
+| [`07-producao.en.md`](07-producao.en.md) | Deployment, `env.js`, removed files, and cache |
+| [`08-seguranca.en.md`](08-seguranca.en.md) | OWASP Top 10 and T01–T12 intrusion matrix |
+| [`09-convencoes-de-rotas.en.md`](09-convencoes-de-rotas.en.md) | Route-area, route, and META conventions |

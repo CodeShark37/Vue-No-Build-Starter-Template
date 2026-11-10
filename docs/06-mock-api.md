@@ -89,4 +89,4 @@ No CASL, a **última regra que casa** sobre o mesmo (action, subject) **vence**.
 - **`position`** — a ordem de avaliação é um dado da regra; `GET /api/rules`, `PUT /rules/order` e o motor da política (`rulesForUser` em `helpers.js`) ordenam sempre por `position` (empate → id). Seeds: position = ordem do ficheiro; regra nova: max+1 (nasce a vencer).
 - **`inverted`** — o `cannot` do CASL: `{action:'update', subject:'Post', inverted:true}` NEGA em vez de permitir. Com conditions funciona igual (`cannot` só nos posts alheios, por exemplo). O painel mostra-os com badge vermelho `cannot`.
 
-Combinação de exemplo (o cenário canónico do drag & drop — ver `05-login-e-permissoes.md`): um `cannot update Post` por cima da owner rule tranca todos os updates do user; arrastado para o topo, a owner rule volta a ser a última e o user volta a editar os próprios posts.
+Combinação de exemplo (o cenário canónico do drag & drop — ver [`05-login-e-permissoes.md`](05-login-e-permissoes.md)): um `cannot update Post` por cima da owner rule tranca todos os updates do user; arrastado para o topo, a owner rule volta a ser a última e o user volta a editar os próprios posts.

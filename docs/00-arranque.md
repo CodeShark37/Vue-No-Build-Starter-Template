@@ -17,7 +17,7 @@
 ## Desenvolvimento
 
 - **Avisos completos do Vue**: `vueDebug: true` em `env.js` (usa `vendor-dev/vue.dev.js` em vez do minificado — não se toca no `index.html`).
-- **Mock on/off**: `mock: true/false` em `env.js` (ver `06-mock-api.md`).
+- **Mock on/off**: `mock: true/false` em `env.js` (ver [`06-mock-api.md`](06-mock-api.md)).
 - **Latência simulada / TTLs dos tokens**: `timing`, `tokenTtl` (access, 120s) e `refreshTtl` (refresh, 7 dias) em `src/core/config.js`.
 - **Verificação**: requer Node.js >= 18; `npm run check` = `node scripts/syntax-check.mjs` + `node scripts/intrusion-matrix.mjs` (só um atalho; `npm install` não é preciso para correr nada — o `package.json` é proveniência, não instalação).
 
@@ -31,19 +31,19 @@
 | `viewer` | `viewer123` | `viewer` | `/content/posts` e `/content/books` — só leitura: nenhum botão, nenhum formulário |
 | `subadmin` | `subadmin123` | `subadmin` | `/admin/users` — gere contas COMUNS (read+update `User`; `roles` reservado ao admin), sem `/admin/stats` nem `/admin/permissions` |
 
-O painel `/admin/users` cria contas novas (ex.: `carol / carol123`): entram logo, com as permissões do role — zero código extra (ver `05-login-e-permissoes.md`).
+O painel `/admin/users` cria contas novas (ex.: `carol / carol123`): entram logo, com as permissões do role — zero código extra (ver [`05-login-e-permissoes.md`](05-login-e-permissoes.md)).
 
 ## Mapa da documentação
 
 | Doc | Assunto |
 | --- | --- |
-| `00-arranque.md` | este ficheiro |
-| `01-como-funciona.md` | árvore, camadas, doutrinas e desempenho |
-| `02-nova-pagina.md` | acrescentar uma página a uma feature existente |
-| `03-nova-feature.md` | acrescentar uma feature nova (o contrato) |
-| `04-falar-com-a-api.md` | `$api` por feature, `$http`, regras de 401/403 |
-| `05-login-e-permissoes.md` | sessão, guard, política CASL como dado |
-| `06-mock-api.md` | MirageJS, seeds, endpoints completos |
-| `07-producao.md` | deploy: `env.js`, o que apagar, cache |
-| `08-seguranca.md` | auditoria OWASP Top 10, matriz de intrusão T01–T12 |
-| `09-convencoes-de-rotas.md` | convenção de zonas/rotas/meta e o estudo por trás |
+| [`00-arranque.md`](00-arranque.md) | Este ficheiro |
+| [`01-como-funciona.md`](01-como-funciona.md) | Árvore, camadas, doutrinas e desempenho |
+| [`02-nova-pagina.md`](02-nova-pagina.md) | Acrescentar uma página a uma feature existente |
+| [`03-nova-feature.md`](03-nova-feature.md) | Acrescentar uma feature nova (o contrato) |
+| [`04-falar-com-a-api.md`](04-falar-com-a-api.md) | `$api` por feature, `$http`, regras de 401/403 |
+| [`05-login-e-permissoes.md`](05-login-e-permissoes.md) | Sessão, guard, política CASL como dado |
+| [`06-mock-api.md`](06-mock-api.md) | MirageJS, seeds, endpoints completos |
+| [`07-producao.md`](07-producao.md) | Deploy: `env.js`, o que apagar, cache |
+| [`08-seguranca.md`](08-seguranca.md) | Auditoria OWASP Top 10, matriz de intrusão T01–T12 |
+| [`09-convencoes-de-rotas.md`](09-convencoes-de-rotas.md) | Convenção de zonas/rotas/meta e o estudo por trás |

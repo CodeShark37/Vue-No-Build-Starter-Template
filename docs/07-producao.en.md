@@ -31,7 +31,7 @@ between development and production.
 `package.json` records upstream provenance; it is not an installation manifest for the
 application. It is not required on the server, and `npm install` is not part of deployment.
 
-## Library provenance: `vendor/VERSIONS.md`
+## Library provenance: [`vendor/VERSIONS.md`](../vendor/VERSIONS.md)
 
 Every vendored library has the recorded origin and SHA-256 hash. Verify the files after
 downloading or cloning:
@@ -40,7 +40,7 @@ downloading or cloning:
 sha256sum vendor/*.js vendor-dev/*.js
 ```
 
-To update a library, replace the file and update its corresponding line in `VERSIONS.md`
+To update a library, replace the file and update its corresponding line in [`VERSIONS.md`](../vendor/VERSIONS.md)
 in the same commit.
 
 ## Compilation cache: the bump rule
@@ -62,7 +62,7 @@ that no longer exist. When in doubt, increase `version`.
 
 1. Set the real `apiBase`, `mock: false`, and `vueDebug: false` in `env.js`.
 2. Do not copy `vendor-dev/` or `dev/`.
-3. Verify `VERSIONS.md` with `sha256sum`.
+3. Verify [`VERSIONS.md`](../vendor/VERSIONS.md) with `sha256sum`.
 4. Bump `config.version` if any `.vue` file was moved or renamed since the previous deployment.
 5. Enable the `history` fallback on the server, or use `routerMode: 'hash'`.
 6. **Security** (see [`08-seguranca.en.md`](08-seguranca.en.md)):

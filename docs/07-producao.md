@@ -24,7 +24,7 @@ Com `mock: false` o `env.js` nem injecta o script do Mirage — mas **não copia
 
 O `package.json` é PROVENIÊNCIA, não instalação (versões upstream para conferência; ver nota `x-vendor`) — não é preciso no servidor e `npm install` não faz parte do deploy.
 
-## Procedência das libs: `vendor/VERSIONS.md`
+## Procedência das libs: [`vendor/VERSIONS.md`](../vendor/VERSIONS.md)
 
 Cada lib vendored tem origem + SHA-256 registados. Para verificar após download:
 
@@ -32,7 +32,7 @@ Cada lib vendored tem origem + SHA-256 registados. Para verificar após download
 sha256sum vendor/*.js vendor-dev/*.js
 ```
 
-Atualizar uma lib = substituir o ficheiro, atualizar a linha correspondente no `VERSIONS.md`.
+Atualizar uma lib = substituir o ficheiro, atualizar a linha correspondente no [`VERSIONS.md`](../vendor/VERSIONS.md).
 
 ## Cache de compilação: a regra do bump
 
@@ -47,7 +47,7 @@ A cache IndexedDB usa `version: '11'` (em `src/core/config.js`). Editar um `.vue
 
 1. `env.js`: `apiBase` real, `mock: false`, `vueDebug: false`.
 2. Não copiar `vendor-dev/` nem `dev/`.
-3. `VERSIONS.md` verificado (`sha256sum`).
+3. [`VERSIONS.md`](../vendor/VERSIONS.md) verificado (`sha256sum`).
 4. Bump de `config.version` se algum `.vue` moveu/renomeou desde o último deploy.
 5. Fallback do `history` activo no servidor (ou `routerMode: 'hash'`).
 6. **Segurança** (detalhes em [`08-seguranca.md`](08-seguranca.md)):

@@ -20,10 +20,10 @@ children: [
 - **Meta no PAI cobre os filhos**: o guard percorre `to.matched`, por isso uma página dentro de `/content` ou `/admin` não precisa de meta própria (excepção: `meta: { guest: true }` para páginas só-de-guest como o login).
 - **Cada vista só se pede e compila quando visitada** (`lazy()`), e o URL na tabela continua a ser relativo à zona.
 - **Título da página**: as vistas usam `vue-head` — bloco `head: { title: { inner, separator, complement } }`.
-- **Nomes de rota**: PascalCase com prefixo da zona (`ContentPosts`, `AdminUsers` — convenção completa em `09-convencoes-de-rotas.md`).
+- **Nomes de rota**: PascalCase com prefixo da zona (`ContentPosts`, `AdminUsers` — convenção completa em [`09-convencoes-de-rotas.md`](09-convencoes-de-rotas.md)).
 
 ## Regras de ouro
 
 - O **catch-all `*`** (404) tem de ficar EM ÚLTIMO na tabela — é o `fallback` do site, concatenado por último em `features/index.js`. Nunca acrescentar rotas depois dele.
-- Se a página precisa de um componente novo usado **só por esta feature**, ele fica na pasta dela. Se for usado por **2 ou mais features**, sobe para `src/ui/` (ver `01-como-funciona.md`).
-- Sem sessão/permissões à mão: `this.$auth.isLoggedIn()`, `this.$perm.can(action, subject, object?)` — ver `05-login-e-permissoes.md`.
+- Se a página precisa de um componente novo usado **só por esta feature**, ele fica na pasta dela. Se for usado por **2 ou mais features**, sobe para `src/ui/` (ver [`01-como-funciona.md`](01-como-funciona.md)).
+- Sem sessão/permissões à mão: `this.$auth.isLoggedIn()`, `this.$perm.can(action, subject, object?)` — ver [`05-login-e-permissoes.md`](05-login-e-permissoes.md).

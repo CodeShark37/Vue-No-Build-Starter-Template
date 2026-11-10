@@ -165,7 +165,7 @@ isso a auditoria separa três planos:
   é a última da linha v3) e substituir o vue-head por gestão de título mínima
   própria.
 - MirageJS 0.1.48: última release da linha 0.1.x — só dev, nunca em produção.
-- Processo de integridade: `vendor/VERSIONS.md` com origem + SHA-256 de TODOS
+- Processo de integridade: [`vendor/VERSIONS.md`](../vendor/VERSIONS.md) com origem + SHA-256 de TODOS
   os vendors (verificação por `sha256sum`) — padrão acima da média para
   templates vendored.
 
@@ -339,7 +339,7 @@ O que a matriz FECHOU (e como):
    credenciais só se estritamente necessário).
 7. **Cookies** (se usados para sessão): `httpOnly; Secure; SameSite=Lax` (ou
    Strict) + token antiforgery em formulários/pedidos mutantes.
-8. **Dependências**: manter o ritual `VERSIONS.md` (substituir ficheiro +
+8. **Dependências**: manter o ritual [`VERSIONS.md`](../vendor/VERSIONS.md) (substituir ficheiro +
    SHA-256 no mesmo commit) e rever CVEs por lib a cada actualização.
 
 ## O que a v12.11 mudou (resumo do hardening)
@@ -351,7 +351,7 @@ O que a matriz FECHOU (e como):
 | Botões demo 401 só em `config.debug` | `src/features/auth/SessionPanel.vue` | A05 — UI de demo em produção |
 | `$auth.demoExpireToken/demoRevokeToken` recusam fora de localhost | `src/core/session.js` | A05/A07 — sobrescrever sessão real com token de demo |
 | axios 1.6.0 → 1.21.0 + SHA-256 em VERSIONS.md | `vendor/` | A06 — CVE-2025-27152 |
-| Checklist de segurança no deploy | `docs/07-producao.md` | A05 — cabeçalhos/HTTPS/mock no deploy |
+| Checklist de segurança no deploy | [`docs/07-producao.md`](07-producao.md) | A05 — cabeçalhos/HTTPS/mock no deploy |
 
 ## O que a v12.12 mudou (o servidor como autoridade da sessão)
 

@@ -82,8 +82,8 @@ Regras do api.js à mão:
 - **401** — "não sei quem és": o interceptor tenta `POST /refresh` UMA vez COM O REFRESH TOKEN (single-flight: 401 paralelos partilham o mesmo refresh), repete o pedido com o access novo; se falhar, limpa a sessão e vai para `/login?redirect=…`. Nada disto é código da vista.
 - **403** — "sei quem és, mas não podes": **nunca** limpa sessão nem navega; a vista mostra mensagem inline.
 - **422** — validação: o corpo traz `{error, field, message?}`; os painéis mostram-no inline.
-- **Edição server-driven**: a listagem traz `meta.editable` — os campos que o PUT aceita. A UI desenha os formulários a partir daí (`ui/DataTable.vue`); mudar a lista branca no mock muda a UI sem tocar em vistas. Esconder um botão com `$perm.can(...)` é **UX**; a API continua a responder 403 a quem não pode — defesa em profundidade (ver `05-login-e-permissoes.md`).
+- **Edição server-driven**: a listagem traz `meta.editable` — os campos que o PUT aceita. A UI desenha os formulários a partir daí (`ui/DataTable.vue`); mudar a lista branca no mock muda a UI sem tocar em vistas. Esconder um botão com `$perm.can(...)` é **UX**; a API continua a responder 403 a quem não pode — defesa em profundidade (ver [`05-login-e-permissoes.md`](05-login-e-permissoes.md)).
 
 ## Lista completa de endpoints
 
-Ver `06-mock-api.md` (tabela com auth, respostas e validações).
+Ver [`06-mock-api.md`](06-mock-api.md) (tabela com auth, respostas e validações).
