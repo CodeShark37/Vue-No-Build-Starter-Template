@@ -83,11 +83,11 @@ isso a auditoria separa três planos:
   real usa argon2id/bcrypt com salt.
 - `publicUser()` é a única forma de saída do user: a password NUNCA sai por
   nenhuma rota (listas, detalhes, login, refresh, profile).
-- FNV-1a na assinatura do dump e o **hashPayload (FNV-1a+DJB2)** da integridade
-  do token são explicitamente NÃO-criptográficos: detectam alteração
-  (dump stale / payload adulterado), não impedem colisão deliberada de
-  64 bits — o comentário no código diz-o. A assinatura REAL é do backend
-  (HS256/RS256).
+- A chave FNV-1a derivada dos seeds identifica dumps desactualizados, e o
+  **hashPayload (FNV-1a+DJB2)** verifica a integridade do token no mock. Ambos
+  são explicitamente NÃO-criptográficos: detectam alterações esperadas, mas não
+  impedem colisões deliberadas de 64 bits. A assinatura REAL é responsabilidade
+  do backend (HS256/RS256).
 - Sem segredos no código cliente (nada para vazare): a app não tem chaves de
   API; tudo o que é sensível pertence ao backend real.
 - Transporte: em produção exige HTTPS + HSTS (ver [`07-producao.md`](07-producao.md)); o token anda no
@@ -192,9 +192,9 @@ isso a auditoria separa três planos:
 ### A08 — Software and Data Integrity Failures
 
 - Vendors com SHA-256 manifest (VERSIONS.md) — verifica-se a cada clone/deploy.
-- O dump do mock assina-se pelos SEEDS (mudar seed → dump rejeitado e
-  re-semeado; nunca estado stale a esconder mudanças) — integridade de
-  desenvolvimento.
+- A chave do dump do mock deriva dos SEEDS (mudar um seed identifica o dump como
+  desactualizado e provoca novo seed); isto evita estado stale a esconder
+  alterações aos seeds, mas não fornece integridade criptográfica ao conteúdo.
 - A política de permissões é DADO lido a cada pedido (não copiada em código
   cliente) — não há estado de permissões que envelheça mal.
 - `PUT /rules/order` com verificação de conjunto completa (422 divergente) —
@@ -256,9 +256,9 @@ isso a auditoria separa três planos:
 
 ## Matriz de testes de intrusão T01–T12
 
-Antes de qualquer alteração, o ciclo de identidade/sessão foi medido com uma
-matriz de intrusão contra o código REAL (harness Node que importa `dev/mock/`,
-carrega o CASL vendored e monta stubs de Mirage/schema).
+O ciclo actual de identidade/sessão é medido com uma matriz de intrusão contra o
+código REAL (harness Node que importa `dev/mock/`, carrega o CASL vendored e
+monta stubs de Mirage/schema).
 
 **Correr a matriz** (a partir da raiz do template; faz parte do contrato —
 correr após CADA mudança em `dev/mock/` ou `src/core/`, tem de ficar 12/12):
@@ -288,8 +288,7 @@ executa na página).
 | T12 | Conta ALVO admin editada por quem não tem o role admin | 403/403 · registo intacto · admin edita admin 200 · sub-admin edita comum 200 | **PASSA** — 403 antes da forma (`users.js` validateUpdate) |
 
 **Resultado actual: 12/12 passam** (T08 por revisão de código — é navegação de
-cliente, fora do alcance do harness server-side). T11 (sub-admin pela política)
-e T12 (conta alvo admin) entraram na matriz à medida que a superfície cresceu.
+cliente, fora do alcance do harness server-side).
 
 O que a matriz FECHOU (e como):
 

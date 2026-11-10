@@ -81,10 +81,10 @@ The audit therefore separates three layers:
   real uses argon2id/bcrypt with salt.
 - `publicUser()` is the only user-output formatter; passwords are never returned by any route
   (lists, details, login, refresh, or profile).
-- FNV-1a in the dump signature and **hashPayload (FNV-1a+DJB2)** for token integrity are
-  explicitly non-cryptographic. They detect changes (stale dumps or tampered payloads) but do not
-  prevent deliberate 64-bit collisions. The code comment states this; the real signature belongs
-  to the backend (HS256/RS256).
+- The FNV-1a key derived from the seeds identifies stale dumps, while
+  **hashPayload (FNV-1a+DJB2)** checks token integrity in the mock. Both are explicitly
+  non-cryptographic: they detect expected changes but do not prevent deliberate 64-bit
+  collisions. The real signature belongs to the backend (HS256/RS256).
 - No secrets are stored in client code. The client has no API keys; all sensitive material belongs
   to the real backend.
 - Transport: production requires HTTPS and HSTS (see [`07-producao.en.md`](07-producao.en.md)); the token is sent in the
@@ -185,8 +185,9 @@ The audit therefore separates three layers:
 ### A08 — Software and Data Integrity Failures
 
 - Vendors with SHA-256 manifest (VERSIONS.md) — verifies each clone/deployment.
-- The mock dump is signed using the seeds (changing a seed rejects the dump and
-  triggers reseeding; stale state cannot hide changes) — development integrity.
+- The mock dump key is derived from the seeds (changing a seed identifies the dump as
+  stale and triggers reseeding); this prevents stale state from hiding seed changes,
+  but does not provide cryptographic integrity for the dump contents.
 - The permission policy is data read on every request, not copied into client code;
   client-side permission state can therefore become stale.
 - `PUT /rules/order` with verification of set complete (422 for a mismatched set) —
@@ -278,8 +279,7 @@ the real handlers (the same logic that Mirage executes in the page).
 | T12 | target administrator account edited by someone without the admin role | 403/403 · record intact · admin edits admin 200 · sub-admin edits ordinary user 200 | **passes** — 403 before validation (`users.js` validateUpdate) |
 
 **Current result: 12/12 passed.** T08 was verified by code review because it concerns client-side
-navigation; the remaining tests run server-side in the harness. T11 (policy-controlled sub-admin)
-and T12 (administrator-account protection) were added as the surface grew.
+navigation; the remaining tests run server-side in the harness.
 
 The matrix closed the following gaps:
 
