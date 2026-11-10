@@ -1,50 +1,6 @@
-// Fábrica do servidor mock — o ÚNICO módulo que conhece o MirageJS (tal como
-// loader.js é o único que conhece o vue2-sfc-loader). Cria um servidor que
-// intercepta os XHR do axios (baseURL = config.apiBase) antes de chegarem à rede.
-// Nos .vue nada muda: continua tudo via this.$api / this.$http — ninguém sabe
-// que as respostas vêm do Mirage.
-//
-// A fábrica é magra de propósito: modelos + seeds + registo de rotas. O que cada
-// domínio serve vive no seu próprio ficheiro —
-//
-//   token.js                  formato do token 'mrg.<payload>.mock' (fake JWT)
-//   sessions.js               REGISTRY de sessões: a autoridade sobre identidade
-//                             e ciclo de vida — emite (login), roda (refresh), revoga
-//                             (logout/password), valida (sessionOf em helpers.js)
-//   helpers.js                respostas, sessão (401/403), guard, procuras, paginação
-//   routes/auth.js            POST login/refresh/logout, GET me
-//   routes/profile.js         GET/PUT /profile — self-service da própria conta
-//   routes/permissions.js     GET /permissions (regras da sessão) e /permissions/:id
-//                             (permissões efectivas de um UTILIZADOR, só admin) +
-//                             CRUD da política em /api/rules (só admin; o seed é
-//                             só o estado inicial)
-//   routes/users.js           zona admin: stats + CRUD de utilizadores VIA FÁBRICA
-//                             (403 sem admin; password nunca sai)
-//   routes/posts.js           CRUD de posts VIA FÁBRICA, com autoria
-//   routes/books.js           CRUD de books VIA FÁBRICA
-//
-// e os DADOS (contas, posts, books e a política roleRules) vêm de seeds/:
-// dados puros, fáceis de ler e estender sem tocar no servidor. TODOS os
-// recursos com seed (posts, books, users) nascem da fábrica registerCrud
-// (dev/mock/crud.js) — a mesma cadeia de política, escrita uma vez.
-//
-// Fluxo do token e dos erros, em resumo:
-//   POST /api/login  -> PAR access/refresh NOVO no registry (sessions.js) + tokens
-//                       'mrg.<payload>.mock' que os referenciam (jti); exp = agora
-//                       + tokenTtl (access) / refreshTtl (refresh).
-//   POST /api/refresh-> ROTAÇÃO: só um REFRESH emitido e não revogado
-//                       renova (mesmo com o access expirado); par novo, refresh
-//                       antigo revogado, access antigos revogados; REUTILIZAR um
-//                       refresh rodado mata a família (detecção de roubo).
-//   POST /api/logout -> REVOGA a FAMÍLIA: access E refresh antigos dão 401 (T04).
-//   password nova    -> REVOGA as sessões do utilizador (PUT /profile e PUT /admin/users/:id — T05).
-//   401              -> 'invalid_token' | 'token_expired' => o interceptor de http.js
-//                       tenta POST /refresh com o REFRESH token UMA vez e repete o
-//                       pedido; se falhar, logout.
-//   403              -> autenticado mas sem permissão (role admin, autoria de post) —
-//                       NUNCA limpa sessão nem navega.
-//   A política de permissões é lida da BD a cada pedido (rulesForUser em
-//   routes/permissions.js): o cliente constrói a Ability (core/ability.js).
+// Fábrica do Mirage: regista modelos, seeds e rotas; os componentes continuam a
+// usar this.$api / this.$http. A autenticação é server-side em sessions.js,
+// enquanto helpers.js e routes/ implementam as respostas e políticas.
 
 import { seedUsers } from './seeds/users.js';
 import { seedPosts } from './seeds/posts.js';

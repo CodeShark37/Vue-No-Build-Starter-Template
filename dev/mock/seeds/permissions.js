@@ -1,31 +1,6 @@
-// Seed de PERMISSÕES do mock — a política em DADOS, como um backend real guarda
-// (tabela de regras por role) e envia ao cliente serializada em JSON. O handler de
-// GET /api/permissions (dev/mock/routes/permissions.js) NÃO decide nada: junta as
-// regras dos roles do utilizador, materializa os placeholders de sessão e devolve o
-// resultado. O cliente só consome (core/ability.js constrói a Ability CASL).
-//
-// Formato: regras CASL em JSON plain — { action, subject, conditions? }.
-//
-//  A REGRA OWNER (a parte interessante):
-//    { action: 'update', subject: 'Post', conditions: { authorId: '${user.id}' } }
-//
-//    - Sem `conditions`, uma regra vale para TODOS os objetos do subject
-//      (read/create valem para qualquer post).
-//    - COM `conditions`, vale apenas para os objetos cujos atributos casam com
-//      elas: aqui, só os posts cujo `authorId` é o UTILIZADOR DA SESSÃO. É isto
-//      que faz o user ver os botões editar/apagar só nos próprios posts — e,
-//      contornando a UI, o PUT/DELETE sobre post alheio responder 403.
-//    - '${user.id}' é um PLACEHOLDER: o mock substitui-o pelo valor real da
-//      sessão antes de responder (materializeRules() em dev/mock/helpers.js),
-//      por isso cada utilizador recebe regras concretas — ex.: { authorId: '2' }.
-//      O seed fica genérico: adicionar utilizadores não exige tocar nas regras.
-//    - POR ID, não por username: o id é único e imutável; um username podia ser
-//      renomeado. O post guarda ambos (author para mostrar, authorId para a
-//      política — routes/posts.js grava os dois na criação). Campo desconhecido
-//      no placeholder => undefined => a condição nunca casa (fail-closed).
-//    - O admin não precisa de regra owner: 'manage' já cobre tudo, sobre todos.
-//
-//  Role desconhecido (sem entrada aqui) => zero regras => UI fail-closed.
+// Política inicial por role. Os placeholders, como '${user.id}', são
+// materializados pelo mock antes da resposta; roles desconhecidos ficam sem
+// regras (fail-closed). Depois do boot, a verdade vive na BD do mock.
 /**
  * Política INICIAL por role (o ESTADO INICIAL apenas): o que o seed escreve na
  * BD (model 'rule', com position pela ordem do ficheiro). Depois do boot a

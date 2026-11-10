@@ -1,10 +1,5 @@
-// Cliente HTTP da zona admin. A API é a autoridade e re-verifica o que a UI
-// esconde: 401 sem sessão, 403 sem o role admin, 422 em validação falhada.
-// permissionsOf() inspeciona a política já materializada de um UTILIZADOR
-// (GET /permissions/:id — :id é o ID DO UTILIZADOR, não de uma regra; também
-// admin-only). As funções *Rule fazem o CRUD da POLÍTICA CRUA em /api/rules
-// (com os placeholders intactos — o contrário do permissionsOf). Registado em
-// features/index.js como this.$api.admin.
+// Cliente HTTP da zona admin. A API revalida autorização e validação; as
+// funções *Rule operam a política crua em /api/rules.
 import http from '../../core/http.js';
 
 /**
@@ -60,9 +55,7 @@ export function removeUser(id) {
     return http.delete('/admin/users/' + id);
 }
 
-// Regras efectivas de um utilizador, já com os placeholders '${user.<campo>}'
-// resolvidos com os dados dele — exactamente o que o servidor lhe entregaria no
-// próximo sync. O painel UserPermissions é a prova visual desta rota.
+// Regras efectivas de um utilizador, com os placeholders já materializados.
 /**
  * Regras efectivas de um UTILIZADOR, já materializadas com os dados dele
  * (GET /permissions/:id — :id é o ID DO UTILIZADOR; também admin-only). É o
@@ -106,10 +99,7 @@ export function updateRule(id, data) {
     return http.put('/rules/' + id, data);
 }
 
-// REORDENA a política: o body é { ids } com TODOS os ids na nova ordem
-// de avaliação — no CASL a ÚLTIMA regra que casa sobre o mesmo (action, subject)
-// vence, por isso a ordem é permissão efectiva. O servidor valida o conjunto
-// (422 se faltar/sobrar id) e devolve a política já reordenada.
+// Reordena a política; o servidor valida o conjunto completo de ids.
 /**
  * REORDENA a política (PUT /rules/order): body { ids } com TODOS os ids na nova
  * ordem de avaliação — a última regra que casa sobre o mesmo (action, subject)
