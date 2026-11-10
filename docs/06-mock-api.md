@@ -1,5 +1,5 @@
 # 06 — Mock API (MirageJS)
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](05-login-e-permissoes.md) · [Seguinte](07-producao.md) · [English](06-mock-api.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](05-login-e-permissoes.md) · [Seguinte](07-producao.md) · [English](06-mock-api.en.md)
 
 Com `mock: true` no `env.js` a app arranca um servidor falso que **interpreta os XHR do axios antes de chegarem à rede** — `this.$api` / `this.$http` desenvolvem-se e testam-se de ponta a ponta sem backend, e o resto da app não distingue. (`vendor-dev/mirage.min.js` é injectado pelo `env.js`; a fábrica vive em `dev/mock/index.js` — o único módulo que conhece o MirageJS, tal como `core/loader.js` é o único que conhece o sfc-loader.)
 
@@ -57,7 +57,7 @@ dev/mock/
 | POST | `/api/__demo/revoke` | token · só `debug` | demo do fluxo 401→logout: revoga a FAMÍLIA da sessão corrente NO REGISTRY → 401 `invalid_token` → refresh falha → logout; 404 fora de `debug` |
 | GET | `/api/profile` | token | perfil público da própria sessão (mesma forma do `/me`) — a rota do Perfil (`/profile`) |
 | PUT | `/api/profile` | token | self-service da própria conta: muda `name` / `username` / `password` (vazio = manter) → 200 com o perfil actualizado; 422 nome vazio, username 3-24 `[a-zA-Z0-9_.-]` + único, password < 4. Self-scoped: escreve SEMPRE no utilizador da sessão (ids no body são ignorados); roles nunca (auto-escalada) |
-| GET | `/api/permissions` | token | regras CASL do utilizador da sessão, lidas da mock DB a cada pedido (seed `seeds/permissions.js`): admin → `manage Post` + `manage Book` + `manage User`; user → `read/create Post` + `read Book` + `update/delete` com conditions `{authorId}`; subadmin → `read User` + `update User` + `read Post` + `read Book` |
+| GET | `/api/permissions` | token | regras CASL do utilizador da sessão, lidas da mock DB a cada pedido (seed `seeds/permissions.js` — a fonte completa da política, 5 roles): admin → `manage Post` + `manage Book` + `manage User`; user → `read/create Post` + `read Book` + `update/delete` com conditions `{authorId}`; editor → `read/create/update Post` + `read Book`; viewer → `read Post` + `read Book`; subadmin → `read User` + `update User` + `read Post` + `read Book` |
 | GET | `/api/permissions/:id` | token + `admin` | **`:id` = ID de UTILIZADOR**: perfil público + regras efectivas já materializadas com os dados dele (o que `GET /api/permissions` lhe serviria); 404 desconhecido, **403** sem admin |
 | GET | `/api/rules` | token + `admin` | política **crua** (placeholders intactos): `{data: [{id, role, action, subject, conditions, inverted, position}]}` ordenada por `position` — a ordem de AVALIAÇÃO CASL, a última regra que casa sobre o mesmo (action, subject) vence |
 | POST | `/api/rules` | token + `admin` | cria regra `{role, action, subject, conditions?, inverted?}` → 201 (nasce em ÚLTIMO lugar, position = max+1 — "a mais recente vence"); 422 texto vazio/>40, conditions inválidas (não-objecto/valores não primitivos), `inverted` não-booleano ou regra duplicada |

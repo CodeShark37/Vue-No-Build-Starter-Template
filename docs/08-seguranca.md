@@ -1,5 +1,5 @@
 # 08 — Segurança (auditoria OWASP Top 10, rotas e sessão)
-> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](07-producao.md) · [Seguinte](09-convencoes-de-rotas.md) · [English](08-seguranca.en.md)
+> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](07-producao.md) · [Seguinte](09-convencoes-de-rotas.md) · [English](08-seguranca.en.md)
 
 Auditoria de segurança actual do template, feita como **hacker ético**: cada achado foi provado com um exploit executado contra a app. O ciclo de identidade/sessão é validado pela **matriz de intrusão T01–T13**, executada contra o mock com um harness Node que importa o código real. A auditoria confirma a doutrina central: **a UI esconde, a API decide**; a autoridade sobre a identidade e o ciclo de vida da sessão é o servidor (registry de sessões).
 
@@ -35,9 +35,19 @@ isso a auditoria separa três planos:
 
 **Bom (proado no EXP3/EXP5):**
 - Toda a escrita e leitura do mock passa pela cadeia única `registerCrud`
-  (`dev/mock/crud.js`): guard 401/403 → política CASL ao nível do TIPO → ao
-  nível da INSTÂNCIA (conditions) → 404 → 422. Um PUT/DELETE sobre post alheio
-  responde 403 mesmo com a UI contornada.
+  (`dev/mock/crud.js`). A ordem de erros é POR OPERAÇÃO — o que o código faz de
+  facto (ver `crud.js`):
+  - LISTA: guard 401/403 → 403 se o role não tem NENHUMA regra de leitura do
+    tipo → filtro ABAC por conditions nos registos → 200. Nunca há 404/422.
+  - DETALHE / PUT / DELETE: guard 401/403 → procura do registo (**404** se não
+    existe) → política CASL SOBRE a instância (**403** se existe mas a política
+    nega — owner rule) → validação quando aplicável (422).
+  - POST: guard 401/403 → permissão `create` ao nível do tipo (403) →
+    validação de forma (422) → 201.
+  Um PUT/DELETE sobre post alheio responde 403 mesmo com a UI contornada. Nota
+  de contrato: a 403 sobre um registo existente revela que o id EXISTE — é
+  deliberado (a UI nunca mostra acções que a política nega); ocultar existência
+  exigiria 404 uniforme, a custo de diagnósticos piores.
 - `PUT /profile` é **self-scoped por construção**: escreve sempre no user da
   SESSÃO e ignora qualquer `id` no body — não há caminho para editar outro
   utilizador.
@@ -92,9 +102,11 @@ isso a auditoria separa três planos:
 
 ### A03 — Injection
 
-- **XSS (prova EXP4)**: zero `v-html`/`innerHTML`/`eval` no código da app
-  (verificado por grep); Vue 2 escapa toda a interpolação `{{ }}`; os slots da
-  DataTable renderizam componentes, não HTML cru.
+- **XSS (prova EXP4)**: zero `v-html`/`innerHTML`/`eval` no código da app em
+  `src/` e nos templates Vue (verificado por grep); Vue 2 escapa toda a
+  interpolação `{{ }}`; os slots da DataTable renderizam componentes, não HTML
+  cru. O fallback estático do `index.html` para browsers sem módulos usa
+  `textContent` (nada de HTML construído em lado nenhum).
 - **Atenção estrutural (inerente ao no-build)**: o vue2-sfc-loader COMPILA os
   `.vue` no browser (usa `new Function`). Uma CSP sem `'unsafe-eval'` impede a
   app de arrancar — mitigação: os templates vêm SEMPRE de ficheiros same-origin
@@ -229,11 +241,17 @@ isso a auditoria separa três planos:
 4. Catch-all `*` sempre em último (`features/index.js` garante por código).
 
 **Mock/API (autoridade):**
-1. TODAS as rotas protegidas usam `guard()` (401) + `guardOpts {admin:true}`
-   quando é zona admin (403) — escritas uma vez, chamadas em todas.
+1. TODAS as rotas protegidas usam `guard()` (401) — escrito uma vez, chamado
+   em todas. `guardOpts {admin:true}` (403 por ROLE) só onde a zona é
+   reservada ao role admin: `/api/admin/stats` e `/api/rules`. A gestão de
+   utilizadores (`/api/admin/users`) NÃO é admin-only: é governada pela
+   política CASL do subject `User` (subadmin lê/edita contas comuns; criar,
+   eliminar, alterar roles e editar contas admin ficam fora — EXP7/T12).
 2. Política CASL aplicada por pedido: tipo (403 sem regra nenhuma) e instância
    (conditions filtram lista/negam registo).
-3. Ordem de erros canónica 401 → 403 → 404 → 422 (nunca 404 a esconder 403).
+3. Ordem de erros POR OPERAÇÃO (detalhe no A01): LISTA 401 → 403 → 200;
+   DETALHE/PUT/DELETE 401 → 404 → 403 → 422; POST 401 → 403 → 422. A 403 de
+   instância revela existência do registo — decisão deliberada de contrato.
 4. `registerCrud` é o único caminho de CRUD — a cadeia não se reescreve por
    recurso (uma só implementação a auditar).
 
@@ -274,7 +292,7 @@ isso a auditoria separa três planos:
 
 A matriz confirma que a identidade vem de `session.userId` no registry, que a validade é decidida pelo relógio do servidor, que a rotação e a revogação são server-side e que `401 invalid_token` não desencadeia refresh.
 
-## Checklist do backend REAL (o que o template não pode dar)
+## Checklist do backend REAL
 
 1. **Tokens**: assinatura verificada no servidor (HS256/RS256); `sub`/`roles`
    do payload só confiáveis APÓS verificação; TTL curto.

@@ -26,8 +26,8 @@
 | Conta | Password | Role | Vê |
 | --- | --- | --- | --- |
 | `admin` | `admin123` | `admin` | tudo, incl. `/admin/stats` e `/admin/users` |
-| `user` | `user123` | `user` | `/content/posts` (owner rules: edita/apaga só os próprios posts), sem link para o admin |
-| `editor` | `editor123` | `editor` | `/content/posts` — edita posts de TODOS os autores (update sem conditions), não apaga |
+| `user` | `user123` | `user` | `/content/posts` (owner rules: edita/apaga só os próprios posts) e `/content/books` (leitura), sem link para o admin |
+| `editor` | `editor123` | `editor` | `/content/posts` — edita posts de TODOS os autores (update sem conditions), não apaga — e `/content/books` (leitura). A diferença para `user` está na ESCRITA de posts, não na leitura |
 | `viewer` | `viewer123` | `viewer` | `/content/posts` e `/content/books` — só leitura: nenhum botão, nenhum formulário |
 | `subadmin` | `subadmin123` | `subadmin` | `/admin/users` — gere contas COMUNS (read+update `User`; `roles` reservado ao admin), sem `/admin/stats` nem `/admin/permissions` |
 
@@ -45,5 +45,5 @@ O painel `/admin/users` cria contas novas (ex.: `carol / carol123`): entram logo
 | [`05-login-e-permissoes.md`](05-login-e-permissoes.md) | Sessão, guard, política CASL como dado |
 | [`06-mock-api.md`](06-mock-api.md) | MirageJS, seeds, endpoints completos |
 | [`07-producao.md`](07-producao.md) | Deploy: `env.js`, o que apagar, cache |
-| [`08-seguranca.md`](08-seguranca.md) | Auditoria OWASP Top 10, matriz de intrusão T01–T12 |
+| [`08-seguranca.md`](08-seguranca.md) | Auditoria OWASP Top 10, matriz de intrusão T01–T13 |
 | [`09-convencoes-de-rotas.md`](09-convencoes-de-rotas.md) | Convenção de zonas/rotas/meta e o estudo por trás |
