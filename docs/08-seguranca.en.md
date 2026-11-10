@@ -1,8 +1,8 @@
 # 08 — Security (OWASP Top 10, routes, and session audit)
 > **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](07-producao.en.md) · [Next](09-convencoes-de-rotas.en.md)
 
-This security audit covers the template’s history from v12.11 through v12.16 and its current
-**v12.18** state. An **ethical hacker** performed each test against the running application;
+This security audit describes the template’s current **v12.18** state. An **ethical hacker**
+performed each test against the running application;
 the evidence is recorded as EXP1–EXP7 below. The identity and session lifecycle was also
 validated with the **T01–T12 intrusion test matrix** against the mock API, using a Node harness
 that exercises the real code. The audit confirms the template’s central rule: **the UI hides,

@@ -1,8 +1,8 @@
 # 08 — Segurança (auditoria OWASP Top 10, rotas e sessão)
 > **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](07-producao.md) · [Seguinte](09-convencoes-de-rotas.md) · [English](08-seguranca.en.md)
 
-Auditoria de segurança do template (histórico v12.11–v12.16; estado actual
-**v12.18**), feita como **hacker ético**: cada achado foi provado com um exploit
+Auditoria de segurança do template no estado actual **v12.18**, feita como
+**hacker ético**: cada achado foi provado com um exploit
 executado contra a app (as provas EXP1–EXP7 abaixo). O ciclo de identidade/sessão
 é validado pela **matriz de intrusão T01–T12**, executada contra o mock com um
 harness Node que importa o código real. A auditoria confirma a doutrina central:
