@@ -5,28 +5,12 @@
 </template>
 
 <script>
-// Raiz mínima: <transition> + <router-view> + os estilos BASE globais. O CROMO
-// (navbar, contentor, cartão de login) vive nos layouts (ui/layouts/), que são os
-// PAIS das zonas declaradas pelas features (features/*/index.js) — a raiz não
-// conhece a app: troca de layout sem a tocar.
-//
-// A navegação animada tem DOIS níveis: este <transition name="page"> cobre a
-// troca de LAYOUT (login ⇄ app); o 2º nível, troca de VISTA dentro do cromo,
-// vive em cada layout (ui/layouts/). O CSS .page-* é global e fica AQUI — com
-// mais de um layout, a raiz é o único sítio comum a todos. mode="out-in": a
-// vista velha sai ANTES de a nova entrar — sem sobreposição nem salto de altura;
-// <transition> é abstracto (não renderiza elemento), por isso a raiz continua a
-// ser o layout roteado, e todas as vistas têm raiz única (exigência do Vue 2).
-//
-// Os estilos base ficam AQUI (e não num layout) porque há MAIS DO QUE UM layout
-// (LayoutDefault, LayoutAuth): tipografia, botões e campos têm de chegar a todos.
-// A raiz é o único componente que sempre monta — e o router só confirma a
-// navegação depois de o resolver, por isso os estilos chegam sempre antes do
-// primeiro render de qualquer vista.
+// Componente raiz: transição entre layouts, router-view e estilos globais.
+// Os layouts são definidos pelas features; os estilos comuns ficam aqui para
+// serem partilhados por todas as vistas.
 </script>
 
-<!-- Base visual comum a todos os layouts (NÃO scoped): tipografia, botões e
-     campos num só sítio, para todas as vistas partilharem o mesmo aspecto. -->
+<!-- Estilos globais partilhados por todos os layouts e vistas. -->
 <style>
 body {
     margin: 0;
@@ -59,7 +43,7 @@ input {
     border-radius: 6px;
     background: #fff;
 }
-/* Mensagens partilhadas por todas as vistas. */
+/* Mensagens partilhadas pelas vistas. */
 .error {
     color: #c0392b;
 }
@@ -67,11 +51,7 @@ input {
     color: #98a2b3;
     font-size: 0.85rem;
 }
-/* Transição de página (.page-*): aplicada à raiz do componente roteado em ambos
-   os níveis (App.vue troca LAYOUT; layouts trocam VISTA). O deslize vertical
-   mínimo dá direcção à troca sem a transformar em espectáculo; 180ms é curto
-   suficiente para não atrapalhar cliques em sequência. prefers-reduced-motion:
-   quem pede menos animação ao SO recebe a troca seca, sem fade. */
+/* Transição curta entre layouts e vistas, respeitando a preferência do sistema. */
 .page-enter-active,
 .page-leave-active {
     transition: opacity 0.18s ease, transform 0.18s ease;
