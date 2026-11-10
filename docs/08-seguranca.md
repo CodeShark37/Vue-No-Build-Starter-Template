@@ -1,13 +1,13 @@
 # 08 — Segurança (auditoria OWASP Top 10, rotas e sessão)
 > **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](07-producao.md) · [Seguinte](09-convencoes-de-rotas.md) · [English](08-seguranca.en.md)
 
-Auditoria de segurança do template no estado actual **v12.18**, feita como
+Auditoria de segurança actual do template, feita como
 **hacker ético**: cada achado foi provado com um exploit
 executado contra a app (as provas EXP1–EXP7 abaixo). O ciclo de identidade/sessão
 é validado pela **matriz de intrusão T01–T12**, executada contra o mock com um
 harness Node que importa o código real. A auditoria confirma a doutrina central:
-**a UI esconde, a API decide**; desde a v12.12, a autoridade sobre a identidade e
-o ciclo de vida da sessão é o servidor (registry de sessões).
+**a UI esconde, a API decide**; a autoridade sobre a identidade e o ciclo de vida
+da sessão é o servidor (registry de sessões).
 
 ## O modelo de ameaça deste template
 
@@ -50,7 +50,7 @@ isso a auditoria separa três planos:
   (autoria nunca editável), `['title','author']` nos books (`creatorId` nunca),
   `['name','password','roles']` nos users (só por admin, com self-lockout: um
   admin não muda as próprias roles nem se elimina — 422).
-- **Conta alvo admin (v12.16)**: uma conta com o ROLE admin só se edita pelo
+- **Conta alvo admin**: uma conta com o ROLE admin só se edita pelo
   ROLE admin — 403 antes de qualquer validação de forma, mesmo para quem tem a
   regra `update User` (EXP7/T12: sem isto, o sub-admin tomava a conta do admin
   pela password nova).
@@ -69,7 +69,7 @@ isso a auditoria separa três planos:
   user da sessão.
 
 **Limitações (desenho do mock, documentadas):**
-- **EXP1 corrigido na v12.12**: o servidor só confia no que emite — o token
+- **EXP1**: o servidor só confia no que emite — o token
   referencia uma sessão no registry (`sessions.js`) e o payload tem um hash
   registado na emissão; forjado/adulterado = 401. Num backend real, o token é
   assinado (HS256/RS256) E verificado contra a sessão/denylist.
@@ -84,7 +84,7 @@ isso a auditoria separa três planos:
 - `publicUser()` é a única forma de saída do user: a password NUNCA sai por
   nenhuma rota (listas, detalhes, login, refresh, profile).
 - FNV-1a na assinatura do dump e o **hashPayload (FNV-1a+DJB2)** da integridade
-  do token (v12.12) são explicitamente NÃO-criptográficos: detectam alteração
+  do token são explicitamente NÃO-criptográficos: detectam alteração
   (dump stale / payload adulterado), não impedem colisão deliberada de
   64 bits — o comentário no código diz-o. A assinatura REAL é do backend
   (HS256/RS256).
@@ -127,7 +127,7 @@ isso a auditoria separa três planos:
 
 ### A05 — Security Misconfiguration
 
-- **Corrigido na v12.11:**
+- **Estado actual:**
   - `withCredentials: false` em `core/http.js` (antes `true` — enviaria cookies
     automaticamente para a API real e alargava a superfície CSRF sem
     necessidade; a app autentica por Bearer).
@@ -147,9 +147,8 @@ isso a auditoria separa três planos:
 
 ### A06 — Vulnerable and Outdated Components
 
-- **Corrigido na v12.11: axios 1.6.0 → 1.21.0.** A 1.6.0 estava dentro do
-  intervalo afectado por **CVE-2025-27152** (SSRF/credencial leak via URL
-  absoluta que ignora `baseURL`; corrigida em 1.8.2). Na prática deste template
+- O Axios usado está fora do intervalo afectado por **CVE-2025-27152**
+  (SSRF/credencial leak via URL absoluta que ignora `baseURL`). Na prática deste template
   o caminho de ataque é estreito (ninguém passa URL absoluto de user input ao
   axios), mas vendoring desatualizado acumula risco. (A anterior 1.6.0 já não
   tinha CVE-2023-45857 — essa foi corrigida precisamente em 1.6.0.)
@@ -174,7 +173,7 @@ isso a auditoria separa três planos:
   `autocomplete="new-password"` (ProfileView).
 - Token mock: access TTL curto (120s) + refresh (7 dias), single-flight no interceptor (um só
   POST /refresh para N pedidos paralelos; retry único por pedido).
-- **Corrigido na v12.12 (o servidor é a autoridade da sessão):**
+- **Estado actual: o servidor é a autoridade da sessão:**
   - Registry de sessões (`dev/mock/sessions.js`): só sessões EMITIDAS abrem a
     API — token forjado/adulterado = 401 (EXP1/T01/T02 fechados).
   - Logout REVOGA a sessão (T04) e mudança de password REVOGA todas as sessões
@@ -186,8 +185,8 @@ isso a auditoria separa três planos:
     os roles vêm da BD a cada pedido e a validade vem do registry.
 - **Limitações do mock restantes (responsabilidade do backend real):** sem rate
   limiting/lockout no `/login`; password mínima de 4 e em claro (A02); sem MFA.
-- Credenciais demo não se sugerem mais fora de dev (v12.11).
-- Logout: **server-side** desde a v12.12 (revogação); o cliente limpa a sessão
+- Credenciais demo não são sugeridas fora de dev.
+- Logout: **server-side** (revogação); o cliente limpa a sessão
   local na mesma (o `POST /logout` é tolerante a token já morto).
 
 ### A08 — Software and Data Integrity Failures
@@ -217,7 +216,7 @@ isso a auditoria separa três planos:
   só carrega caminhos declarados em código (features/index.js, rotas) a partir
   da raiz da app (`config.root`), same-origin.
 - A API mock não faz pedidos de saída. (O CVE-2025-27152 do axios antigo era
-  SSRF por URL absoluta — eliminado pela actualização v12.11.)
+  SSRF por URL absoluta — não está presente na dependência actual.)
 
 ## Segurança de ROTAS (o que está bem e como se repete)
 
@@ -317,7 +316,7 @@ O que a matriz FECHOU (e como):
 1. **Tokens**: assinatura verificada no servidor (HS256/RS256); `sub`/`roles`
    do payload só confiáveis APÓS verificação; TTL curto.
 2. **Refresh token separado** do access token, com rotação e revogação
-   (denylist por jti ou versão de sessão por user); logout revoga. *(O mock
+   (denylist por jti ou revisão de sessão por user); logout revoga. *(O mock
    já demonstra o ciclo completo: par access/refresh com TTLs próprios,
    rotação, revogação de família e detecção de reutilização.)*
 3. **Passwords**: argon2id/bcrypt + salt; política real (comprimento,
