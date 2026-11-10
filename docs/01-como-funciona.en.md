@@ -30,9 +30,21 @@
 1. `env.js` decides which Vue build to load and whether to inject
    `vendor-dev/mirage.min.js`, using `document.write` at its own position so deferred
    scripts retain their order.
-2. `main.js` calls `startMirage(config)` when enabled, then creates the router, synchronizes
-   permissions, installs services, creates the store, loads `src/app/App.vue`, and mounts
-   `#app`.
+2. `main.js` completes the bootstrap in this order:
+
+   ```text
+   startMirage(config)
+       │
+       ├── Intercepts XHR before the first request
+       ├── createRouter(routes)
+       │   └── Routes from features/index.js
+       ├── ability.sync()
+       │   └── First permissions load
+       ├── installServices()
+       ├── createStore()
+       ├── load('src/app/App.vue')
+       └── $mount('#app')
+   ```
 3. In production, set `mock: false`; the same client then sends requests to `apiBase`.
 
 ## Architectural principles

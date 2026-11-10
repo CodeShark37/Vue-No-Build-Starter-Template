@@ -28,7 +28,21 @@
 
 1. `env.js` (script clássico) decide QUE vue entra na fila (`vue.min.js` ou `vue.dev.js`) e se `vendor-dev/mirage.min.js` vem para produção — via `document.write` na própria posição, por isso a ordem dos `defer` fica garantida.
 2. Vendors `defer` executam pela ordem escrita; o `main.js` (módulo) corre por último.
-3. `main.js`: `startMirage(config)` intercepta XHR antes de qualquer pedido → `createRouter(routes)` (rotas de `features/index.js`) → `ability.sync()` (1º fetch de permissões) → `installServices()` → `createStore()` → `load('src/app/App.vue')` → `$mount('#app')`.
+3. `main.js` conclui o arranque nesta sequência:
+
+   ```text
+   startMirage(config)
+       │
+       ├── Intercepta XHR antes do primeiro pedido
+       ├── createRouter(routes)
+       │   └── Rotas de features/index.js
+       ├── ability.sync()
+       │   └── Primeiro carregamento das permissões
+       ├── installServices()
+       ├── createStore()
+       ├── load('src/app/App.vue')
+       └── $mount('#app')
+   ```
 
 ## Camadas e doutrinas
 
