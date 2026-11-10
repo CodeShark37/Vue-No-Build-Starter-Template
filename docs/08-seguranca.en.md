@@ -36,8 +36,19 @@ The audit therefore separates three layers:
 
 **Positive findings (demonstrated by EXP3 and EXP5):**
 - All mock reads and writes use the single `registerCrud` chain
-  (`dev/mock/crud.js`): guard 401/403 → CASL policy at the type level → instance-level
-  conditions → 404 → 422. PUT and DELETE on another user’s post return 403 even when the UI is bypassed.
+  (`dev/mock/crud.js`). The error order is PER OPERATION — exactly what the
+  code does (see `crud.js`):
+  - LIST: guard 401/403 → 403 when the role has NO read rule for the type →
+    ABAC filter by conditions per record → 200. No 404/422 ever.
+  - DETAIL / PUT / DELETE: guard 401/403 → record lookup (**404** when
+    missing) → CASL policy ON THE INSTANCE (**403** when it exists but the
+    policy denies — owner rule) → validation when applicable (422).
+  - POST: guard 401/403 → `create` permission at type level (403) →
+    shape validation (422) → 201.
+  PUT and DELETE on another user’s post return 403 even when the UI is
+  bypassed. Contract note: a 403 on an existing record reveals that the id
+  EXISTS — deliberate (the UI never shows actions the policy denies); hiding
+  existence would require a uniform 404, at the cost of worse diagnostics.
 - `PUT /profile` is **self-scoped by design**: it always writes to the current
   session and ignores any `id` in the request body; there is no route for editing another user.
 - allowlists prevent mass assignment: `editable: ['title','body']` in the posts
@@ -89,9 +100,10 @@ The audit therefore separates three layers:
 
 ### A03 — Injection
 
-- **XSS (proof EXP4)**: zero `v-html`/`innerHTML`/`eval` in the application code
-  (verified by grep); Vue 2 escapes every interpolation `{{ }}`; the slots of the
-  DataTable renders components, not raw HTML.
+- **XSS (proof EXP4)**: zero `v-html`/`innerHTML`/`eval` in the application code under
+  `src/` and the Vue templates (verified by grep); Vue 2 escapes every interpolation `{{ }}`; the slots of the
+  DataTable renders components, not raw HTML. The static fallback in `index.html` for browsers
+  without modules uses `textContent` (no HTML is built anywhere).
 - **Structural concern (inherent to the no-build architecture):** vue2-sfc-loader compiles
   `.vue` files in the browser with `new Function`. A CSP without `'unsafe-eval'` prevents the
   application from starting. Templates must therefore come from same-origin deployment files,
@@ -221,11 +233,17 @@ The audit therefore separates three layers:
 4. The catch-all `*` is always last (`features/index.js` ensures by code).
 
 **Mock/API (authority):**
-1. All protected routes use `guard()` (401) + `guardOpts {admin:true}`
-   when the route is administrative (403); the checks are defined once and reused.
+1. All protected routes use `guard()` (401) — defined once, called everywhere.
+   `guardOpts {admin:true}` (403 by ROLE) only where the area is reserved to
+   the admin role: `/api/admin/stats` and `/api/rules`. User management
+   (`/api/admin/users`) is NOT admin-only: it is governed by the CASL policy
+   of subject `User` (subadmin reads/edits common accounts; create, delete,
+   changing roles and editing admin accounts are out — EXP7/T12).
 2. CASL policy is applied on every request: type-level checks return 403 without a rule,
    and instance conditions filter lists or deny individual records.
-3. The canonical error order is 401 → 403 → 404 → 422 (never hide a 403 behind a 404).
+3. Error order PER OPERATION (details in A01): LIST 401 → 403 → 200;
+   DETAIL/PUT/DELETE 401 → 404 → 403 → 422; POST 401 → 403 → 422. An instance
+   403 reveals the record exists — a deliberate contract decision.
 4. `registerCrud` is the single CRUD path; the policy chain is not rewritten per resource.
 
 ## Security of session (current state and limitations)
@@ -265,7 +283,7 @@ The audit therefore separates three layers:
 
 The matrix confirms that identity comes from `session.userId` in the registry, expiry is decided by the server clock, rotation and revocation are server-side, and `401 invalid_token` never triggers refresh.
 
-## Checklist of the real backend (that the template cannot give)
+## Checklist of the real backend
 
 1. **Tokens:** verify the signature on the server (HS256/RS256); `sub`/`roles`
    trust payload roles only after verification; TTL short.

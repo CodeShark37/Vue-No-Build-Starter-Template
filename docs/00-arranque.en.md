@@ -34,8 +34,8 @@
 | Account | password | Role | Access |
 | --- | --- | --- | --- |
 | `admin` | `admin123` | `admin` | Everything, including `/admin/stats` and `/admin/users` |
-| `user` | `user123` | `user` | `/content/posts`; owner rules allow editing and deleting only owned posts |
-| `editor` | `editor123` | `editor` | `/content/posts`; can edit every author’s posts but cannot delete |
+| `user` | `user123` | `user` | `/content/posts`; owner rules allow editing and deleting only owned posts; also `/content/books` (read-only) |
+| `editor` | `editor123` | `editor` | `/content/posts`; can edit every author’s posts but cannot delete; also `/content/books` (read-only). The difference from `user` is WRITE access to posts, not reading |
 | `viewer` | `viewer123` | `viewer` | `/content/posts` and `/content/books`; read-only |
 | `subadmin` | `subadmin123` | `subadmin` | `/admin/users`; can read/update ordinary `User` records, but cannot change `roles`; not `/admin/stats` or `/admin/permissions` |
 
@@ -55,5 +55,5 @@ immediately with their role’s permissions; no additional code is required (see
 | [`05-login-e-permissoes.en.md`](05-login-e-permissoes.en.md) | Sessions, guards, and CASL policy data |
 | [`06-mock-api.en.md`](06-mock-api.en.md) | MirageJS, seeds, and endpoints |
 | [`07-producao.en.md`](07-producao.en.md) | Deployment, `env.js`, removed files, and cache |
-| [`08-seguranca.en.md`](08-seguranca.en.md) | OWASP Top 10 and T01–T12 intrusion matrix |
+| [`08-seguranca.en.md`](08-seguranca.en.md) | OWASP Top 10 and T01–T13 intrusion matrix |
 | [`09-convencoes-de-rotas.en.md`](09-convencoes-de-rotas.en.md) | Route-area, route, and META conventions |

@@ -7,9 +7,7 @@
     <!-- Raiz da app. Alterar se for servida num sub-caminho (ex.: "/meu-repo/"). -->
     <base href="/">
     <title></title>
-    <!-- Tema ANTES da 1.ª pintura: script clássico síncrono (módulos ES são
-         diferidos e não chegam aqui). A política vive em core/theme-boot.js —
-         espelho de core/theme.js; ver src/ui/theme.css. -->
+    <!-- Tema ANTES da 1.ª pintura: script clássico síncrono -->
     <script src="src/core/theme-boot.js"></script>
     <link rel="stylesheet" href="src/ui/theme.css">
     <style>
@@ -20,27 +18,20 @@
 
 <body>
     <div id="app"><p class="boot">A carregar…</p></div>
-
-    <!-- 1º de tudo: env.js decide QUE vue entra na fila e se o mock (Mirage) vem
-         para produção. Escreve as tags por document.write NA SUA POSIÇÃO — ver env.js. -->
+    
     <script src="env.js"></script>
-
-    <!-- Restantes vendors (iguais em dev e produção). `defer`: descarregam em
-         paralelo sem bloquear o HTML e executam pela ordem escrita, antes do
-         main.js (módulos também são diferidos, na mesma fila). -->
+    <!-- `defer`: descarregam em paralelo sem bloquear o HTML-->
     <script defer src="vendor/vue2-sfc-loader.js"></script>
     <script defer src="vendor/vuex.min.js"></script>
     <script defer src="vendor/vue-head.js"></script>
     <script defer src="vendor/vue-router.min.js"></script>
     <script defer src="vendor/axios.min.js"></script>
-    <!-- CASL: permissões (RBAC/ABAC). core/ability.js constrói a Ability a partir
-         das regras de GET /api/permissions; as vistas perguntam com this.$perm.can(...). -->
     <script defer src="vendor/casl.min.js"></script>
 
     <script type="module" src="src/main.js"></script>
 
     <script nomodule>
-        document.getElementById("app").innerHTML = "Your browser doesn't support JavaScript modules :("
+        document.getElementById("app").textContent = "Your browser doesn't support JavaScript modules :("
     </script>
 </body>
 

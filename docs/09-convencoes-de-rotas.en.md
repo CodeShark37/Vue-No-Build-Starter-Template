@@ -22,9 +22,14 @@ configuration.
 - **C2 — Collisions and order:** paths never collide, and no rule depends on registration order
   except the catch-all `*`, which is always last.
 - **C3 — Inherited META:** `requiresAuth`, `roles`, and `perm` on the parent cover children
-  through `to.matched`; never repeat META on every child. For `roles` the inheritance is
-  restrictive: every level that declares `roles` must be satisfied (AND across levels;
-  a level’s array is an OR of alternatives) — the child tightens, never loosens.
+  through `to.matched`; never repeat META on every child. The THREE metas merge with
+  different rules (`app/guards.js`, `requirementsOf()`):
+  - `requiresAuth`: ONE level declaring it is enough (ANY) — any parent or child;
+  - `roles`: restrictive — every level that declares `roles` must be satisfied (AND across
+    levels; a level’s array is an OR of alternatives) — the child tightens, never loosens;
+  - `perm`: REPLACEMENT — the DEEPEST `perm` is the only one evaluated and replaces the
+    parent’s (it does not accumulate). Requiring both the parent’s and the child’s permission
+    would need the guard to collect every `perm` in the chain.
 - **C4 — URL stability:** current paths are explicit and stable, with one declaration point
   for each area.
 - **C5 — Addition cost:** a new page is one child in an existing area; a new domain is one new
@@ -45,6 +50,10 @@ configuration.
 1. **One primary area per feature:** one top-level path, one layout in `ui/layouts/`, and one
    `index.js` declaring everything. Areas with several sections provide navigation in their layout
    (AdminLayout uses a sidebar; ContentLayout uses tabs).
+   EXPLICIT EXCEPTION: a feature may declare MORE THAN ONE complete area (distinct top-level
+   paths, each with its own layout and META) — the `auth` feature declares `/login`
+   (LayoutAuth, `guest`) and `/profile` (LayoutDefault, `requiresAuth`); a single
+   `features/auth/` folder remains the single declaration point (C1).
 2. **Put META on the area parent.** A child declares META only for an exception inside the area
    (for example, `/admin/users` uses `perm` while sibling routes require `roles`). The guard
    walks `to.matched`, so the parent covers its children.

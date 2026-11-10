@@ -22,10 +22,15 @@ as features cresçam sem espalhar a configuração.
 - **C2 — Colisões e ordem**: caminhos nunca colidem; nenhuma regra depende de
   ordem de registo (excepto o catch-all `*`, sempre último).
 - **C3 — Meta herdada**: `requiresAuth`/`roles`/`perm` no PAI cobrem os filhos
-  por `to.matched` — nunca repetir meta em cada filho. Em `roles` a herdação é
-  restritiva: cada nível que declarar `roles` tem de ficar satisfeito (AND entre
-  níveis; o array de um nível é OR de alternativas) — o filho aperta, nunca
-  afrouxa.
+  por `to.matched` — nunca repetir meta em cada filho. As TRÊS meta fundem-se
+  com regras diferentes (`app/guards.js`, `requirementsOf()`):
+  - `requiresAuth`: basta UM nível o declarar (ANY) — pai ou filho qualquer;
+  - `roles`: restritiva — cada nível que declarar `roles` tem de ficar
+    satisfeito (AND entre níveis; o array de um nível é OR de alternativas) —
+    o filho aperta, nunca afrouxa;
+  - `perm`: SUBSTITUIÇÃO — o `perm` mais PROFUNDO é o único avaliado e
+    substitui o do pai (não se acumula). Para exigir a permissão do pai E a do
+    filho, o guard teria de acumular todas as `perm` da cadeia.
 - **C4 — Estabilidade de URL**: os caminhos actuais são explícitos e estáveis,
   com um único ponto de declaração por zona.
 - **C5 — Custo de acrescentar**: uma página nova = 1 filho na zona existente;
@@ -46,6 +51,11 @@ as features cresçam sem espalhar a configuração.
 1. **Uma zona principal por feature**: 1 path de topo, 1 layout de
    `ui/layouts/` e 1 `index.js` que declara tudo. Zonas com várias secções
    ganham navegação no layout (AdminLayout: sidebar; ContentLayout: abas).
+   EXCEPÇÃO explícita: uma feature pode declarar MAIS QUE UMA zona completa
+   (paths de topo distintos, com layouts e meta próprios) — a feature `auth`
+   declara `/login` (LayoutAuth, `guest`) e `/profile` (LayoutDefault,
+   `requiresAuth`); mantém-se uma única pasta `features/auth/` como ponto de
+   declaração (C1).
 2. **Meta no PAI da zona**; filho declara meta só para EXCEÇÕES dentro da zona
    (ex.: `/admin/users` abre por `perm` enquanto os irmãos exigem `roles`).
    O guard percorre `to.matched` — o pai cobre os filhos.

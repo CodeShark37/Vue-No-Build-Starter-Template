@@ -22,7 +22,7 @@
 │       ├── content/      Posts and books
 │       └── admin/
 ├── docs/                 Documentation, one file per topic
-└── scripts/              Checks and the T01–T12 intrusion matrix
+└── scripts/              Checks and the T01–T13 intrusion matrix
 ```
 
 ## Boot sequence

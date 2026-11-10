@@ -65,10 +65,12 @@ const features = [site, auth, content, admin];
 
 Não há "caminho didáctico" vs. "caminho rápido" no código — posts e books seguem o MESMO: `registerCrud` no mock, `makeApi` no cliente, `ui/DataTable.vue` na vista. Para UM recurso novo basta (o exemplo completo é `features/content/` — o livro entrou na mesma zona):
 
-1. **Mock** — em vez de copiar a cadeia de política em N ficheiros (TODOS os recursos com seed passam pela fábrica: posts, books e users), regista as 5 rotas com a fábrica `registerCrud` (`dev/mock/crud.js`), que aplica a MESMA cadeia (guard → nível tipo → filtro/negação por instância → 403 → 404 → 422 → paginação):
+1. **Mock** — em vez de copiar a cadeia de política em N ficheiros (TODOS os recursos com seed passam pela fábrica: posts, books e users), regista as 5 rotas com a fábrica `registerCrud` (`dev/mock/crud.js`), que aplica a MESMA cadeia (guard → 404 da procura → política por tipo/instância → 403 → validação 422 → paginação; ordem por operação, ver docs/08):
 
    ```js
-   // dev/mock/routes/books.js — ~20 linhas no total
+   // dev/mock/routes/books.js — EXEMPLO SIMPLIFICADO inspirado no ficheiro real
+   // (o real inclui 'pages' em allowedSorts, numericSorts: ['pages'] e a coerção
+   // Number(body.pages) — ver dev/mock/routes/books.js)
    import { registerCrud } from '../crud.js';
    export function register(server, ctx) {
        registerCrud(server, ctx, {

@@ -71,11 +71,14 @@ Posts and books use the same chain: `registerCrud` in the mock, `makeApi` on the
 view. To add a resource:
 
 1. **Mock.** Instead of copying the policy chain into several files, register the five routes
-   with `registerCrud` (`dev/mock/crud.js`). It applies the same sequence—guard, type-level
-   check, instance filtering/denial, 403, 404, 422, and pagination—to every seeded resource:
+   with `registerCrud` (`dev/mock/crud.js`). It applies the same sequence—guard, record
+   lookup 404, type/instance policy 403, shape validation 422, and pagination—to every
+   seeded resource (order per operation; see docs/08):
 
    ```js
-   // dev/mock/routes/books.js — about 20 lines in total
+   // dev/mock/routes/books.js — SIMPLIFIED EXAMPLE inspired by the real file
+   // (the real one includes 'pages' in allowedSorts, numericSorts: ['pages'],
+   // and the Number(body.pages) coercion — see dev/mock/routes/books.js)
    import { registerCrud } from '../crud.js';
    export function register(server, ctx) {
        registerCrud(server, ctx, {

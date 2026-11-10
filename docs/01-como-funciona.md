@@ -21,7 +21,7 @@
 │       ├── content/      Posts e books
 │       └── admin/
 ├── docs/                 Documentação, um ficheiro por assunto
-└── scripts/              Matriz T01–T12 e verificação de sintaxe
+└── scripts/              Matriz T01–T13 e verificação de sintaxe
 ```
 
 ## Boot, por ordem
