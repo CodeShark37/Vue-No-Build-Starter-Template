@@ -31,17 +31,23 @@
 3. `main.js` conclui o arranque nesta sequência:
 
    ```text
-   startMirage(config)
+   theme-boot.js
        │
-       ├── Intercepta XHR antes do primeiro pedido
-       ├── createRouter(routes)
-       │   └── Rotas de features/index.js
-       ├── ability.sync()
-       │   └── Primeiro carregamento das permissões
-       ├── installServices()
-       ├── createStore()
-       ├── load('src/app/App.vue')
-       └── $mount('#app')
+       └── Aplica o tema guardado ou o tema do sistema antes da primeira pintura
+           │
+           └── main.js
+               │
+               ├── theme.init()
+               ├── startMirage(config)
+               │   └── Intercepta XHR antes do primeiro pedido
+               ├── createRouter(routes)
+               │   └── Rotas de features/index.js
+               ├── ability.sync()
+               │   └── Primeiro carregamento das permissões
+               ├── installServices()
+               ├── createStore()
+               ├── load('src/app/App.vue')
+               └── $mount('#app')
    ```
 
 ## Camadas e doutrinas

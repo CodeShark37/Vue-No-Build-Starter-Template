@@ -33,17 +33,23 @@
 2. `main.js` completes the bootstrap in this order:
 
    ```text
-   startMirage(config)
+   theme-boot.js
        │
-       ├── Intercepts XHR before the first request
-       ├── createRouter(routes)
-       │   └── Routes from features/index.js
-       ├── ability.sync()
-       │   └── First permissions load
-       ├── installServices()
-       ├── createStore()
-       ├── load('src/app/App.vue')
-       └── $mount('#app')
+       └── Applies the stored or system theme before the first paint
+           │
+           └── main.js
+               │
+               ├── theme.init()
+               ├── startMirage(config)
+               │   └── Intercepts XHR before the first request
+               ├── createRouter(routes)
+               │   └── Routes from features/index.js
+               ├── ability.sync()
+               │   └── First permissions load
+               ├── installServices()
+               ├── createStore()
+               ├── load('src/app/App.vue')
+               └── $mount('#app')
    ```
 3. In production, set `mock: false`; the same client then sends requests to `apiBase`.
 
