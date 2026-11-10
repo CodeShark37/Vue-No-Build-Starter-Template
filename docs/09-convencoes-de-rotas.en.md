@@ -1,9 +1,9 @@
 # 09 — Route conventions: areas, META, and names
 > **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](08-seguranca.en.md)
 
-This convention organizes the template’s areas, route metadata, names, and legacy redirects.
-Its goal is to keep authorization centralized, avoid collisions, and let features grow without
-scattering configuration.
+This convention organizes the template’s areas, route metadata, and route names. Its goal is to
+keep authorization centralized, avoid collisions, and let features grow without scattering
+configuration.
 
 ## 1. Current inventory
 
@@ -14,7 +14,6 @@ scattering configuration.
 | auth | `/app/profile` | LayoutDefault | `requiresAuth` | Profile |
 | content | `/content` | **ContentLayout** | `requiresAuth` | posts, books (`''` → posts) |
 | admin | `/admin` | AdminLayout | `requiresAuth` | users (`perm`), stats (`roles`), permissions (`roles`); `''` → users |
-| legacy | `/app/feed`, `/app/books` | — | `requiresAuth` | redirects to `/content/…` |
 
 ## 2. Evaluation criteria
 
@@ -26,8 +25,8 @@ scattering configuration.
   through `to.matched`; never repeat META on every child. For `roles` the inheritance is
   restrictive: every level that declares `roles` must be satisfied (AND across levels;
   a level’s array is an OR of alternatives) — the child tightens, never loosens.
-- **C4 — URL stability:** bookmarks survive reorganizations through legacy redirects declared
-  by the old area (for example, `/app/data` → `/app/feed`).
+- **C4 — URL stability:** current paths are explicit and stable, with one declaration point
+  for each area.
 - **C5 — Addition cost:** a new page is one child in an existing area; a new domain is one new
   feature (folder plus one registration in `features/index.js`).
 - **C6 — Readability:** the URL describes the area and resource; avoid abbreviations.
@@ -36,16 +35,15 @@ scattering configuration.
 
 | option | description | C1 | C2 | C3 | C4 | C5 | C6 | Verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **A. Separate `/app` parents per feature** | posts and books each declared their own `/app` parent | medium (META scattered across two `index.js` files) | risk of child collisions and duplicate parents | okay | okay | new page okay; new area duplicates the parent | `/app/feed` hides the area | **rejected** — the application area remains implicit and configuration is duplicated |
-| **B. Area per feature with a top-level path** (**adopted**) | one feature = one top-level path (`/content`, `/admin`) + one layout + parent META | high — everything is in `index.js` | zero collisions (one path per area) | high | legacy redirects | page = one child; domain = one folder | `/content/posts` | **adopted** |
+| **A. Separate parents per feature** | posts and books each declared their own parent | medium (META scattered across two `index.js` files) | risk of child collisions and duplicate parents | okay | okay | new page okay; new area duplicates the parent | the area remains implicit | **rejected** — configuration is duplicated |
+| **B. Area per feature with a top-level path** (**adopted**) | one feature = one top-level path (`/content`, `/admin`) + one layout + parent META | high — everything is in `index.js` | zero collisions (one path per area) | high | stable paths | page = one child; domain = one folder | `/content/posts` | **adopted** |
 | **C. Single `/app` shell with a shared parent** | one `/app` parent with LayoutDefault and all children inside it | low — feature `index.js` files would no longer be the source of truth | different features share one parent (registration/import order matters) | high | okay | every feature writes to the same parent; the central registry grows | okay | **rejected** — violates “one folder per feature; the registry is the single contact point” |
 | **D. Resource routes with parameters** (`/posts/:id`, `/books/:id`) | detail pages by ID | high | okay | okay | okay | okay | high | **reserved for when detail pages exist** — DataTable currently covers the use cases without detail pages; `api.get(id)` already exists for that future need |
 
 ## 4. The convention
 
 1. **One primary area per feature:** one top-level path, one layout in `ui/layouts/`, and one
-   `index.js` declaring everything. Legacy routes may remain in a compatible area only to redirect
-   to the current address. Areas with several sections provide navigation in their layout
+   `index.js` declaring everything. Areas with several sections provide navigation in their layout
    (AdminLayout uses a sidebar; ContentLayout uses tabs).
 2. **Put META on the area parent.** A child declares META only for an exception inside the area
    (for example, `/admin/users` uses `perm` while sibling routes require `roles`). The guard
@@ -60,11 +58,8 @@ scattering configuration.
    path `''` redirects to the area’s main section, so `/content` and `/admin` never return 404.
 5. **Route names** (for `router.push` by name): PascalCase with the area prefix — `Home`, `Login`,
    `Profile`, `ContentPosts`, `ContentBooks`, `AdminStats`, `AdminUsers`, `AdminPermissions`.
-6. **Legacy URLs:** declare redirects in the old area (`/app/feed` → `/content/posts`,
-   `/app/books` → `/content/books`, `/app/data` → `/app/feed` → the first redirect). Upgrades
-   should not turn known URLs into 404 responses.
-7. **Catch-all `*`:** always last; `features/index.js` enforces this order.
-8. **API namespace follows the feature:** `$api.content.posts`, `$api.content.books`, and
+6. **Catch-all `*`:** always last; `features/index.js` enforces this order.
+7. **API namespace follows the feature:** `$api.content.posts`, `$api.content.books`, and
    `$api.admin.*`; data-domain code belongs beside the UI that consumes it.
 
 ## 5. Maintenance checklist

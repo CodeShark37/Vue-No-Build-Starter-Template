@@ -7,10 +7,7 @@
 //     navbar + abas) + meta no PAI (requiresAuth) — os filhos herdam pelo
 //     to.matched do guard;
 //   - filho vazio '' -> redirect 'posts': /content nunca dá 404;
-//   - filhos 'posts' e 'books' — recursos no PLURAL (convenção docs/09);
-//   - redirects de LEGADO: /app/feed e /app/books continuam a funcionar
-//     (bookmarks) — declarados aqui, na zona que os absorveu;
-//     /app/data -> /app/feed -> cai no redirect /content/posts.
+//   - filhos 'posts' e 'books' — recursos no PLURAL (convenção docs/09).
 //
 // API namespace segue a feature (convenção docs/09 §4.8): this.$api.content.posts
 // e this.$api.content.books — makeApi() dá os 5 verbos canónicos de cada domínio
@@ -46,31 +43,6 @@ export default {
                     path: 'books',
                     name: 'ContentBooks',
                     component: lazy('src/features/content/BooksView.vue'),
-                },
-            ],
-        },
-        {
-            // LEGADO: os URLs antigos da zona /app redirecionam
-            // para a zona nova — zero 404 em bookmarks. O pai repete o cromo
-            // LayoutDefault (nunca renderiza: os filhos são redirects puros) e
-            // mantém requiresAuth — o guard avalia o destino ANTES do redirect
-            // completar, e os destinos exigem sessão na mesma.
-            path: '/app',
-            component: lazy('src/ui/layouts/LayoutDefault.vue'),
-            meta: { requiresAuth: true },
-            children: [
-                {
-                    path: 'feed',
-                    redirect: '/content/posts',
-                },
-                {
-                    path: 'books',
-                    redirect: '/content/books',
-                },
-                {
-                    // A cadeia de redirects termina em /content/posts.
-                    path: 'data',
-                    redirect: '/app/feed',
                 },
             ],
         },
