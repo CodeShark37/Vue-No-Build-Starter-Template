@@ -24,7 +24,9 @@ maintainability as features grow. The convention below is the one the template f
 - **C2 — Collisions and order:** paths never collide, and no rule depends on registration order
   except the catch-all `*`, which is always last.
 - **C3 — Inherited META:** `requiresAuth`, `roles`, and `perm` on the parent cover children
-  through `to.matched`; never repeat META on every child.
+  through `to.matched`; never repeat META on every child. For `roles` the inheritance is
+  restrictive: every level that declares `roles` must be satisfied (AND across levels;
+  a level’s array is an OR of alternatives) — the child tightens, never loosens.
 - **C4 — URL stability:** bookmarks survive reorganizations through legacy redirects declared
   by the old area (for example, `/app/data` → `/app/feed`).
 - **C5 — Addition cost:** a new page is one child in an existing area; a new domain is one new

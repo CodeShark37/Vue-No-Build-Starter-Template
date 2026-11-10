@@ -38,7 +38,7 @@
                         <tr v-for="(r, i) in target.rules" :key="i">
                             <td class="td-pos">{{ i + 1 }}</td>
                             <td><strong>{{ r.action }}</strong>
-                                <span v-if="r.inverted" class="badge-cannot" title="Regra de negação (cannot no CASL)">cannot</span></td>
+                                <span v-if="r.inverted" class="badge badge-cannot" title="Regra de negação (cannot no CASL)">cannot</span></td>
                             <td>{{ r.subject }}</td>
                             <td class="td-conditions"><code>{{ conditionsText(r) }}</code></td>
                         </tr>
@@ -114,7 +114,7 @@ export default {
                     }
                 })
                 .catch(function (err) {
-                    self.error = 'GET /admin/users falhou' + self.detailOf(err);
+                    self.error = 'GET /admin/users falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.loadingUsers = false; });
         },
@@ -127,16 +127,9 @@ export default {
                 .then(function (res) { self.target = res.data.data; })
                 .catch(function (err) {
                     self.target = null;
-                    self.error = 'GET /permissions/' + self.selectedId + ' falhou' + self.detailOf(err);
+                    self.error = 'GET /permissions/' + self.selectedId + ' falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.loading = false; });
-        },
-        // Mensagem curta por status (mesmo formato dos restantes painéis): 403 é
-        // "sem permissão" — a sessão NUNCA é limpa pelo interceptor.
-        detailOf(err) {
-            const res = err && err.response;
-            if (!res) return '';
-            return ' (HTTP ' + res.status + ')';
         },
     },
 };
@@ -150,23 +143,13 @@ export default {
     margin: 0.3rem 0 0.8rem;
 }
 .td-pos {
-    color: #98a2b3;
+    color: var(--text-faint);
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
     width: 2rem;
 }
-.badge-cannot {
-    display: inline-block;
-    margin-left: 0.35rem;
-    padding: 0.1rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    background: #fee2e2;
-    color: #b91c1c;
-}
 .picker label {
-    color: #667085;
+    color: var(--text-soft);
     font-size: 0.9rem;
 }
 .userperm-select {
@@ -174,9 +157,6 @@ export default {
 }
 .target-line {
     margin: 0.2rem 0 0.5rem;
-}
-.table-wrap {
-    overflow-x: auto;
 }
 .userperm-table {
     width: 100%;
@@ -188,18 +168,17 @@ export default {
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #98a2b3;
+    color: var(--text-faint);
     padding: 0.45rem 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
 }
 .userperm-table td {
     padding: 0.5rem;
-    border-bottom: 1px solid #f0f1f3;
+    border-bottom: 1px solid var(--border-soft);
     vertical-align: middle;
 }
 .td-conditions code {
     font-size: 0.8rem;
-    color: #555;
+    color: var(--text-soft);
     word-break: break-all;
-}
-</style>
+}</style>

@@ -1,22 +1,29 @@
 <template>
     <div>
-        <AppNavbar />
-        <main class="container-content">
-            <!-- ABAS da zona content: a sub-navegação da área vive no
-                 CROMO da zona (o mesmo padrão da sidebar do AdminLayout, em
-                 versão leve para duas secções). router-link-active destaca a
-                 secção corrente (prefixo /content/...). Nada aqui decide
-                 permissões: quem chega a /content já passou no guard
-                 (requiresAuth no pai) e a API re-verifica — abas são navegação,
-                 não segurança. -->
-            <nav class="content-tabs" aria-label="Secções do conteúdo">
-                <router-link to="/content/posts">Posts</router-link>
-                <router-link to="/content/books">Livros</router-link>
-            </nav>
+        <!-- Cabeçalho da zona PINADO COMO UNIDADE (navbar + abas): sticky no
+             wrapper e não nas peças — a altura da navbar varia (as linhas
+             empilham no ecrã estreito) e medir-lha em JS é custo que o CSS
+             evita. O fundo --bg mascara o conteúdo que passa por baixo.
+             ABAS: a sub-navegação da área vive no CROMO da zona (o mesmo
+             padrão da sidebar do AdminLayout, em versão leve para duas
+             secções). router-link-active destaca a secção corrente (prefixo
+             /content/...). Nada aqui decide permissões: quem chega a
+             /content já passou no guard (requiresAuth no pai) e a API
+             re-verifica — abas são navegação, não segurança. -->
+        <header class="pinned">
+            <AppNavbar />
+            <div class="tabs-holder">
+                <nav class="content-tabs" aria-label="Secções do conteúdo">
+                    <router-link to="/content/posts">Posts</router-link>
+                    <router-link to="/content/books">Livros</router-link>
+                </nav>
+            </div>
+        </header>
 
-            <!-- Conteúdo da secção: mesmo <transition name="page"> dos restantes
-                 layouts — troca de VISTA dentro do cromo (a troca de LAYOUT vive
-                 no App.vue). -->
+        <!-- Conteúdo da secção: mesmo <transition name="page"> dos restantes
+             layouts — troca de VISTA dentro do cromo (a troca de LAYOUT vive
+             no App.vue). -->
+        <main class="container-content">
             <section class="content-main">
                 <transition name="page" mode="out-in">
                     <router-view></router-view>
@@ -46,6 +53,21 @@ export default {
 </script>
 
 <style scoped>
+/* Cabeçalho da zona (navbar + abas) preso ao topo: sticky na UNIDADE — o
+   topbar do AppNavbar já é sticky, mas dentro deste header o seu sticky fica
+   inerte (o wrapper nunca rola internamente); quem prende aqui é o .pinned. */
+.pinned {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+}
+.tabs-holder {
+    /* Mesma largura do container-content: as abas alinham com o conteúdo. */
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 0;
+}
 .container-content {
     max-width: 860px;
     margin: 0 auto;
@@ -54,27 +76,27 @@ export default {
 .content-tabs {
     display: flex;
     gap: 0.25rem;
-    background: #fff;
-    border: 1px solid #e5e5e5;
+    background: var(--surface-sunken); /* segmented control em bg-subtle (spec) */
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.35rem;
-    margin-bottom: 1.25rem;
 }
 .content-tabs a {
     flex: 1;
     text-align: center;
     padding: 0.45rem 0.9rem;
     border-radius: 6px;
-    color: #555;
+    color: var(--text-soft);
     text-decoration: none;
     font-weight: 600;
     font-size: 0.92rem;
 }
 .content-tabs a:hover {
-    background: #f2f2f2;
+    background: var(--surface-hover);
 }
 .content-tabs a.router-link-active {
-    background: #1a73e8;
-    color: #fff;
-}
-</style>
+    /* Aba activa: branco+azul no claro, azul sólido no escuro (mockup). */
+    background: var(--tab-active-bg);
+    color: var(--tab-active-fg);
+    box-shadow: 0 1px 2px var(--shadow-color);
+}</style>

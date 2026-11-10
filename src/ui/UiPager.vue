@@ -49,10 +49,10 @@ export default {
     flex-wrap: wrap;
     margin-top: 0.9rem;
     padding-top: 0.8rem;
-    border-top: 1px solid #f2f4f7;
+    border-top: 1px solid var(--border-soft);
 }
 .rows-info {
-    color: #98a2b3;
+    color: var(--text-faint);
     font-size: 0.84rem;
 }
 .pager {
@@ -66,19 +66,20 @@ export default {
     padding: 0 0.45rem;
     border: none;
     border-radius: 8px;
-    background: #f2f4f7;
-    color: #475467;
+    background: var(--surface-sunken);
+    color: var(--badge-neutral-fg);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
 }
 .page-btn:hover:not(.active):not(:disabled) {
-    background: #e9ecef;
+    background: var(--surface-hover);
 }
 .page-btn.active {
-    background: #1f2937;
-    color: #fff;
+    /* Página actual: inverse no claro, primary no escuro (mockup). */
+    background: var(--pill-active-bg);
+    color: var(--pill-active-fg);
 }
 .page-btn:disabled {
     opacity: 0.45;
@@ -88,16 +89,16 @@ export default {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    color: #667085;
+    color: var(--text-soft);
     font-size: 0.84rem;
 }
 .goto input {
     width: 3.4rem;
     padding: 0.35rem 0.5rem;
-    border: 1px solid #e4e7ec;
+    border: 1px solid var(--border);
     border-radius: 8px;
     font: inherit;
-    color: #1f2937;
+    color: var(--text);
     text-align: center;
-}
-</style>
+    background: var(--surface-sunken); /* controlo inline do mockup: subtil */
+}</style>

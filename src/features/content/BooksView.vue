@@ -17,14 +17,14 @@
              adjacência no compilador do sfc-loader e a vista deixa de renderizar. -->
         <UiPanel v-if="!$perm.ability || $perm.can('read', 'Book')" card>
             <DataTable
-                :rows="books" :columns="bookColumns" :loading="loading"
+                :rows="rows" :columns="bookColumns" :loading="loading"
                 :editing-id="editingId" :editable-fields="editable"
                 :sorts-allowed="sorts.allowed" :sorts-numeric="sorts.numeric"
                 :page="page" :per-page="perPage" :total="total" :total-pages="totalPages"
                 :sort="sort" :order="order"
                 noun="livros" empty-text="Sem livros no catálogo."
                 :can-edit="canEditBook" :can-remove="canRemoveBook"
-                @sort="setSort" @per-page="setPerPage" @refresh="reloadBooks"
+                @sort="setSort" @per-page="setPerPage" @refresh="reloadRows"
                 @edit="startEdit" @cancel="cancelEdit" @save="saveEdit" @delete="removeBook">
                 <!-- Acção EXTRA (slot actions da DataTable): o Detalhe — o
                      5.º verbo canónico (GET /books/:id). O gating fica
@@ -39,7 +39,7 @@
                  não se aplica: isto É um GET, o resultado mostra-se logo. -->
             <p v-if="detailText" class="detail-line" :class="{ 'detail-error': detailError }">{{ detailText }}</p>
             <UiPager :page="page" :total-pages="totalPages"
-                :info="'Mostrando ' + books.length + ' de ' + total" @go="goTo" />
+                :info="'Mostrando ' + rows.length + ' de ' + total" @go="goTo" />
             <p class="hint">Política (seed + painel <code>/admin/permissions</code>): o admin gere
                 livros (<code>manage Book</code> — por isso vê os botões de editar/apagar); o user lê
                 o catálogo (<code>read Book</code> — nenhuma edição, só o Detalhe). Os CAMPOS do
@@ -67,13 +67,16 @@
 
 <script>
 // Vista do 2.º recurso — ORQUESTRADOR fino, como o PostsView, e sobre a MESMA
-// tabela genérica (ui/DataTable.vue). Leitura paginada + ordenada (o servidor
-// aceita ?sort id/title/author/pages), edição inline (PUT com a lista branca
-// publicada em meta.editable: title/author) e apagar (DELETE 204), gated por
-// $perm.can('update'/'delete', 'Book', book) — o admin (manage Book) vê tudo;
-// o user (read Book) não vê nenhuma. Estados: loading do GET, .no-read quando
-// a política não dá 'read Book', erro (403 = sem permissão, sessão mantida).
-// Paginação e ordenação server-side, como nos posts.
+// tabela genérica (ui/DataTable.vue). A MÁQUINA DE LEITURA vem do mixin
+// Vue.listPage (ui/list-page.js, partilhado com PostsView e UsersPanel); aqui
+// fica o domínio: colunas, o Detalhe (5.º verbo canónico) e as mutações.
+// Leitura paginada + ordenada (o servidor aceita ?sort id/title/author/pages),
+// edição inline (PUT com a lista branca publicada em meta.editable:
+// title/author) e apagar (DELETE 204), gated por $perm.can('update'/'delete',
+// 'Book', book) — o admin (manage Book) vê tudo; o user (read Book) não vê
+// nenhuma. Estados: loading do GET, .no-read quando a política não dá
+// 'read Book', erro (403 = sem permissão, sessão mantida). Paginação e
+// ordenação server-side, como nos posts.
 //
 // Dois demos desta vista:
 //  - coluna 'Páginas' NUMÉRICA: o servidor declara 'pages' em allowedSorts +
@@ -88,6 +91,13 @@ import DataTable from '../../ui/DataTable.vue';
 import UiPager from '../../ui/UiPager.vue';
 import UiIconBtn from '../../ui/UiIconBtn.vue';
 
+// Formatador pt-PT do Detalhe: UMA instância no módulo (não uma por clique).
+// A DataTable tem a SUA, para as colunas numeric; este é o da linha inline —
+// formatação é da vista, a tabela só formata as colunas dela.
+const pagesFmt = (typeof Intl !== 'undefined' && Intl.NumberFormat)
+    ? new Intl.NumberFormat('pt-PT')
+    : null;
+
 export default {
     components: {
         UiPanel,
@@ -95,28 +105,14 @@ export default {
         UiPager,
         UiIconBtn,
     },
+    // Máquina de leitura server-driven (ui/list-page.js), igual à do Feed: a
+    // vista só diz QUE endpoint ler e sobrepõe readError com o texto 403 daqui.
+    mixins: [Vue.listPage({
+        label: 'GET /books',
+        fetch: function (query) { return this.$api.content.books.list(query); },
+    })],
     data() {
         return {
-            books: [],
-            page: 1,
-            perPage: 6,
-            total: 0,
-            totalPages: 1,
-            sort: 'id', // coluna activa (?sort=) — tem de estar em meta.sorts.allowed
-            order: 'desc',
-            loading: false,
-            error: '',
-            // Sessão de edição inline: controlada por esta vista — o editor só
-            // fecha quando o PUT teve sucesso (ou cancelamento); num 403 fica
-            // aberto com o que o utilizador escreveu, como nos posts.
-            editingId: null,
-            // Campos editáveis PUBLICADOS pelo servidor (meta.editable):
-            // mudar `editable` em dev/mock/routes/books.js reflecte-se aqui sem
-            // tocar nesta vista.
-            editable: [],
-            // Contrato de ORDENAÇÃO publicado pelo servidor (meta.sorts):
-            // setas da DataTable e formato numérico, como nos posts.
-            sorts: { allowed: [], numeric: [] },
             // Resultado do último botão Detalhe (slot actions): o texto
             // da linha inline e um sinal de erro para o estilo. Vazio = escondido.
             detailText: '',
@@ -134,79 +130,14 @@ export default {
             ],
         };
     },
-    created() {
-        this.loadBooks(1);
-    },
     methods: {
-        queryFor(page) {
-            return { page: page, per_page: this.perPage, sort: this.sort, order: this.order };
-        },
-        applyPage(res) {
-            const self = this;
-            self.books = res.data.data;
-            self.page = res.data.meta.page;
-            self.total = res.data.meta.total;
-            self.totalPages = res.data.meta.totalPages;
-            // O contrato de edição chega com a lista — a UI segue o servidor.
-            self.editable = res.data.meta.editable || [];
-            // Idem para a ordenação (setas) e o formato numérico.
-            self.sorts = res.data.meta.sorts || { allowed: [], numeric: [] };
-        },
-        loadBooks(page) {
-            const self = this;
-            self.loading = true;
-            self.error = '';
-            self.$api.content.books.list(self.queryFor(page))
-                .then(function (res) { self.applyPage(res); })
-                .catch(function (err) {
-                    self.error = self.readError('GET /books', err);
-                })
-                .then(function () { self.loading = false; });
-        },
-        // Re-lê do servidor a página actual e SUBSTITUI a lista (depois de
-        // editar/apagar). Se a página deixou de existir (apagou-se o último
-        // livro dela), cai para a última página válida da meta.
-        reloadBooks() {
-            const self = this;
-            self.loading = true;
-            self.error = '';
-            return self.$api.content.books.list(self.queryFor(self.page))
-                .then(function (res) {
-                    if (!res.data.data.length && self.page > 1) {
-                        return self.goTo(res.data.meta.totalPages);
-                    }
-                    self.applyPage(res);
-                    return res;
-                })
-                .catch(function (err) {
-                    self.error = self.readError('GET /books (reload)', err);
-                })
-                .then(function () { self.loading = false; });
-        },
-        // 403 é POLÍTICA (sem regra 'read' sobre Book): texto próprio; os restantes, o geral.
+        // Mensagem de falha de leitura (SOBREPÕE a do mixin): 403 é POLÍTICA
+        // (sem regra 'read' sobre Book): texto próprio; os restantes, o geral.
         readError(prefix, err) {
             if (err.response && err.response.status === 403) {
                 return prefix + ' devolveu 403 — a política não dá "read" sobre "Book" ao teu role. Sessão mantida.';
             }
-            return prefix + ' falhou' + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
-        },
-        goTo(page) {
-            // Clamps: entrada do "Ir para página" pode ser vazia/0/fora do intervalo.
-            const target = Math.min(Math.max(1, parseInt(page, 10) || 1), Math.max(1, this.totalPages));
-            if (target !== this.page || target === 1) this.loadBooks(target);
-        },
-        setPerPage(n) {
-            this.perPage = n;
-            this.loadBooks(1);
-        },
-        setSort(col) {
-            if (this.sort === col) {
-                this.order = this.order === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sort = col;
-                this.order = 'asc';
-            }
-            this.loadBooks(1);
+            return prefix + ' falhou' + this.$http.describe(err);
         },
         // ---------- acções por permissão (a DataTable recebe FUNÇÕES) ----------
         canEditBook(book) {
@@ -228,7 +159,7 @@ export default {
                 .then(function (res) {
                     const b = res.data.data || {};
                     const pages = typeof b.pages === 'number'
-                        ? new Intl.NumberFormat('pt-PT').format(b.pages) + ' págs.'
+                        ? pagesFmt.format(b.pages) + ' págs.'
                         : 'edição sem contagem de páginas';
                     self.detailText = 'GET /books/' + b.id + ' → «' + b.title + '» · '
                         + b.author + ' · ' + b.year + ' · ' + pages;
@@ -236,20 +167,15 @@ export default {
                 .catch(function (err) {
                     self.detailError = true;
                     self.detailText = 'GET /books/' + book.id + ' falhou'
-                        + (err.response ? ' (HTTP ' + err.response.status + ')' : '')
+                        + self.$http.describe(err)
                         + (err.response && err.response.status === 403
                             ? ' — a política não dá "read" sobre este livro.' : '');
                 });
         },
-        startEdit(book) {
-            this.editingId = book.id;
-        },
-        cancelEdit() {
-            this.editingId = null;
-        },
         // A DataTable emite { id, values } (só campos editáveis, aparados). Sem
         // título não há PUT (o servidor devolveria 422); o PUT vive aqui — o
-        // editor só fecha quando o PUT teve sucesso (ou cancelamento).
+        // editor só fecha quando o PUT teve sucesso (ou cancelamento); o estado
+        // da sessão (editingId) é do mixin listPage.
         saveEdit(payload) {
             const self = this;
             if (!payload.values.title) return;
@@ -258,13 +184,13 @@ export default {
                 .then(function () {
                     self.editingId = null;
                     // O estado real chega pelo GET de recarga da página actual.
-                    return self.reloadBooks();
+                    return self.reloadRows();
                 })
                 .catch(function (err) {
                     if (err.response && err.response.status === 403) {
                         self.error = 'PUT /books/' + payload.id + ' devolveu 403 — a política não dá "update" sobre este livro. Sessão mantida.';
                     } else {
-                        self.error = 'PUT /books/' + payload.id + ' falhou' + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
+                        self.error = 'PUT /books/' + payload.id + ' falhou' + self.$http.describe(err);
                     }
                 });
         },
@@ -273,13 +199,13 @@ export default {
             self.error = '';
             self.$api.content.books.remove(book.id)
                 .then(function () {
-                    return self.reloadBooks();
+                    return self.reloadRows();
                 })
                 .catch(function (err) {
                     if (err.response && err.response.status === 403) {
                         self.error = 'DELETE /books/' + book.id + ' devolveu 403 — a política não dá "delete" sobre este livro. Sessão mantida.';
                     } else {
-                        self.error = 'DELETE /books falhou' + (err.response ? ' (HTTP ' + err.response.status + ')' : '');
+                        self.error = 'DELETE /books falhou' + self.$http.describe(err);
                     }
                 });
         },
@@ -296,28 +222,20 @@ export default {
 </script>
 
 <style scoped>
-.tag {
-    font-weight: 400;
-    font-size: 0.8rem;
-    color: #888;
-}
-.explain {
-    color: #555;
-}
+/* .tag/.explain são globais do App.vue; aqui só a linha do Detalhe. */
 /* Linha do Detalhe (slot actions): discreta, monoespaçada no sítio
    do pedido; a variante de erro fica vermelha. */
 .detail-line {
     margin: 0.5rem 0 0;
     padding: 0.5rem 0.65rem;
-    background: #f8f9fb;
-    border: 1px solid #e4e7ec;
+    background: var(--surface-tint);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: #475467;
+    color: var(--badge-neutral-fg);
     font-size: 0.88rem;
 }
 .detail-error {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #b91c1c;
-}
-</style>
+    background: var(--danger-soft);
+    border-color: var(--danger-border);
+    color: var(--danger-strong);
+}</style>

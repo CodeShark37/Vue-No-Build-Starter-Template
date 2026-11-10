@@ -69,20 +69,26 @@ export default {
     gap: 1.25rem;
     align-items: flex-start;
 }
+/* Sticky POR BAIXO da navbar: a navbar é sticky top: 0 (z-index 20, fundo
+   opaco) — um top: 1rem "puro" fazia o painel colar AOS 16px e deslizar SOB
+   a navbar, escondendo o título e o 1.º link (medido no browser: 41px
+   tapados). O offset certo é a altura real da navbar (--topbar-h, theme.css)
+   mais o folgo de 1rem. ≤720px o painel volta a static: a navbar pode
+   empilhar linhas e o offset fixo deixaria de ser verdade. */
 .admin-side {
     flex: 0 0 200px;
-    background: #fff;
-    border: 1px solid #e5e5e5;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.9rem 0.9rem 0.7rem;
     position: sticky;
-    top: 1rem;
+    top: calc(var(--topbar-h) + 1rem);
 }
 .side-title {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #98a2b3;
+    color: var(--text-faint);
     margin: 0 0 0.6rem;
 }
 .side-nav {
@@ -95,26 +101,26 @@ export default {
     padding: 0.4rem 0.6rem;
     border-radius: 6px;
     text-decoration: none;
-    color: #444;
+    color: var(--text);
     font-size: 0.95rem;
 }
 .side-nav a:hover {
-    background: #f4f5f7;
-    color: #000;
+    background: var(--surface-sunken);
+    color: var(--text);
 }
 /* Secção corrente: fundo suave + barra à esquerda (router-link-active cobre os
    prefixos /admin/stats, /admin/users, /admin/permissions). */
 .side-nav a.router-link-active {
-    background: #eef4fd;
-    color: #0a58ca;
+    background: var(--primary-soft);
+    color: var(--primary);
     font-weight: 600;
-    box-shadow: inset 3px 0 0 #0a58ca;
+    box-shadow: inset 3px 0 0 var(--primary);
 }
 .side-hint {
     margin: 0.8rem 0 0;
-    border-top: 1px solid #f0f1f3;
+    border-top: 1px solid var(--border-soft);
     padding-top: 0.6rem;
-    color: #98a2b3;
+    color: var(--text-faint);
     font-size: 0.78rem;
 }
 .admin-main {
@@ -131,5 +137,4 @@ export default {
         width: 100%;
         box-sizing: border-box;
     }
-}
-</style>
+}</style>

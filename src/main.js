@@ -4,6 +4,7 @@
 import config from './core/config.js';
 import { load } from './core/loader.js';
 import ability from './core/ability.js';
+import { theme } from './core/theme.js';
 import { routes } from './features/index.js';
 import { createRouter } from './app/router.js';
 import { installServices } from './app/services.js';
@@ -16,6 +17,9 @@ import { createStore } from './app/store.js';
 async function bootstrap() {
     // Permite identificar no console em que fase o arranque parou.
     window.__bootStep = '0-bootstrap';
+    // Tema: o boot inline já aplicou light/dark em <html>; daqui em diante
+    // segue o SO até o utilizador escolher (toggle na navbar).
+    theme.init();
     // Importação dinâmica para que o mock possa ser removido do deploy.
     // Deve arrancar antes de qualquer pedido HTTP.
     if (config.mock) {

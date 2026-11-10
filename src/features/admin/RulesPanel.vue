@@ -200,7 +200,7 @@ export default {
             self.$api.admin.listRules()
                 .then(function (res) { self.rules = res.data.data || []; })
                 .catch(function (err) {
-                    self.error = 'GET /rules falhou' + self.detailOf(err);
+                    self.error = 'GET /rules falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.loading = false; });
         },
@@ -236,7 +236,7 @@ export default {
                     return self.loadAll();
                 })
                 .catch(function (err) {
-                    self.error = 'POST /rules falhou' + self.detailOf(err);
+                    self.error = 'POST /rules falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.saving = false; });
         },
@@ -274,7 +274,7 @@ export default {
                     self.syncPerm();
                 })
                 .catch(function (err) {
-                    self.error = 'PUT /rules/order falhou' + self.detailOf(err);
+                    self.error = 'PUT /rules/order falhou' + self.$http.describe(err);
                     return self.loadAll(); // rollback: volta à ordem real do servidor
                 });
         },
@@ -316,7 +316,7 @@ export default {
                     return self.loadAll();
                 })
                 .catch(function (err) {
-                    self.error = 'PUT /rules/' + r.id + ' falhou' + self.detailOf(err);
+                    self.error = 'PUT /rules/' + r.id + ' falhou' + self.$http.describe(err);
                 });
         },
         removeRule(r) {
@@ -328,28 +328,16 @@ export default {
                     return self.loadAll();
                 })
                 .catch(function (err) {
-                    self.error = 'DELETE /rules/' + r.id + ' falhou' + self.detailOf(err);
+                    self.error = 'DELETE /rules/' + r.id + ' falhou' + self.$http.describe(err);
                 });
-        },
-        // 422 mostra a mensagem de validação; 403 mantém a sessão.
-        detailOf(err) {
-            const res = err && err.response;
-            if (!res) return '';
-            const d = res.data || {};
-            if (res.status === 422) {
-                if (d.message) return ' (422 — ' + d.message + ')';
-                if (d.field) return ' (422 validação: campo ' + d.field + ')';
-            }
-            return ' (HTTP ' + res.status + ')';
         },
     },
 };
 </script>
 
 <style scoped>
-.table-wrap {
-    overflow-x: auto;
-}
+/* Tabela própria do painel (drag & drop); o .table-wrap e os badges são
+   globais do App.vue. */
 .rules-table {
     width: 100%;
     border-collapse: collapse;
@@ -360,13 +348,13 @@ export default {
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #98a2b3;
+    color: var(--text-faint);
     padding: 0.45rem 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border);
 }
 .rules-table td {
     padding: 0.5rem;
-    border-bottom: 1px solid #f0f1f3;
+    border-bottom: 1px solid var(--border-soft);
     vertical-align: middle;
 }
 .th-pos {
@@ -381,32 +369,32 @@ export default {
     opacity: 0.45;
 }
 .rule-row.drag-over td {
-    border-top: 2px solid #0a58ca;
+    border-top: 2px solid var(--primary);
 }
 .td-pos {
     white-space: nowrap;
 }
 .handle {
-    color: #b6bdc9;
+    color: var(--text-disabled);
     font-size: 1rem;
     margin-right: 0.3rem;
     user-select: none;
 }
 .pos-num {
-    color: #98a2b3;
+    color: var(--text-faint);
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
 }
 .handle-legend {
-    color: #b6bdc9;
+    color: var(--text-disabled);
     font-size: 1rem;
 }
 .order-hint {
-    background: #f4f8ff;
-    border: 1px solid #dbe7fb;
+    background: var(--info-soft);
+    border: 1px solid var(--info-border);
     border-radius: 6px;
     padding: 0.5rem 0.6rem;
-    color: #555;
+    color: var(--text-soft);
 }
 .td-role {
     white-space: nowrap;
@@ -416,7 +404,7 @@ export default {
 }
 .td-conditions code {
     font-size: 0.8rem;
-    color: #555;
+    color: var(--text-soft);
     word-break: break-all;
 }
 .td-actions {
@@ -424,7 +412,7 @@ export default {
     text-align: right;
 }
 .td-empty {
-    color: #98a2b3;
+    color: var(--text-faint);
     text-align: center;
     padding: 1rem 0;
 }
@@ -436,27 +424,8 @@ export default {
 .edit-conditions {
     min-width: 220px;
 }
-.badge {
-    display: inline-block;
-    padding: 0.1rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-.badge-admin {
-    background: #ede9fe;
-    color: #6d28d9;
-}
-.badge-user {
-    background: #e0f2fe;
-    color: #0369a1;
-}
-/* Regra cannot (inverted): vermelho — NEGA o que as anteriores permitiram. */
-.badge-cannot {
-    background: #fee2e2;
-    color: #b91c1c;
-    margin-left: 0.35rem;
-}
+/* Regra cannot (inverted): vermelho — NEGA o que as anteriores permitiram
+   (a pílula .badge e a variante .badge-cannot são globais do App.vue). */
 .rule-form {
     display: flex;
     flex-wrap: wrap;
@@ -475,10 +444,9 @@ export default {
     align-items: center;
     gap: 0.3rem;
     font-size: 0.9rem;
-    color: #555;
+    color: var(--text-soft);
     white-space: nowrap;
 }
 .cannot-check input {
     flex: none;
-}
-</style>
+}</style>

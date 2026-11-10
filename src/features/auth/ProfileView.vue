@@ -143,22 +143,9 @@ export default {
                     self.ok = 'Conta actualizada (PUT /profile) — o navbar já mostra o novo nome.';
                 })
                 .catch(function (err) {
-                    self.error = 'PUT /profile falhou' + self.detailOf(err);
+                    self.error = 'PUT /profile falhou' + self.$http.describe(err);
                 })
                 .then(function () { self.saving = false; });
-        },
-        // Mensagem curta por status: 422 mostra o campo e, se existir, a mensagem do
-        // mock (ex.: "o username já existe", "mínimo 4 caracteres"); 401 é sessão
-        // morta (o interceptor já cuidou do refresh antes disto).
-        detailOf(err) {
-            const res = err && err.response;
-            if (!res) return '';
-            const d = res.data || {};
-            if (res.status === 422) {
-                if (d.message) return ' (422 — ' + d.message + ')';
-                if (d.field) return ' (422 validação: campo ' + d.field + ')';
-            }
-            return ' (HTTP ' + res.status + ')';
         },
     },
     head: {
@@ -173,14 +160,6 @@ export default {
 </script>
 
 <style scoped>
-.tag {
-    font-weight: 400;
-    font-size: 0.8rem;
-    color: #888;
-}
-.explain {
-    color: #555;
-}
 .identity {
     margin: 0.2rem 0;
 }
@@ -189,7 +168,7 @@ export default {
 }
 .identity small {
     display: block;
-    color: #667085;
+    color: var(--text-soft);
     font-size: 0.84rem;
 }
 .profile-form {
@@ -204,37 +183,21 @@ export default {
     flex-direction: column;
     gap: 0.25rem;
     font-size: 0.88rem;
-    color: #475467;
+    color: var(--badge-neutral-fg);
 }
 .profile-form label small {
-    color: #98a2b3;
+    color: var(--text-faint);
 }
 .profile-form button {
     align-self: flex-start;
 }
-.badge {
-    display: inline-block;
-    padding: 0.1rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-.badge-admin {
-    background: #ede9fe;
-    color: #6d28d9;
-}
-.badge-user {
-    background: #e0f2fe;
-    color: #0369a1;
-}
+/* .hint e os badges (.badge/.badge-admin/.badge-user) são globais do App.vue;
+   aqui só a margem local do bloco de avisos. */
 .hint {
     margin-top: 0.8rem;
-    color: #98a2b3;
-    font-size: 0.85rem;
 }
 .ok {
-    color: #15803d;
+    color: var(--ok);
     font-size: 0.9rem;
     margin: 0.4rem 0 0;
-}
-</style>
+}</style>

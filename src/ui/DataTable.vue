@@ -33,9 +33,9 @@
                 <tbody>
                     <tr v-for="row in rows" :key="row.id">
                         <td v-for="col in resolvedColumns" :key="col.key" :class="{ 'td-numeric': col.numeric }">
-                            <template v-if="isEditing(row) && columnEdits(col).length">
-                                <input v-for="f in columnEdits(col)" :key="f" class="edit-input"
-                                    :class="{ 'edit-next': columnEdits(col).length > 1 && f !== columnEdits(col)[0] }"
+                            <template v-if="isEditing(row) && col.edits.length">
+                                <input v-for="f in col.edits" :key="f" class="edit-input"
+                                    :class="{ 'edit-next': col.edits.length > 1 && f !== col.edits[0] }"
                                     v-model="editValues[f]" :type="fieldTypes[f] || 'text'"
                                     :placeholder="fieldTitle(col, f)" :aria-label="'Editar ' + fieldTitle(col, f)"
                                     :disabled="fieldDisabledFor(f, row)" @keyup.enter="save">
@@ -195,14 +195,18 @@ export default {
         // Colunas RESOLVIDAS: a config da vista (key/label/width/sub/editFields)
         // cruzada com o contrato do servidor — sortable/numeric vêm de
         // sortsAllowed/sortsNumeric (meta.sorts) quando publicados; só na
-        // ausência de meta caem para a flag antiga da coluna. É ESTE array que
-        // o template percorre (cabeça e corpo).
+        // ausência de meta caem para a flag antiga da coluna; edits já traz os
+        // campos editáveis DESTA coluna cruzados com editableFields (o template
+        // lê col.edits — sem recalcular o filtro em cada passo do render).
+        // É ESTE array que o template percorre (cabeça e corpo).
         resolvedColumns() {
             const self = this;
             return this.columns.map(function (col) {
+                const fields = col.editFields || [col.key];
                 return Object.assign({}, col, {
                     sortable: self.sortsAllowed ? self.sortsAllowed.indexOf(col.key) !== -1 : !!col.sortable,
                     numeric: self.sortsNumeric ? self.sortsNumeric.indexOf(col.key) !== -1 : !!col.numeric,
+                    edits: fields.filter(function (f) { return self.editableFields.indexOf(f) !== -1; }),
                 });
             });
         },
@@ -248,14 +252,10 @@ export default {
         isEditing(row) {
             return this.editingId !== null && String(row.id) === String(this.editingId);
         },
-        // Os campos editáveis DESTE coluna: editFields (ou [key]) cruzados com o
-        // que o servidor publica. Coluna sem campo editável => exibe em modo leitura
+        // Os campos editáveis DESTA coluna já vêm resolvidos no col.edits do
+        // computed resolvedColumns (editFields ou [key], cruzados com o que o
+        // servidor publica). Coluna sem campo editável => exibe em modo leitura
         // mesmo durante a edição (ex.: 'Ano' do livro, 'Autor' do post).
-        columnEdits(col) {
-            const self = this;
-            const fields = col.editFields || [col.key];
-            return fields.filter(function (f) { return self.editableFields.indexOf(f) !== -1; });
-        },
         canEditRow(row) {
             return !!(this.editableFields.length && this.canEdit && this.canEdit(row));
         },
@@ -301,7 +301,7 @@ export default {
 
 <style scoped>
 .meta {
-    color: #7a8194;
+    color: var(--text-faint);
     font-size: 0.88rem;
     margin: 0.15rem 0;
 }
@@ -325,17 +325,17 @@ export default {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    border: 1px solid #e4e7ec;
+    border: 1px solid var(--border);
     border-radius: 9px;
-    background: #fff;
-    color: #475467;
+    background: var(--surface-sunken); /* toolbar do mockup: controlos em bg-subtle */
+    color: var(--badge-neutral-fg);
     font-size: 0.85rem;
     padding: 0.35rem 0.65rem;
 }
 .chip select {
     border: none;
     background: transparent;
-    color: #1f2937;
+    color: var(--text);
     font: inherit;
     padding: 0 0.15rem;
     cursor: pointer;
@@ -344,15 +344,15 @@ export default {
     cursor: pointer;
 }
 .chip-btn:hover {
-    background: #f7f8fa;
+    background: var(--surface-hover);
 }
 .dt-loading {
-    color: #98a2b3;
+    color: var(--text-faint);
 }
 
 /* ---------- tabela ---------- */
+/* .table-wrap (overflow-x) é global do App.vue; aqui só a margem própria. */
 .table-wrap {
-    overflow-x: auto;
     margin: 0.3rem 0 0;
 }
 .data-table {
@@ -363,13 +363,13 @@ export default {
     font-size: 0.93rem;
 }
 .data-table th {
-    background: #f4f5f7;
+    background: var(--surface-sunken);
     text-align: left;
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #8b93a1;
+    color: var(--text-faint);
     padding: 0.65rem 0.9rem;
     white-space: nowrap;
 }
@@ -384,24 +384,24 @@ export default {
     user-select: none;
 }
 .data-table th.sortable:hover {
-    color: #475467;
+    color: var(--badge-neutral-fg);
 }
 .sort-arrow {
-    color: #b6bcc8;
+    color: var(--text-disabled);
     font-size: 0.78rem;
     margin-left: 0.25rem;
 }
 .sort-arrow.on {
-    color: #475467;
+    color: var(--badge-neutral-fg);
 }
 .data-table td {
     padding: 0.85rem 0.9rem;
     vertical-align: middle;
-    color: #1f2937;
+    color: var(--text);
     overflow-wrap: break-word;
 }
 .data-table tbody tr:hover {
-    background: #f8f9fb;
+    background: var(--surface-tint);
 }
 .cell-stack strong {
     display: block;
@@ -409,7 +409,7 @@ export default {
 }
 .cell-stack small {
     display: block;
-    color: #667085;
+    color: var(--text-soft);
     font-size: 0.84rem;
     margin-top: 0.12rem;
     line-height: 1.35;
@@ -429,7 +429,7 @@ export default {
     white-space: nowrap;
 }
 .td-empty {
-    color: #98a2b3;
+    color: var(--text-faint);
     text-align: center;
     padding: 1.4rem 0.9rem;
 }
@@ -439,18 +439,18 @@ export default {
     width: 100%;
     max-width: 30rem;
     padding: 0.35rem 0.55rem;
-    border: 1px solid #cdd4e0;
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
     font-size: 0.9rem;
-    color: #1f2937;
+    color: var(--text);
 }
 .edit-input.edit-next {
     margin-top: 0.4rem;
-    color: #475467;
+    color: var(--badge-neutral-fg);
 }
 .edit-input:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: var(--primary);
 }
 
 .visually-hidden {
@@ -463,5 +463,4 @@ export default {
     clip: rect(0 0 0 0);
     white-space: nowrap;
     border: 0;
-}
-</style>
+}</style>

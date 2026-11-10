@@ -28,5 +28,4 @@ export default {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
-}
-</style>
+}</style>

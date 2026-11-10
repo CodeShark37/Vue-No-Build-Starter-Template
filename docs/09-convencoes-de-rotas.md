@@ -26,7 +26,10 @@ para a frente.
 - **C2 — Colisões e ordem**: caminhos nunca colidem; nenhuma regra depende de
   ordem de registo (excepto o catch-all `*`, sempre último).
 - **C3 — Meta herdada**: `requiresAuth`/`roles`/`perm` no PAI cobrem os filhos
-  por `to.matched` — nunca repetir meta em cada filho.
+  por `to.matched` — nunca repetir meta em cada filho. Em `roles` a herdação é
+  restritiva: cada nível que declarar `roles` tem de ficar satisfeito (AND entre
+  níveis; o array de um nível é OR de alternativas) — o filho aperta, nunca
+  afrouxa.
 - **C4 — Estabilidade de URL**: bookmarks sobrevivem a reorganizações via
   redirects de legado declarados NA zona antiga (precedente `/app/data` → `/app/feed`).
 - **C5 — Custo de acrescentar**: uma página nova = 1 filho na zona existente;

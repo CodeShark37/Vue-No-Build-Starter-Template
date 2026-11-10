@@ -134,6 +134,14 @@ automatic protections, the factory accepts `validate`, `validateUpdate`, `valida
   cells and `actions` for row actions. `UsersPanel` demonstrates `fieldTypes`, `fieldDisabled`,
   and `META.roleCounts`. Aggregates that a paginated page cannot derive belong in listing
   metadata via `extraMeta(schema)` in the mock factory.
+- **Read machine for list views:** use the `Vue.listPage` mixin (`ui/list-page.js`, registered in
+  `app/services.js`): pagination/sort state, `loadRows`/`reloadRows` (post-mutation reload with
+  empty-page fallback), `goTo`/`setPerPage`/`setSort`, and the inline-edit session (`editingId`)
+  written once for every list (PostsView, BooksView, and UsersPanel use it). A view declares
+  `mixins: [Vue.listPage({ fetch, label })]` (plus `apply` for metadata extras, e.g. `roleCounts`)
+  and keeps only its domain: columns, mutations, and its own 403 texts (override `readError`).
+  It is never an `import` inside `.vue` (second-module-copy rule): registration happens at boot,
+  on the native module graph.
 - **Components:** used by one feature → keep them there; used by two or more → `src/ui/`.
   Never import local `.js` modules from `.vue`; that would create a second module copy.
 - **Core:** `core/` does not know features. Features import `core/http.js` and `core/loader.js`,

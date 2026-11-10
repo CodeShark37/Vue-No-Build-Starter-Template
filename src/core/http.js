@@ -148,6 +148,25 @@ http.interceptors.response.use(
     }
 );
 
+// Sufixo de mensagem de erro por status, UMA vez para toda a app (antes
+// duplicado como detailOf() em 4 painéis e como '(HTTP n)' à mão em cada catch).
+// Devolve SÓ o sufixo — quem chama acrescenta o prefixo ('GET /posts falhou'):
+//   sem resposta ................ ''                     (rede, cancelamento)
+//   422 com message ............. ' (422 — <message>)'   (validação do mock)
+//   422 com field ............... ' (422 validação: campo <field>)'
+//   qualquer outro .............. ' (HTTP <status>)'     (403 incluído — a
+//     política "sem permissão" a escrever é da vista; aqui é só o formato)
+http.describe = function (err) {
+    const res = err && err.response;
+    if (!res) return '';
+    const d = res.data || {};
+    if (res.status === 422) {
+        if (d.message) return ' (422 — ' + d.message + ')';
+        if (d.field) return ' (422 validação: campo ' + d.field + ')';
+    }
+    return ' (HTTP ' + res.status + ')';
+};
+
 /**
  * Fábrica de módulos api.js para domínios CRUD canónicos: os 5 verbos finos
  * sobre ESTE axios (mesma política de 401/refresh — é só isto que as funções

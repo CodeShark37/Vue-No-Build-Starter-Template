@@ -122,12 +122,11 @@ export default {
 <style scoped>
 .token {
     margin: 0.2rem 0;
-    color: #555;
+    color: var(--text-soft);
 }
 .actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin: 0.4rem 0;
-}
-</style>
+}</style>

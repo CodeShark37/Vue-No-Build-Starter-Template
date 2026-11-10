@@ -46,39 +46,38 @@ export default {
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: #98a2b3;
+    color: var(--text-faint);
     cursor: pointer;
     margin-left: 0.2rem;
     transition: background 0.15s ease, color 0.15s ease;
 }
 .icon-btn.edit:hover,
 .icon-btn.edit:focus-visible {
-    color: #2563eb;
-    background: #eef4ff;
+    color: var(--primary);
+    background: var(--primary-soft);
     outline: none;
 }
 .icon-btn.view:hover,
 .icon-btn.view:focus-visible {
-    color: #7c3aed;
-    background: #f5f3ff;
+    color: var(--accent);
+    background: var(--accent-soft);
     outline: none;
 }
 .icon-btn.delete:hover,
 .icon-btn.delete:focus-visible {
-    color: #dc2626;
-    background: #fef2f2;
+    color: var(--danger-strong);
+    background: var(--danger-soft);
     outline: none;
 }
 .icon-btn.save:hover,
 .icon-btn.save:focus-visible {
-    color: #16a34a;
-    background: #ecfdf3;
+    color: var(--ok);
+    background: var(--ok-soft);
     outline: none;
 }
 .icon-btn:hover:not(.edit):not(.delete):not(.save),
 .icon-btn:focus-visible:not(.edit):not(.delete):not(.save) {
-    color: #475467;
-    background: #f2f4f7;
+    color: var(--badge-neutral-fg);
+    background: var(--surface-sunken);
     outline: none;
-}
-</style>
+}</style>
