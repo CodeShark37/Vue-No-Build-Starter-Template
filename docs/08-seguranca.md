@@ -2,13 +2,12 @@
 > **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](07-producao.md) · [Seguinte](09-convencoes-de-rotas.md) · [English](08-seguranca.en.md)
 
 Auditoria de segurança do template (histórico v12.11–v12.16; estado actual
-**v12.17.1**), feita como **hacker ético**: cada achado foi PROVADO com um exploit
-executado contra a app a correr (as provas EXP1–EXP7 em baixo) e o ciclo de identidade/sessão passou a ser
-validado por uma **matriz de testes de intrusão T01–T12** executada contra o mock
-(harness em Node que importa o código real — ver secção em baixo). O template tem
-uma doutrina clara que a auditoria confirmou: **a UI esconde, a API decide** — e
- desde a v12.12 a autoridade sobre a identidade e o ciclo de vida da sessão é o
-SERVIDOR (registry de sessões).
+**v12.18**), feita como **hacker ético**: cada achado foi provado com um exploit
+executado contra a app (as provas EXP1–EXP7 abaixo). O ciclo de identidade/sessão
+é validado pela **matriz de intrusão T01–T12**, executada contra o mock com um
+harness Node que importa o código real. A auditoria confirma a doutrina central:
+**a UI esconde, a API decide**; desde a v12.12, a autoridade sobre a identidade e
+o ciclo de vida da sessão é o servidor (registry de sessões).
 
 ## O modelo de ameaça deste template
 
@@ -70,8 +69,7 @@ isso a auditoria separa três planos:
   user da sessão.
 
 **Limitações (desenho do mock, documentadas):**
-- ~~EXP1: sem verificação de assinatura, qualquer JS da página se faz passar por
-  admin.~~ **CORRIGIDO na v12.12**: o servidor só confia no que EMITE — o token
+- **EXP1 corrigido na v12.12**: o servidor só confia no que emite — o token
   referencia uma sessão no registry (`sessions.js`) e o payload tem um hash
   registado na emissão; forjado/adulterado = 401. Num backend real, o token é
   assinado (HS256/RS256) E verificado contra a sessão/denylist.
@@ -81,7 +79,7 @@ isso a auditoria separa três planos:
 ### A02 — Cryptographic Failures
 
 - Passwords em claro no mock (seeds + BD + dump localStorage, EXP2): aceitável
-  SÓ em desenvolvimento; `docs/07` obriga a apagar `dev/` no deploy. Um backend
+  só em desenvolvimento; [`07-producao.md`](07-producao.md) obriga a apagar `dev/` no deploy. Um backend
   real usa argon2id/bcrypt com salt.
 - `publicUser()` é a única forma de saída do user: a password NUNCA sai por
   nenhuma rota (listas, detalhes, login, refresh, profile).
@@ -92,7 +90,7 @@ isso a auditoria separa três planos:
   (HS256/RS256).
 - Sem segredos no código cliente (nada para vazare): a app não tem chaves de
   API; tudo o que é sensível pertence ao backend real.
-- Transporte: em produção exige HTTPS + HSTS (`docs/07`); o token anda no
+- Transporte: em produção exige HTTPS + HSTS (ver [`07-producao.md`](07-producao.md)); o token anda no
   header `Authorization` de todos os pedidos.
 
 ### A03 — Injection
@@ -142,7 +140,7 @@ isso a auditoria separa três planos:
 - `devtools` do Vue: só em `config.debug` (já estava correcto).
 - **Sem cabeçalhos de segurança por omissão** (CSP, nosniff, X-Frame-Options,
   Referrer-Policy): é o servidor estático quem os envia — configuração
-  documentada em `docs/07`. Nota CSP: precisa `'unsafe-eval'` (ver A03).
+  documentada em [`07-producao.md`](07-producao.md). Nota CSP: precisa `'unsafe-eval'` (ver A03).
 - `env.js` de exemplo usa `http://localhost/api/` — documentado que o real deve
   ser HTTPS; página HTTPS + API HTTP dá mixed-content bloqueado pelo browser
   (falha visível, não silenciosa).
@@ -334,7 +332,7 @@ O que a matriz FECHOU (e como):
    confiar em campos de autoria/roles vindos do body.
 5. **Audit log** de acções admin (política de permissões, users) e de
    401/403/422 por IP/user.
-6. **Transporte**: HTTPS + HSTS; cabeçalhos `docs/07`; CORS mínimo (se a app
+6. **Transporte**: HTTPS + HSTS; cabeçalhos documentados em [`07-producao.md`](07-producao.md); CORS mínimo (se a app
    e a API forem origens diferentes: origem exacta, sem wildcard, com
    credenciais só se estritamente necessário).
 7. **Cookies** (se usados para sessão): `httpOnly; Secure; SameSite=Lax` (ou
@@ -351,7 +349,7 @@ O que a matriz FECHOU (e como):
 | Botões demo 401 só em `config.debug` | `src/features/auth/SessionPanel.vue` | A05 — UI de demo em produção |
 | `$auth.demoExpireToken/demoRevokeToken` recusam fora de localhost | `src/core/session.js` | A05/A07 — sobrescrever sessão real com token de demo |
 | axios 1.6.0 → 1.21.0 + SHA-256 em VERSIONS.md | `vendor/` | A06 — CVE-2025-27152 |
-| Checklist de segurança no deploy | [`docs/07-producao.md`](07-producao.md) | A05 — cabeçalhos/HTTPS/mock no deploy |
+| Checklist de segurança no deploy | [`07-producao.md`](07-producao.md) | A05 — cabeçalhos/HTTPS/mock no deploy |
 
 ## O que a v12.12 mudou (o servidor como autoridade da sessão)
 

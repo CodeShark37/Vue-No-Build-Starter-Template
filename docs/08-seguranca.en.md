@@ -2,7 +2,7 @@
 > **Navigation:** [Portuguese README](../README.md) · [README english](../README.en.md) · [Previous](07-producao.en.md) · [Next](09-convencoes-de-rotas.en.md)
 
 This security audit covers the template’s history from v12.11 through v12.16 and its current
-**v12.17.1** state. An **ethical hacker** performed each test against the running application;
+**v12.18** state. An **ethical hacker** performed each test against the running application;
 the evidence is recorded as EXP1–EXP7 below. The identity and session lifecycle was also
 validated with the **T01–T12 intrusion test matrix** against the mock API, using a Node harness
 that exercises the real code. The audit confirms the template’s central rule: **the UI hides,
@@ -23,7 +23,7 @@ The audit therefore separates three layers:
 | **Mock** (dev/mock/) | development API substitute | a good model of a real API; it is not a secure backend (and cannot be) |
 | **Real API** (future) | the deployment target configured through `env.js` | the authority; see the backend checklist in the final section |
 
-## exploit evidence (executed against the running app)
+## Exploit evidence (executed against the running app)
 
 | # | attack | result | classification |
 | --- | --- | --- | --- |
@@ -66,9 +66,8 @@ The audit therefore separates three layers:
   primitives), so injected prototypes and expressions are rejected. Placeholders accept only
   `${user.<field>}` (regex `\w+`) and are materialized from the current session user.
 
-**limitations (documented mock design):**
-- ~~EXP1: without signature verification, any JS of the page if does pass by
-  admin.~~ **Fixed in v12.12**: the server trusts only what it issues — the token
+**Limitations (documented mock design):**
+- **EXP1 fixed in v12.12**: the server trusts only what it issues — the token
   references the session in the registry (`sessions.js`) and the payload contains the hash recorded
   at issuance. Forged or tampered tokens return 401. In a real backend, the token is signed
   (HS256/RS256) and verified against the session or denylist.
@@ -78,7 +77,7 @@ The audit therefore separates three layers:
 ### A02 — Cryptographic Failures
 
 - Plaintext passwords in the mock (seeds + database + dump localStorage, EXP2): acceptable
-  development only; `docs/07` requires deleting `dev/` in the deployment. the backend
+  development only; [`07-producao.en.md`](07-producao.en.md) requires deleting `dev/` in the deployment. The backend
   real uses argon2id/bcrypt with salt.
 - `publicUser()` is the only user-output formatter; passwords are never returned by any route
   (lists, details, login, refresh, or profile).
@@ -88,7 +87,7 @@ The audit therefore separates three layers:
   to the backend (HS256/RS256).
 - No secrets are stored in client code. The client has no API keys; all sensitive material belongs
   to the real backend.
-- Transport: production requires HTTPS and HSTS (`docs/07`); the token is sent in the
+- Transport: production requires HTTPS and HSTS (see [`07-producao.en.md`](07-producao.en.md)); the token is sent in the
   `Authorization` header on every request.
 
 ### A03 — Injection
@@ -136,7 +135,7 @@ The audit therefore separates three layers:
 - Vue devtools are enabled only in `config.debug` (this was already correct).
 - **Security headers are not provided by default** (CSP, nosniff, X-Frame-Options,
   Referrer-Policy); the static server must send them. Configuration is documented
-  in `docs/07`. Note that CSP requires `'unsafe-eval'` (see A03).
+  in [`07-producao.en.md`](07-producao.en.md). Note that CSP requires `'unsafe-eval'` (see A03).
 - The example `env.js` uses `http://localhost/api/`; the real API must use
   HTTPS. An HTTPS page calling an HTTP API is blocked as mixed content by the browser.
 
@@ -320,7 +319,7 @@ The matrix closed the following gaps:
    trust authorship or role fields supplied in the request body.
 5. **Audit log** of actions admin (policy of permissions, users) and of
    401/403/422 by IP/user.
-6. **Transport**: HTTPS + HSTS; headers `docs/07`; CORS minimal (if the app and API use different origins: origin exact, without wildcard, with
+6. **Transport**: HTTPS + HSTS; headers [`07-producao.en.md`](07-producao.en.md); CORS minimal (if the app and API use different origins: origin exact, without wildcard, with
    credentials only when strictly required).
 7. **Cookies** (if used for session): `httpOnly; Secure; SameSite=Lax` (or
    Strict) + an anti-forgery token in forms and requests.
