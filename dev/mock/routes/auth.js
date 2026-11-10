@@ -1,5 +1,4 @@
-// Rotas de AUTENTICAÇÃO do mock — as mesmas que um backend real com sessões
-// server-side exporia:
+// Rotas de autenticação server-side: login, refresh, logout e me.
 //   POST /api/login    -> credenciais válidas => NOVO PAR access/refresh no
 //                         registry => {token, refreshToken, user};
 //                         401 invalid_credentials
@@ -19,9 +18,8 @@
 // 401 aqui significa sempre "sem sessão válida" (ausente/forjada/adulterada/
 // revogada/expirada) — nunca "sem permissão" (isso é 403, ver guard em helpers.js).
 //
-// Endpoints de DEMO (só registados com ctx.debug — localhost/dev): o registry
-// tornou o payload do token UMA REFERÊNCIA, por isso "simular expirado/revogado"
-// muda o estado da SESSÃO no servidor:
+// Os endpoints de demo, quando activos, alteram o registry para testar
+// expiração e revogação no servidor.
 //   POST /api/__demo/expire  -> marca a sessão corrente como expirada (expiresAt
 //                               no passado): o próximo pedido dá 401
 //                               token_expired => interceptor faz /refresh e repete.
@@ -45,8 +43,8 @@ import { payloadOf } from '../token.js';
  */
 export function register(server, ctx) {
     const Mirage = ctx.Mirage;
-    const ttl = ctx.ttl;              // access — curto (todos os pedidos)
-    const refreshTtl = ctx.refreshTtl; // refresh — longo (só /refresh)
+    const ttl = ctx.ttl;              // access
+    const refreshTtl = ctx.refreshTtl; // refresh
 
     server.post('/api/login', function (schema, request) {
         const body = parseBody(request);
@@ -58,9 +56,7 @@ export function register(server, ctx) {
         if (!user || user.password !== body.password) {
             return send(Mirage, 401, { error: 'invalid_credentials' });
         }
-        // Emitir = criar SESSÃO NOVA no registry (jti novo — sem reutilização
-        // nem fixação): sessão = PAR access/refresh, exactamente o que um
-        // backend real devolve.
+        // Cada login cria uma sessão e um novo par de tokens.
         const pair = createSessionPair(schema, user, ttl, refreshTtl);
         return send(Mirage, 200, {
             token: pair.token,
@@ -69,16 +65,11 @@ export function register(server, ctx) {
         });
     });
 
-    // O ÚNICO sítio onde se aceita um REFRESH token (sessionOf expectType):
-    // renovar é precisamente ignorar a expiração do ACCESS — o refresh nem o tem
-    // de estar válido (vive mais tempo). ROTAÇÃO com detecção de
-    // REUTILIZAÇÃO — refresh já rodado (revogado) => família morta => re-login.
+    // Só um refresh emitido e não revogado pode renovar a sessão.
     server.post('/api/refresh', function (schema, request) {
         const session = sessionOf(schema, request, true, 'refresh');
         if (session.error) {
-            // DETECÇÃO DE REUTILIZAÇÃO: o token era uma linha 'refresh' do
-            // registry REVOGADA (rodada por outra pessoa — ladrão ou dono)?
-            // Matamos a família toda: o par que o intruso tem também morre.
+            // Reutilização de refresh revogado mata a família.
             const payload = payloadOf(tokenOf(request));
             const row = payload && payload.jti ? sessionRowByJti(schema, payload.jti) : null;
             if (row && row.type === 'refresh' && row.revoked) {
@@ -100,12 +91,7 @@ export function register(server, ctx) {
         return send(Mirage, 200, { user: publicUser(g.user) });
     });
 
-    // Logout com EFEITO server-side: revoga a FAMÍLIA (access + refresh de
-    // uma vez; tentamos access primeiro e refresh a seguir, por isso logout
-    // funciona com qualquer das credenciais). Tolerante por desenho
-    // (idempotente): sem token/forjado/expirado responde {ok:true} na mesma — o
-    // cliente limpa a sessão local de qualquer forma; o que importa é que COM
-    // uma sessão reconhecível ela morre aqui.
+    // Logout revoga a família e aceita qualquer das credenciais.
     server.post('/api/logout', function (schema, request) {
         let s = sessionOf(schema, request, true, 'access'); // revoga mesmo expirado
         if (s.error) s = sessionOf(schema, request, true, 'refresh');
@@ -121,8 +107,7 @@ export function register(server, ctx) {
         if (!ctx.debug) return send(Mirage, 404, { error: 'not_found' });
         const s = sessionOf(schema, request, true, 'access');
         if (s.error) return send(Mirage, 401, { error: s.error });
-        // Expira SÓ o ACCESS: o refresh continua válido — é o cenário exacto que
-        // o /refresh existe para resolver (o interceptor renova e repete).
+        // Expira apenas o access; o refresh continua disponível para renovação.
         s.session.update({ expiresAt: Math.floor(Date.now() / 1000) - 10 });
         return send(Mirage, 200, { ok: true });
     });

@@ -132,28 +132,8 @@
 </template>
 
 <script>
-// Painel de gestão da POLÍTICA de permissões (só admin) — CRUD + REORDENAÇÃO
-// sobre /api/rules:
-//   GET    /api/rules       -> política crua (placeholders intactos; por position)
-//   POST   /api/rules       -> cria {role, action, subject, conditions?, inverted?}
-//   PUT    /api/rules/:id   -> muda qualquer campo (incl. inverted)
-//   PUT    /api/rules/order -> REORDENA: body {ids:[...]} com TODOS os ids
-//   DELETE /api/rules/:id   -> elimina (a última regra do role admin é intocável: 422)
-//
-// DRAG & DROP: HTML5 nativo (draggable + dragstart/dragover/drop), SEM
-// vendor novo — um template sem build não pode pagar uma lib de DnD. A lista é
-// a ordem de AVALIAÇÃO do CASL: quando duas regras casam o mesmo (acção,
-// subject), a ÚLTIMA vence ("a mais recente"). O drop reordena localmente e faz
-// PUT /rules/order com TODOS os ids (o servidor rejeita 422 se o conjunto
-// divergir — nunca se perde uma regra num drag mal feito); no erro faz-se
-// loadAll() e a tabela volta ao estado real do servidor.
-//
-// Mesmo padrão dos restantes painéis (UsersPanel, PostForm): cada mutação é
-// seguida de 1 GET (a lista volta ao estado REAL do servidor) e os erros
-// mostram-se inline — 403 nunca limpa a sessão (ver core/http.js). Depois de
-// gravar, $perm.sync() re-consulta GET /permissions e a Ability reconstrói-se —
-// as mudanças na política SENTEM-SE na UI sem recarregar.
-// Conditions circulam em texto (JSON) na UI e como objecto no pedido: vazio = null.
+// Painel admin da política de permissões. A ordem da lista é a ordem de
+// avaliação CASL; PUT /rules/order exige o conjunto completo de ids.
 import UiPanel from '../../ui/UiPanel.vue';
 import UiIconBtn from '../../ui/UiIconBtn.vue';
 
@@ -169,11 +149,10 @@ export default {
             saving: false,
             error: '',
             editingId: null,
-            // Estado do drag & drop: id da linha a arrastar e da linha por baixo
-            // (a que mostra o indicador de destino). Limpos no dragend.
+            // Estado do drag & drop.
             draggingId: null,
             overId: null,
-            // Buffer da edição inline (estado visual local; a linha só muda via PUT).
+            // Buffer da edição inline; a linha só muda via PUT.
             edit: { role: '', action: '', subject: '', conditions: '', inverted: false },
             form: { role: '', action: '', subject: '', conditions: '', inverted: false },
         };
@@ -181,7 +160,7 @@ export default {
     computed: {
         knownRoles() { return this.uniq(this.rules, 'role'); },
         knownSubjects() { return this.uniq(this.rules, 'subject'); },
-        // Acções CASL mais comuns, para sugerir — texto livre continua aceite.
+        // Acções CASL sugeridas; texto livre continua aceite.
         knownActions() {
             const seen = this.uniq(this.rules, 'action');
             ['manage', 'read', 'create', 'update', 'delete'].forEach(function (a) {
@@ -204,8 +183,7 @@ export default {
         conditionsText(rule) {
             return rule.conditions ? JSON.stringify(rule.conditions) : '—';
         },
-        // Texto -> objecto|null. Vazio = null; JSON inválido/não-objecto = erro
-        // inline ANTES de sair do browser (o servidor re-valida na mesma: 422).
+        // Texto -> objecto|null; o servidor revalida o resultado.
         parseConditions(text) {
             const t = String(text || '').trim();
             if (!t) return null;
@@ -226,9 +204,7 @@ export default {
                 })
                 .then(function () { self.loading = false; });
         },
-        // A Ability ($perm) observa a sessão, não a política: depois de mudar
-        // regras (ou a sua ordem), re-consulta GET /permissions para os botões
-        // acompanharem já.
+        // Reconsulta as permissões depois de alterar a política.
         syncPerm() {
             if (this.$perm && this.$perm.sync) this.$perm.sync();
         },
@@ -266,10 +242,10 @@ export default {
         },
         // ---------- drag & drop da ordem de avaliação ----------
         onDragStart(rule, ev) {
-            // Em edição inline não se arrasta (o input capturaria o gesto à mesma).
+            // Não arrastar durante edição inline.
             if (this.editingId !== null) { ev.preventDefault(); return; }
             this.draggingId = rule.id;
-            // dataTransfer é obrigatório para o Firefox iniciar o gesto.
+            // Necessário para iniciar o gesto no Firefox.
             try {
                 ev.dataTransfer.effectAllowed = 'move';
                 ev.dataTransfer.setData('text/plain', String(rule.id));
@@ -286,11 +262,10 @@ export default {
             const to = self.rules.findIndex(function (r) { return r.id === rule.id; });
             self.onDragEnd();
             if (from === -1 || to === -1) return;
-            // 1. Reordena LOCAL (optimista): a UI mostra já a nova ordem de avaliação.
+            // Atualiza localmente antes de persistir.
             const moved = self.rules.splice(from, 1)[0];
             self.rules.splice(to, 0, moved);
-            // 2. PERSISTE: TODOS os ids na nova ordem (o servidor exige o conjunto
-            //    completo e devolve a política reordenada — autoridade).
+            // O servidor exige o conjunto completo e continua a ser a autoridade.
             const ids = self.rules.map(function (r) { return r.id; });
             self.error = '';
             self.$api.admin.reorderRules(ids)
@@ -356,9 +331,7 @@ export default {
                     self.error = 'DELETE /rules/' + r.id + ' falhou' + self.detailOf(err);
                 });
         },
-        // Mensagem curta por status: 422 mostra campo/mensagem do mock (ex.: "a
-        // regra já existe", "o role admin tem de manter pelo menos uma regra");
-        // 403 é "sem permissão" (sessão mantida).
+        // 422 mostra a mensagem de validação; 403 mantém a sessão.
         detailOf(err) {
             const res = err && err.response;
             if (!res) return '';

@@ -1,42 +1,15 @@
-// Fábrica de CRUD para recursos do mock — TODOS os recursos com seed passam por
-// aqui: declara dados (seeds/), política (subject em seeds/permissions.js) e
-// registra as 5 rotas com a MESMA cadeia de aplicação da política, escrita uma
-// vez:
+// Fábrica dos CRUD canónicos. Centraliza autorização por tipo e instância,
+// validação, serialização, paginação e ordenação dos recursos com seed.
+// A política de /api/rules é tratada separadamente por routes/permissions.js.
 //
-//   guard (401 sessão / 403 admin) -> nível TIPO (há alguma regra? senão 403)
-//   -> nível INSTÂNCIA (as conditions filtram a lista / negam o registo)
-//   -> 403 -> 404 -> 422.
-//
-//   posts  (routes/posts.js)   subject 'Post'  — o recurso de demonstração;
-//   books  (routes/books.js)   subject 'Book'  — o caminho rápido (docs/03);
-//   users  (routes/users.js)   subject 'User'  — recurso da política; o serialize
-//                              corta a password e os hooks levam as validações e
-//                              auto-protecções (self-lockout, contas admin).
-//   O routes/permissions.js (a política em /api/rules) é escrito à mão DE
-//   PROPÓSITO: não é CRUD canónico — tem endpoint de REORDENAÇÃO (PUT
-//   /rules/order), nasce em ÚLTIMO lugar e tem auto-protecções próprias.
-//
-// opts (ver typedef abaixo): model/path, subject CASL OPCIONAL, createAttrs
-// (autoria), editable (lista branca do PUT), coerce por campo,
-// validate/validateUpdate/validateDelete (422; podem devolver `status`, ex. 403
-// num campo reservado), serialize (forma pública), enrich (JOIN de leitura em
-// tempo de serviço) e paginação/ordenação server-side (allowedSorts,
-// numericSorts — campos comparados com Number).
-//
-// O servidor é a AUTORIDADE sobre o contrato de interface: editable,
-// allowedSorts e numericSorts viajam na META da listagem (meta.editable,
-// meta.sorts) e as vistas desenham a partir daí — mudar aqui reflecte-se na UI
-// sem tocar em nenhum .vue, uma só fonte de verdade. Expor não é delegar: um
-// ?sort= desconhecido cai no defaultSort aqui dentro e campos fora da lista
-// branca nunca chegam ao record.
+// editable, allowedSorts e numericSorts são expostos na meta da lista para que
+// a UI use o contrato do servidor; campos fora da lista branca nunca chegam ao
+// record.
 import { send, parseBody, guard, abilityFor, caslSubject, paginate } from './helpers.js';
 
 /**
  * @typedef {Object} PageMeta
- * Meta da paginação das listas do mock, enriquecida com o contrato de
- * edição do recurso: editable é a MESMA lista branca aplicada no PUT. A UI
- * desenha os inputs de edição a partir daqui; o servidor re-verifica a cada
- * PUT — a lista branca nunca é política do cliente, apenas é EXPOSTA por ele.
+ * Meta da paginação e do contrato de edição/ordenação do recurso.
  * @property {number} page
  * @property {number} perPage
  * @property {number} total
@@ -44,11 +17,7 @@ import { send, parseBody, guard, abilityFor, caslSubject, paginate } from './hel
  * @property {boolean} hasMore
  * @property {string[]} editable       campos que o PUT aceita (lista branca do recurso)
  * @property {{allowed: string[], numeric: string[]}} sorts
- *                                     contrato de ORDENAÇÃO: allowed são os campos
- *                                     ?sort= aceites (allowedSorts do recurso); numeric os
- *                                     que comparam como NÚMERO (numericSorts). A DataTable
- *                                     deriva setas e formatação numérica daqui — a config
- *                                     das vistas nunca repete o que o servidor declara.
+ *                                     campos aceites em ?sort= e os comparados como número.
  */
 
 /**
@@ -105,9 +74,8 @@ function recordById(schema, model, id) {
 }
 
 /**
- * Registra as 5 rotas CRUD canónicas de um recurso no servidor mock, com a MESMA
- * cadeia de aplicação da política do posts.js (escrita uma vez, ver cabeçalho):
- * guard (401/403 admin) -> nível TIPO -> nível INSTÂNCIA -> 404 -> 422.
+ * Regista as cinco rotas CRUD canónicas e aplica a cadeia de guard, política,
+ * validação e serialização do recurso.
  * @param {Object} server servidor Mirage em configuração (routes())
  * @param {{Mirage: Object, ttl: number}} ctx contexto partilhado dos handlers
  * @param {CrudOptions} opts

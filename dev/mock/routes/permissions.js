@@ -1,59 +1,11 @@
-// Rotas de PERMISSÕES do mock. A política é DADO: vive na BD do mock (model
-// 'rule', semeada de seeds/permissions.js) e é LIDA A CADA PEDIDO — não há
-// regras em código nem cache. É o ÚNICO domínio que NÃO passa pela fábrica
-// registerCrud: não é CRUD canónico — tem endpoint de REORDENAÇÃO (PUT
-// /rules/order, a semântica "a última regra que casa vence"), validações
-// próprias (duplicadas, conditions cruas) e auto-protecções (a última regra do
-// role admin é intocável). Leitura, em duas variantes:
+// A política vive na BD do mock e é lida a cada pedido; este domínio não usa
+// registerCrud porque também expõe reordenação e protecções próprias.
+// /permissions devolve regras materializadas para a sessão; /rules expõe e
+// edita a política crua. A última regra CASL que casa vence.
 //
-//   GET /api/permissions      -> regras CASL do utilizador autenticado, em JSON
-//                                plain. É o que core/ability.js consome para
-//                                construir a Ability que $perm.can() consulta.
-//   GET /api/permissions/:id  -> permissões EFECTIVAS de um utilizador (só
-//                                admin): aqui :id é o ID DO UTILIZADOR — devolve
-//                                o perfil público + as regras JÁ MATERIALIZADAS
-//                                com os dados DELE, exactamente o que o GET
-//                                acima lhe serviria no próximo sync. 404 se o
-//                                utilizador não existir; 403 sem o role admin.
-//
-// E CRUD da PRÓPRIA política (só admin) — a tabela central que um backend real
-// teria. Em /api/rules (NUNCA em /permissions/:id, que é id de UTILIZADOR):
-//
-//   GET    /api/rules      -> a política CRUA, com os placeholders intactos
-//                             ('${user.username}') — o contrário didáctico do
-//                             GET /permissions/:id, que materializa. Ordenada
-//                             por POSITION: é a ordem de AVALIAÇÃO CASL — a
-//                             ÚLTIMA regra que casa sobre o mesmo (action,
-//                             subject) vence (drag & drop no painel).
-//   POST   /api/rules      -> cria {role, action, subject, conditions?,
-//                             inverted?} => 201. inverted=true é um CANNOT:
-//                             a regra NEGA o que as anteriores permitiam (e,
-//                             sendo a última, nega mesmo). Nasce em ÚLTIMO
-//                             lugar (position = max+1): "a mais recente vence".
-//   PUT    /api/rules/:id  -> muda qualquer campo da regra (incl. inverted).
-//   PUT    /api/rules/order-> REORDENA a política: body {ids:[...]} com TODOS
-//                             os ids na nova ordem (position = índice+1).
-//                             422 se faltar/sobrar id (nunca perder regras por
-//                             um drag mal feito).
-//   DELETE /api/rules/:id  -> elimina => 204
-//
-// TODAS exigem role admin (403 fora disso). Validações (422 {error:'validation',
-// field, message}): role/action/subject = texto 1-40; conditions = null ou
-// objecto plano com valores primitivos; regra duplicada (mesmos 4 campos)
-// rejeitada. Auto-protecção (como o self-guard dos users): nenhuma mutação pode
-// deixar o role 'admin' SEM regras — a política ficava fail-closed para quem
-// a administra. O seed (roleRules) é só o ESTADO INICIAL: as mudanças aqui
-// valem já nos próximos GET /permissions (a BD é relida a cada pedido) e o
-// cliente re-sincroniza a Ability ($perm.sync() após cada mutação no painel).
-// O handler nunca decide nada:
-//  1. junta as regras de TODOS os roles do utilizador (role sem entrada no seed
-//     => zero regras => fail-closed);
-//  2. materializa os placeholders '${user.<campo>}' com os dados da sessão
-//     (ou do utilizador alvo, no :id).
-// Esse motor (rulesForUser/materializeRules/abilityFor) vive em helpers.js e é o
-// MESMO que as rotas de posts usam para aplicar a política a CADA pedido — ler
-// incluído: apagar a regra 'read Post' de um role tranca GET /posts com 403 no
-// pedido seguinte. Esconder botões é UX, não segurança.
+// Todas as mutações exigem admin, validam campos e preservam pelo menos uma
+// regra para o role admin. O motor de materialização é partilhado com as rotas
+// de recursos; esconder botões é UX, a API continua a autorizar cada pedido.
 import { send, parseBody, guard, publicUser, userById, rulesForUser } from '../helpers.js';
 
 // Resposta 422 canónica do mock (igual a routes/users.js): {error, field, message?}.

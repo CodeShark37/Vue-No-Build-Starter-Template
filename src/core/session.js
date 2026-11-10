@@ -1,22 +1,5 @@
-// Fonte única da sessão. O guard (app/guards.js), o interceptor (core/http.js)
-// e as vistas perguntam TODOS a este módulo — ninguém mais toca no localStorage.
-// Quando a app crescer (cookies, JWT real), só este ficheiro muda.
-//
-// O estado é reactivo (Vue.observable): a UI — nav com links condicionais,
-// vistas — reage a setSession()/clearSession() sem eventos manuais nem Vuex.
-//
-// Formato dos tokens: "fake JWT" mrg.<payload>.mock (base64url) — PAR
-// access/refresh como um backend real:
-//   token        = ACCESS (vida curta, tokenTtl) — vai no header de TODOS os pedidos;
-//   refreshToken = REFRESH (vida longa, refreshTtl) — SÓ existe para POST /refresh
-//                  (o interceptor do http.js que o usa; nenhuma vista o toca).
-// Ambos são REFERÊNCIAS a sessões do servidor (jti): a validade REAL vive no
-// registry do servidor (dev/mock/sessions.js) — revogação no logout/mudança de
-// password, rotação no refresh, 401 para tudo o que não foi emitido. O cliente
-// descodifica o payload SÓ para UX: quem está autenticado e quando o access
-// expira. As demos de expiração/revogação (SessionPanel) também passam por
-// endpoints do mock (POST /__demo/expire, /__demo/revoke) — reescrever o
-// payload no cliente não muda o que o servidor decide.
+// Fonte única e reactiva da sessão. A validade dos tokens pertence ao registry
+// do servidor; o cliente lê o payload apenas para UX e nunca decide autorização.
 import config from './config.js';
 
 /**
@@ -39,10 +22,8 @@ import config from './config.js';
  * @property {string[]} roles
  */
 
-// ---------- base64url ----------
-// Padrão clássico compatível com WebViews antigos (sem TextEncoder/BigInt):
-// decodeURIComponent+escape depois do atob, para UTF-8 seguro (só DESCODIFICAÇÃO:
-// emitir tokens é do servidor — dev/mock/sessions.js + token.js).
+// Compatível com WebViews sem TextEncoder/BigInt; só descodifica tokens emitidos
+// pelo servidor.
 function b64urlDecode(str) {
     let s = str.replace(/-/g, '+').replace(/_/g, '/');
     while (s.length % 4 !== 0) s += '=';
@@ -61,7 +42,7 @@ function payloadOf(token) {
     try { return JSON.parse(b64urlDecode(parts[1])); } catch (e) { return null; }
 }
 
-// ---------- localStorage tolerante (modo privado / bloqueado) ----------
+// localStorage pode estar indisponível em modo privado ou bloqueado.
 function storageGet(key) {
     try { return window.localStorage.getItem(key); } catch (e) { return null; }
 }
@@ -72,7 +53,6 @@ function storageRemove(key) {
     try { window.localStorage.removeItem(key); } catch (e) { /* indisponível */ }
 }
 
-// ---------- estado reactivo ----------
 const state = Vue.observable({
     token: storageGet(config.auth.tokenKey),
     refreshToken: storageGet(config.auth.refreshTokenKey),
@@ -98,17 +78,14 @@ function setUser(user) {
     if (user) storageSet(config.auth.userKey, JSON.stringify(user)); else storageRemove(config.auth.userKey);
 }
 
-// ---------- API pública ----------
 /**
- * Fonte única da sessão, REACTIVA (Vue.observable) — instalada como `this.$auth`
- * em app/services.js. O guard (app/guards.js), o interceptor (core/http.js) e as
- * vistas perguntam TODOS a este módulo; ninguém mais toca no localStorage.
+ * API reactiva instalada como `this.$auth`.
  */
 const auth = {
-    /** ACCESS token corrente (reactivo: usar em computed/render). Vai em TODOS os pedidos. @type {string} */
+    /** ACCESS token corrente. @type {string} */
     get token() { return state.token; },
 
-    /** REFRESH token corrente (reactivo). SÓ para o POST /refresh — http.js. @type {string} */
+    /** REFRESH token corrente, usado apenas pelo POST /refresh. @type {string} */
     get refreshToken() { return state.refreshToken; },
 
     /** Perfil em cache do utilizador autenticado (reactivo). @type {SessionUser|null} */
@@ -120,22 +97,19 @@ const auth = {
     /** @returns {TokenPayload|null} payload do token corrente, ou null. */
     payload() { return payloadOf(state.token); },
 
-    // Expirado segundo o payload. Token sem payload conta como expirado
-    // (o servidor é quem decide; aqui é só para puder avisar na UI).
+    // Indicador de UX; a decisão real continua no servidor.
     isExpired() {
         const p = payloadOf(state.token);
         return !p || (typeof p.exp === 'number' && p.exp * 1000 < Date.now());
     },
 
-    // Timestamp (ms) em que o token expira; null se o formato não for reconhecido.
-    // Base para computed reactivos: "expira em Ns" recalcula sozinho quando um
-    // relógio externo (ex.: o SessionPanel) faz avançar o tempo segundo a segundo.
+    // Timestamp em milissegundos para os componentes de UX.
     expiresAt() {
         const p = payloadOf(state.token);
         return p && typeof p.exp === 'number' ? p.exp * 1000 : null;
     },
 
-    // Segundos até expirar (negativo = já expirou). Para mostrar na UI.
+    // Segundos até expirar, para mostrar na UI.
     expiresIn() {
         const p = payloadOf(state.token);
         if (!p || typeof p.exp !== 'number') return null;
