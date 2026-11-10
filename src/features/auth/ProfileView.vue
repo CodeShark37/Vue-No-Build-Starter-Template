@@ -63,7 +63,7 @@
 // a cache local da sessão actualiza-se e o NOME no navbar muda à hora (reactivo),
 // sem reload nem novo login. EXCEPTO quando muda a password: o servidor
 // revogou TODAS as sessões da conta (inclusive esta, T05 da matriz de intrusão),
-// por isso o cliente sai limpo: clearSession() + /login?redirect=/app/profile
+// por isso o cliente sai limpo: clearSession() + /login?redirect=/profile
 // (adiantando-se ao 401 => refresh falhado => logout automático que viria a seguir).
 import SessionPanel from './SessionPanel.vue';
 import UiPanel from '../../ui/UiPanel.vue';
@@ -127,7 +127,7 @@ export default {
                         self.$auth.clearSession();
                         self.$router.push({
                             path: self.$config.auth.redirect,
-                            query: { redirect: '/app/profile' },
+                            query: { redirect: '/profile' },
                         });
                         return;
                     }

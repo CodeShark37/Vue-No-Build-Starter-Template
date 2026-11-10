@@ -11,7 +11,7 @@ configuration.
 | --- | --- | --- | --- | --- |
 | site | `/` | LayoutDefault | — (public) | Home, 403; catch-all `*` (404) |
 | auth | `/login` | LayoutAuth | `guest` | Login |
-| auth | `/app/profile` | LayoutDefault | `requiresAuth` | Profile |
+| auth | `/profile` | LayoutDefault | `requiresAuth` | Profile |
 | content | `/content` | **ContentLayout** | `requiresAuth` | posts, books (`''` → posts) |
 | admin | `/admin` | AdminLayout | `requiresAuth` | users (`perm`), stats (`roles`), permissions (`roles`); `''` → users |
 
@@ -67,7 +67,7 @@ configuration.
 - **New page in an area:** add one child to the feature’s `index.js` and one link in the area
   layout. Nothing else.
 - **New domain:** add `features/<name>/` with `{ name, routes, api? }` and register it in
-  `features/index.js`. If it shares a layout with another feature (for example, `/app/profile`),
+  `features/index.js`. If it shares a layout with another feature (for example, `/profile`),
   declare the complete parent/children pair and keep paths collision-free.
 - **New permission-restricted area:** add `META.perm` to the parent and add rules to the policy
   (`/admin/permissions` edits the policy at runtime). Do not modify the guard code.

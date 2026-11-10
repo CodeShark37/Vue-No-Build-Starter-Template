@@ -25,9 +25,9 @@
                 @click="$theme.toggle()">{{ $theme.current === 'dark' ? '\u2600' : '\u263E' }}</button>
             <!-- O NOME do utilizador é o link para o PERFIL: sessão (token,
                  expiração, simular expirado) + gestão da própria conta (nome, username,
-                 password — PUT /profile). O guard da rota /app exige sessão: sem ela,
+                 password — PUT /profile). O guard da rota /profile exige sessão: sem ela,
                  este link nem aparece. -->
-            <router-link v-if="$auth.isLoggedIn()" to="/app/profile" class="whoami"
+            <router-link v-if="$auth.isLoggedIn()" to="/profile" class="whoami"
                 title="Abrir o meu perfil">
                 {{ $auth.user ? $auth.user.name : '…' }}
                 <em v-if="$auth.user && $auth.user.roles">[{{ $auth.user.roles.join(', ') }}]</em>

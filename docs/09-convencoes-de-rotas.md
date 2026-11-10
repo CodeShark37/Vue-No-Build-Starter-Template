@@ -11,7 +11,7 @@ as features cresçam sem espalhar a configuração.
 | --- | --- | --- | --- | --- |
 | site | `/` | LayoutDefault | — (pública) | Home, 403; catch-all `*` (404) |
 | auth | `/login` | LayoutAuth | `guest` | Login |
-| auth | `/app/profile` | LayoutDefault | `requiresAuth` | Profile |
+| auth | `/profile` | LayoutDefault | `requiresAuth` | Profile |
 | content | `/content` | **ContentLayout** | `requiresAuth` | posts, books (`''` → posts) |
 | admin | `/admin` | AdminLayout | `requiresAuth` | users (`perm`), stats (`roles`), permissions (`roles`); `''` → users |
 
@@ -71,7 +71,7 @@ as features cresçam sem espalhar a configuração.
   layout da zona. Nada mais.
 - Novo domínio: nova pasta `features/<nome>/` com `{ name, routes, api? }` +
   registo em `features/index.js`. Se partilha o layout com outra feature
-  (como `/app/profile`), declarar o par pai/filhos completo e manter os paths
-  sem colisões.
+  (como `/profile`), declarar o par pai/filhos completo e manter os paths sem
+  colisões.
 - Nova zona restrita por permissão: `meta.perm` no pai + regras na política
   (`/admin/permissions` edita em runtime) — sem tocar no código do guard.

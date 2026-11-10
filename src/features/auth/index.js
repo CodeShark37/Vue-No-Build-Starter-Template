@@ -8,11 +8,9 @@
 // SessionPanel com GET /me).
 //
 // DUAS zonas: o login (LayoutAuth, centrado, SEM navbar; meta.guest no PAI:
-// com sessão, o guard nem deixa chegar aqui) e o PERFIL (/app/profile), a rota
-// a que o NOME do utilizador no navbar aponta. O perfil partilha o cromo
-// LayoutDefault (como books faz com posts): duas rotas-pai '/app' coexistem —
-// cada feature declara o seu par rota-pai/filhos e os caminhos filhos completos
-// nunca colidem. meta.requiresAuth no PAI: sem sessão, o guard manda ao login.
+// com sessão, o guard nem deixa chegar aqui) e o PERFIL (/profile), a rota a
+// que o NOME do utilizador no navbar aponta. O perfil usa LayoutDefault e
+// meta.requiresAuth no PAI: sem sessão, o guard manda ao login.
 import { lazy } from '../../core/loader.js';
 
 export default {
@@ -33,12 +31,12 @@ export default {
         {
             // Zona do perfil: sessão (token, expiração, demos 401) +
             // gestão da própria conta (nome, username, password -> PUT /profile).
-            path: '/app',
+            path: '/profile',
             component: lazy('src/ui/layouts/LayoutDefault.vue'),
             meta: { requiresAuth: true },
             children: [
                 {
-                    path: 'profile',
+                    path: '',
                     name: 'Profile',
                     component: lazy('src/features/auth/ProfileView.vue'),
                 },

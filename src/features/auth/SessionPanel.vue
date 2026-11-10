@@ -20,7 +20,7 @@
 // Painel de sessão auto-contido: mostra quem está autenticado (GET /me), o token em
 // uso e a contagem decrescente até expirar. É o DONO do relógio de 1s (`now`) que
 // alimenta os computed expiresIn/isExpired — as vistas já não precisam de nenhum
-// código de sessão: basta <SessionPanel />. Vive na rota PERFIL (/app/profile —
+// código de sessão: basta <SessionPanel />. Vive na rota PERFIL (/profile —
 // o clique no nome no navbar): as informações de sessão pertencem ao perfil, não
 // às vistas de dados.
 //

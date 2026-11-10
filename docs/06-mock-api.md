@@ -37,7 +37,7 @@ Organização:
 | POST | `/api/logout` | token (tolerante) | **REVOGA a FAMÍLIA** (access E refresh morrem juntos): o token antigo dá 401 em qualquer pedido seguinte; `{ok: true}` sempre |
 | POST | `/api/__demo/expire` | token · só `debug` | demo do fluxo 401→refresh: marca a sessão corrente como expirada NO REGISTRY → próximo pedido 401 `token_expired` → refresh roda o par; 404 fora de `debug` |
 | POST | `/api/__demo/revoke` | token · só `debug` | demo do fluxo 401→logout: revoga a FAMÍLIA da sessão corrente NO REGISTRY → 401 `invalid_token` → refresh falha → logout; 404 fora de `debug` |
-| GET | `/api/profile` | token | perfil público da própria sessão (mesma forma do `/me`) — a rota do Perfil (`/app/profile`) |
+| GET | `/api/profile` | token | perfil público da própria sessão (mesma forma do `/me`) — a rota do Perfil (`/profile`) |
 | PUT | `/api/profile` | token | self-service da própria conta: muda `name` / `username` / `password` (vazio = manter) → 200 com o perfil actualizado; 422 nome vazio, username 3-24 `[a-zA-Z0-9_.-]` + único, password < 4. Self-scoped: escreve SEMPRE no utilizador da sessão (ids no body são ignorados); roles nunca (auto-escalada) |
 | GET | `/api/permissions` | token | regras CASL do utilizador da sessão, lidas da mock DB a cada pedido (seed `seeds/permissions.js`): admin → `manage Post` + `manage Book` + `manage User`; user → `read/create Post` + `read Book` + `update/delete` com conditions `{authorId}`; subadmin → `read User` + `update User` + `read Post` + `read Book` |
 | GET | `/api/permissions/:id` | token + `admin` | **`:id` = ID de UTILIZADOR**: perfil público + regras efectivas já materializadas com os dados dele (o que `GET /api/permissions` lhe serviria); 404 desconhecido, **403** sem admin |
