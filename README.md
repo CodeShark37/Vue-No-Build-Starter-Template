@@ -56,7 +56,7 @@ em `src/`.
 
 ### Pré-requisitos
 
-- Um servidor HTTP local, como VS Code Live Server ou `python3 -m http.server`;
+- Um servidor HTTP local, como VS Code Live Server, `python3 -m http.server` ou `php -S localhost:8080`;
 - Node.js `>=18` apenas para executar `npm run check`.
 
 ### Clonar
