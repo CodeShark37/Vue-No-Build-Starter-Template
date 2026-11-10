@@ -11,7 +11,7 @@
 </div>
 
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e?logo=javascript&logoColor=black)
-![Version](https://img.shields.io/badge/version-v12.17.1-blue)
+![Version](https://img.shields.io/badge/version-v12.27-blue)
 [![Release](https://img.shields.io/github/v/release/CodeShark37/Vue-No-Build-Starter-Template?label=release)](https://github.com/CodeShark37/Vue-No-Build-Starter-Template/releases)
 
 **Author:** [Josué André](https://github.com/CodeShark37)
@@ -49,6 +49,7 @@ live in `src/`.
 - server-driven RBAC/ABAC with CASL and an editable, reorderable policy;
 - a seeded CRUD factory in the mock API for every seeded resource;
 - a Profile route, route guards, and feature-based layouts;
+- a light/dark theme with CSS tokens (Slate/Navy spec), a sticky navbar with toggle, persistence, and OS-following;
 - a complete MirageJS mock API;
 - `ui/DataTable.vue`, a generic table with sorting, pagination, inline editing, numeric
   columns, slots, and aggregates;

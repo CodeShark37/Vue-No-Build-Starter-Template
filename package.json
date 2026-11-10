@@ -1,6 +1,6 @@
 {
     "name": "vue-no-build-starter-template",
-    "version": "12.17.1",
+    "version": "12.18",
     "private": true,
     "description": "Starter template Vue 2 sem build step: SFCs (.vue) compilados no browser pelo vue2-sfc-loader.",
     "type": "module",

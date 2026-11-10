@@ -7,9 +7,14 @@
     <!-- Raiz da app. Alterar se for servida num sub-caminho (ex.: "/meu-repo/"). -->
     <base href="/">
     <title></title>
+    <!-- Tema ANTES da 1.ª pintura: script clássico síncrono (módulos ES são
+         diferidos e não chegam aqui). A política vive em core/theme-boot.js —
+         espelho de core/theme.js; ver src/ui/theme.css. -->
+    <script src="src/core/theme-boot.js"></script>
+    <link rel="stylesheet" href="src/ui/theme.css">
     <style>
         /* Shell de arranque: visível enquanto as bibliotecas descarregam e executam. */
-        .boot { font: 16px/1.4 system-ui, sans-serif; color: #555; padding: 1rem; }
+        .boot { font: 16px/1.4 system-ui, sans-serif; color: var(--text-faint); padding: 1rem; }
     </style>
 </head>
 
