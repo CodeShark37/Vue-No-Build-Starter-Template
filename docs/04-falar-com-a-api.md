@@ -18,7 +18,7 @@ Nos `.vue` NÃO se importam `.js` locais (o loader compilaria uma 2ª cópia do 
 
 ## API do domínio: `makeApi` é o padrão
 
-**No código fica só a melhor forma.** Para um domínio CRUD canónico (lista/detalhe/criar/editar/apagar sobre um path), o módulo de API nasce de uma linha — `api: makeApi('/posts')` no `index.js` da feature — e nada se escreve à mão:
+**No código fica só a melhor forma.** Para cada domínio CRUD canónico (lista/detalhe/criar/editar/apagar sobre um path), a API nasce de uma linha `makeApi(...)` no `index.js` da feature — e nada se escreve à mão:
 
 ```js
 // features/content/index.js — na zona, cada domínio é uma chave do namespace
@@ -41,7 +41,7 @@ O `makeApi` gera os 5 verbos finos sobre o MESMO axios de `core/http.js` — log
 | `remove(id)` | `DELETE <path>/:id` |
 
 - **URLs vivem num sítio só**: mudar `/posts` é mudar a linha do `makeApi`.
-- **Registo**: `features/index.js` junta as `api` das features num objecto por nome — `this.$api.posts`, `this.$api.admin`. Adicionar uma feature é 1 linha; não há `$api` registado em mais nenhum sítio.
+- **Registo**: `features/index.js` junta as `api` das features num objecto por nome — `this.$api.content.posts`, `this.$api.content.books`, `this.$api.admin`. Adicionar uma feature é 1 linha; não há `$api` registado em mais nenhum sítio.
 - **`auth` não entra no `$api`**: login/refresh/logout/me são ciclo de SESSÃO — vivem em `core/session.js` e o interceptor do `core/http.js` usa-os directamente. Se houvesse `$api.auth`, o core teria de importar features (doutrina: core não conhece nada).
 
 ## Quando o domínio NÃO é canónico: `api.js` à mão

@@ -11,7 +11,7 @@
 </div>
 
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e?logo=javascript&logoColor=black)
-![Version](https://img.shields.io/badge/version-v12.27-blue)
+![Version](https://img.shields.io/badge/version-v12.18-blue)
 [![Release](https://img.shields.io/github/v/release/CodeShark37/Vue-No-Build-Starter-Template?label=release)](https://github.com/CodeShark37/Vue-No-Build-Starter-Template/releases)
 
 **Author:** [Josué André](https://github.com/CodeShark37)
