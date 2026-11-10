@@ -27,13 +27,13 @@ The audit therefore separates three layers:
 
 | # | attack | result | classification |
 | --- | --- | --- | --- |
-| EXP1 | token forged `mrg.<payload>.mock` (sub=1, roles=[admin], signature invented) attempted `GET /api/admin/stats` | **v12.11: HTTP 200** with the data — the mock checked format, user, and expiration, but not issuance. **v12.12: HTTP 401** — a token without a registry-issued `jti` is rejected (T02 of the matrix) | **fixed in v12.12** (registry of sessions; only exists when `mock: true`) |
+| EXP1 | token forged `mrg.<payload>.mock` (sub=1, roles=[admin], signature invented) attempted `GET /api/admin/stats` | **HTTP 401** — a token without a registry-issued `jti` is rejected (T02 of the matrix) | **not exploitable** — session registry; only exists when `mock: true` |
 | EXP2 | read the `mock-db-*` dump from localStorage | **Passwords in plaintext** (admin/admin123, …) | Dev-only by design (the demo seeds are text). It never reaches production because deployment removes `dev/`. |
 | EXP3 | Spoof roles in an ordinary user’s `localStorage.user` (`roles:["admin"]`) and reload | The navigation shows **Admin** and `[admin]`, but `GET /api/admin/users` with that user’s token returns **HTTP 403** | **The API re-verifies (defense in depth works).** The spoof misleads the UI but never changes data. |
 | EXP4 | Post created through the API with title `<img src=x onerror=…><b>bold</b>` | The cell renders escaped text (`payloadComoTexto: true`; no `<img>` or `<b>` elements are created) | **Not exploitable:** no `v-html` occurs in `src/` (grep: 0 occurrences); Vue escapes interpolation. |
 | EXP5 | `GET /api/posts?per_page=9999&sort=1%3D1&order=ASC` | `META.perPage` **is clamped to 50**; sort unknown falls back to the `defaultSort`; order invalid falls back to the default | **not exploitable**: whitelist `allowedSorts` + clamp `maxPerPage` on the server |
-| EXP6 | `POST /api/refresh` with a token that expired 60 seconds ago | **v12.11: HTTP 200** + a new token, indefinitely. **v12.12**: renewal occurs only when the session exists in the registry and has not been revoked; refresh also rotates the jti (the old token expires) | **fixed in v12.12** (rotation + registry; T03 of the matrix) |
-| EXP7 | A sub-admin (with `update User` but not the admin role) sends `PUT /api/admin/users/1` for the ADMIN account and changes the name and **password** | **v12.15: HTTP 200** — escalation protection covered only `roles`; the sub-admin could set a password and take over the target’s account. **v12.16: HTTP 403** — accounts with the admin role may be edited only by an administrator, before validation | **Fixed in v12.16** (`users.js` `validateUpdate`; T12 of the matrix) |
+| EXP6 | `POST /api/refresh` with a token that expired 60 seconds ago | Renewal occurs only when the session exists in the registry and has not been revoked; refresh also rotates the jti and the old token expires | **not exploitable** — rotation + registry (T03 of the matrix) |
+| EXP7 | A sub-admin (with `update User` but not the admin role) sends `PUT /api/admin/users/1` for the ADMIN account and changes the name and **password** | **HTTP 403** — accounts with the admin role may be edited only by an administrator, before validation | **not exploitable** — `users.js` `validateUpdate` (T12 of the matrix) |
 
 ## OWASP Top 10 (2021), item by item
 
@@ -263,24 +263,20 @@ It requires only Node >= 18; it does not start a server or browser. The harness 
 `dev/mock/` to a temporary directory, stubs Mirage/schema, and sends requests directly to
 the real handlers (the same logic that Mirage executes in the page).
 
-**Baseline (v12.11, before the fix): 5/10 passed.** Authorization was server-side (T06–T10),
-but identity and session lifecycle were not (T01–T05): the token itself was treated as the
-credential, and the mock did not maintain session state.
-
-| id | Test | Acceptance criterion | Baseline v12.11 | current state |
-| --- | --- | --- | --- | --- |
-| T01 | tampered token (elevated roles / extended exp) | 401 | **failure** — 200 (payload accepted without issuance) | **passes** — 401 (payload hash recorded at issuance) |
-| T02 | token with an administrator’s ID (forged from scratch) | 401 | **failure** — 200 (ADMIN granted by forged token) | **passes** — 401 (jti not issued) |
-| T03 | Refresh: access/refresh pair, rotation, and reuse | forged or wrong-type token → 401 · real expired token renews · reuse revokes the family | **failure** — 200 (a new admin session was issued from the forged token) | **passes** — forged token 401 · access token on `/refresh` 401 · refresh token on a normal route 401 · real token renews with pair rotation · reuse of a rotated refresh token revokes the family |
-| T04 | old token after logout | 401 (access and refresh) | **failure** — 200 (logout was stateless) | **passes** — both return 401 (family revoked) |
-| T05 | old token after password change | 401 | **failure** — 200 (own account and admin update) | **passes** — 401 (all sessions revoked) |
-| T06 | Invalid login with an existing session | does not start refresh; the existing session remains intact | passes (`canRefresh` excludes login/refresh) | passes (same validation) |
-| T07 | administrative API with insufficient role | 403 | passes (guard `{admin:true}`) | passes (the same validation) |
-| T08 | Redirect external after login | never sign out of the origin | passes (code review: `router.push` never does `location.href`; pushState cross-origin is blocked by the browser; destination strange falls back to the catch-all `*`) | passes (the same validation) |
-| T09 | elevated roles in the token or localStorage | no API access (401/403) | passes — 403 (roles come from the database) | passes — 401 (tampering detected by the hash) |
-| T10 | changing the ID for someone else’s resource | 403/404 + body ignored | passes (owner rule + allowlists + self-scoped profile) | passes (same validation) |
-| T11 | Sub-admin: policy governs the `User` resource | read/update 200 · create/delete 403 · roles 403 · stats/rules 403 · ordinary user 403 | — (did not exist) | **passes** — `User` is enforced by the factory; the `roles` field is reserved for the admin role |
-| T12 | target administrator account edited by someone without the admin role | 403/403 · record intact · admin edits admin 200 · sub-admin edits ordinary user 200 | — (did not exist; **v12.15 returned 200** — credential escalation, EXP7) | **passes** — 403 before validation (`users.js` validateUpdate) |
+| id | Test | Acceptance criterion | current state |
+| --- | --- | --- | --- |
+| T01 | tampered token (elevated roles / extended exp) | 401 | **passes** — 401 (payload hash recorded at issuance) |
+| T02 | token with an administrator’s ID (forged from scratch) | 401 | **passes** — 401 (jti not issued) |
+| T03 | Refresh: access/refresh pair, rotation, and reuse | forged or wrong-type token → 401 · real expired token renews · reuse revokes the family | **passes** — forged token 401 · access token on `/refresh` 401 · refresh token on a normal route 401 · real token renews with pair rotation · reuse of a rotated refresh token revokes the family |
+| T04 | old token after logout | 401 (access and refresh) | **passes** — both return 401 (family revoked) |
+| T05 | old token after password change | 401 | **passes** — 401 (all sessions revoked) |
+| T06 | Invalid login with an existing session | does not start refresh; the existing session remains intact | passes (`canRefresh` excludes login/refresh) |
+| T07 | administrative API with insufficient role | 403 | passes (guard `{admin:true}`) |
+| T08 | Redirect external after login | never sign out of the origin | passes (code review: `router.push` never does `location.href`; pushState cross-origin is blocked by the browser; destination strange falls back to the catch-all `*`) |
+| T09 | elevated roles in the token or localStorage | no API access (401/403) | passes — 401 (tampering detected by the hash) |
+| T10 | changing the ID for someone else’s resource | 403/404 + body ignored | passes (owner rule + allowlists + self-scoped profile) |
+| T11 | Sub-admin: policy governs the `User` resource | read/update 200 · create/delete 403 · roles 403 · stats/rules 403 · ordinary user 403 | **passes** — `User` is enforced by the factory; the `roles` field is reserved for the admin role |
+| T12 | target administrator account edited by someone without the admin role | 403/403 · record intact · admin edits admin 200 · sub-admin edits ordinary user 200 | **passes** — 403 before validation (`users.js` validateUpdate) |
 
 **Current result: 12/12 passed.** T08 was verified by code review because it concerns client-side
 navigation; the remaining tests run server-side in the harness. T11 (policy-controlled sub-admin)
