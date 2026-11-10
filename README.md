@@ -83,22 +83,27 @@ Detalhes: [`docs/00-arranque.md`](docs/00-arranque.md) ·
 ## Estrutura
 
 ```text
-├── index.html  env.js    shell + vendors (defer); env.js é o ÚNICO ficheiro do deploy
-├── jsconfig.json          IntelliSense/JSDoc; não é build e o browser ignora-o
-├── vendor/     vendor-dev/           libs de produção vs libs mock só de desenvolvimento
+├── index.html
+├── env.js                 Shell, vendors e configuração de ambiente
+├── jsconfig.json          IntelliSense/JSDoc; não é usado pelo browser
+├── vendor/                Bibliotecas de produção
+├── vendor-dev/            Bibliotecas usadas apenas no desenvolvimento
 ├── src/
-│   ├── main.js                 composição: mock -> router -> permissões -> serviços -> store
-│   ├── app/                    App.vue, router.js, guards.js, services.js, store.js
-│   ├── core/                   config, session, ability, http, loader, cache
-│   ├── ui/                     layouts, componentes Ui* e DataTable partilhada
-│   └── features/               uma pasta por feature; index.js é o registo único
-│       └── site/  auth/  content/  admin/   (content = posts + books)
+│   ├── main.js               Composição: mock -> router -> permissões -> serviços
+│   ├── app/                  App.vue, router.js, guards.js, services.js e store.js
+│   ├── core/                 Configuração, sessão, permissões, HTTP, loader e cache
+│   ├── ui/                   Layouts e componentes genéricos
+│   └── features/             Uma pasta por feature; index.js é o registo único
+│       ├── site/
+│       ├── auth/
+│       ├── content/          Posts e books
+│       └── admin/
 ├── dev/
-│   └── mock/                   Mirage, tokens, sessões, CRUD, rotas e seeds — apagar em produção
-├── docs/                       Documentação, um ficheiro por assunto
+│   └── mock/                 Mirage, tokens, sessões, CRUD, rotas e seeds
+├── docs/                     Documentação, um ficheiro por assunto
 └── scripts/
-    ├── intrusion-matrix.mjs    Matriz T01–T12 contra o código real
-    └── syntax-check.mjs        Verificação de sintaxe dos .vue/.js
+    ├── intrusion-matrix.mjs  Matriz T01–T12 contra o código real
+    └── syntax-check.mjs      Verificação de sintaxe dos .vue/.js
 ```
 
 Um componente usado por **uma feature** fica dentro dela. Um componente usado por **duas

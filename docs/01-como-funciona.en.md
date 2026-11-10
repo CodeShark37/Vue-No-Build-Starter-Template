@@ -5,38 +5,24 @@
 ## Project tree
 
 ```text
-├── index.html            shell + <script src="env.js"> + deferred vendors + src/main.js
-├── env.js                environment configuration (apiBase, mock, vueDebug); the ONLY deployment file
-├── vendor/               production libraries (classic scripts exposing globals) + VERSIONS.md
-├── vendor-dev/           development-only libraries (mirage.min.js, vue.dev.js); do not deploy
-├── dev/                  loaded only when env.mock is enabled; delete in production
-│   ├── mock/
-│   │   ├── index.js          Mirage server factory (models + seeds + route registration)
-│   │   │     + database persistence across reloads (localStorage dump)
-│   │   ├── token.js          fake-JWT codec 'mrg.<payload>.mock'
-│   │   ├── sessions.js       session REGISTRY — authority for identity and lifecycle:
-│   │   │     createSessionPair (login: access/refresh pair, same family),
-│   │   │     rotateSession (refresh rotation and reuse detection),
-│   │   │     revokeSession/revokeFamily (logout and demos), revokeUserSessions
-│   │   │     (new password), validateSession (arbiter for EVERY request)
-│   │   ├── helpers.js        responses, sessionOf/tokenOf (401; delegates to registry), guard (403),
-│   │   │     server-side pagination, and the policy ENGINE (rulesForUser/
-│   │   │     materializeRules/abilityFor — the mock’s CASL implementation)
-│   │   ├── crud.js           registerCrud factory: five canonical resource routes with the policy
-│   │   │     chain written ONCE; every seeded resource (posts, books, users) passes
-│   │   │     through it, with validation and self-protection hooks
-│   │   ├── routes/           mock API, one file per domain (auth, profile, permissions,
-│   │   │     users, posts, books)
-│   │   ├── seeds/            DATA: users, posts, books, roleRules (initial policy)
+├── index.html
+├── env.js                Environment configuration; the only deployment file
+├── vendor/               Production libraries
+├── vendor-dev/           Development-only libraries
+├── dev/
+│   └── mock/             Mirage, tokens, sessions, CRUD, routes, and seeds
 ├── src/
-│   ├── main.js             composition root: mock -> router -> permissions -> services -> store
-│   ├── app/                App.vue, router.js, guards.js, services.js, and store.js
-│   ├── core/               infrastructure with no business knowledge
-│   ├── ui/                 generic layouts, Ui* components, and the shared DataTable
-│   ├── features/           one folder per feature; index.js is the ONLY registry
-│   │   ├── site/  auth/  content/  admin/   (content = posts + books in one area)
-├── docs/                 documentation, one file per topic
-├── scripts/              checks and the T01–T12 intrusion matrix
+│   ├── main.js           Composition: mock -> router -> permissions -> services
+│   ├── app/              App.vue, router.js, guards.js, services.js, and store.js
+│   ├── core/             Configuration, session, permissions, HTTP, loader, and cache
+│   ├── ui/               Layouts and generic components
+│   └── features/         One folder per feature; index.js is the single registry
+│       ├── site/
+│       ├── auth/
+│       ├── content/      Posts and books
+│       └── admin/
+├── docs/                 Documentation, one file per topic
+└── scripts/              Checks and the T01–T12 intrusion matrix
 ```
 
 ## Boot sequence
