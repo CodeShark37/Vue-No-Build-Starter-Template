@@ -50,7 +50,7 @@ live in `src/`.
 - Server-driven RBAC/ABAC with CASL and an editable, reorderable policy;
 - A seeded CRUD factory in the mock API for every seeded resource;
 - A Profile route, route guards, and feature-based layouts;
-- A light/dark theme with CSS tokens (Slate/Navy spec), a sticky navbar with toggle, persistence, and OS-following;
+- Light/dark theme;
 - A complete MirageJS mock API;
 - The T01–T13 intrusion matrix and syntax checks.
 

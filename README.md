@@ -50,7 +50,7 @@ em `src/`.
 - RBAC/ABAC server-driven com CASL e política editável/reordenável;
 - CRUD factory no mock para todos os recursos com seed;
 - Rota de Perfil, guards de rotas e layouts por feature;
-- Tema claro/escuro com tokens CSS (spec Slate/Navy), navbar fixa no topo com toggle, persistência e follow do SO;
+- Tema claro/escuro;
 - API mock MirageJS completa;
 - Matriz de intrusão T01–T13 e verificação de sintaxe.
 
