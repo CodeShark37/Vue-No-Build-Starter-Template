@@ -29,6 +29,10 @@ import { send, parseBody, guard, abilityFor, caslSubject, paginate } from './hel
  *                                               zona admin por ROLE) — a política CASL não é consultada
  * @property {string} [collection]               nome PLURAL da colecção no schema (omissão: model + 's')
  * @property {function(Object, Object): Object} createAttrs  (body, user) -> attrs do POST; é aqui que a autoria é gravada (creatorId/authorId = user.id)
+ * @property {function(Object, Object, Object): Object} [updateAttrs] (body, record, user) -> patch do PUT — SUBSTITUI o
+ *                                               loop editable/coerce quando definido (ex.: users deriva password ->
+ *                                               passwordHash antes de gravar; meta.editable continua a publicar o nome
+ *                                               dos campos do BODY, que é o contrato da UI)
  * @property {string[]} [editable]               lista branca do PUT (String()-coercidos, salvo coerce) — nunca um merge arbitrário do body
  * @property {Object.<string, function>} [coerce] coercão POR CAMPO no PUT: fn(value) -> valor gravado; undefined = não grava (ex.: password vazia = manter)
  * @property {function(Object, Object): {field: string, message?: string}|null} [validate]          (body, schema) -> 422 no POST
@@ -211,12 +215,21 @@ export function registerCrud(server, ctx, opts) {
                 return send(Mirage, bad.status || 422, { error: 'validation', field: bad.field, message: bad.message });
             }
         }
-        const patch = {};
-        editable.forEach(function (k) {
-            if (body[k] === undefined) return;
-            const value = coerce[k] ? coerce[k](body[k]) : String(body[k]);
-            if (value !== undefined) patch[k] = value;
-        });
+        // Patch do PUT: ou o hook dedicado (updateAttrs — simétrico do createAttrs
+        // do POST; casos que transformam o body antes de gravar, ex. password ->
+        // hash), ou o loop editable/coerce de sempre (String() por omissão). Em
+        // ambos: só campos da lista branca chegam ao record.
+        let patch;
+        if (opts.updateAttrs) {
+            patch = opts.updateAttrs(body, record, g.user) || {};
+        } else {
+            patch = {};
+            editable.forEach(function (k) {
+                if (body[k] === undefined) return;
+                const value = coerce[k] ? coerce[k](body[k]) : String(body[k]);
+                if (value !== undefined) patch[k] = value;
+            });
+        }
         record.update(patch);
         // Hook de efeitos colaterais: corre com o record JÁ gravado e
         // o schema à mão — ex.: users.js revoga as sessões do alvo quando a

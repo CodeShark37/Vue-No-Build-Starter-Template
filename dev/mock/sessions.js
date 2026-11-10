@@ -2,7 +2,7 @@
 // não dos campos de controlo do payload. Cada login cria um par access/refresh
 // ligado pela mesma `family`; logout, rotação e alteração de password revogam
 // os registos correspondentes. O estado é persistido com o dump do Mirage.
-import { payloadOf, issueToken, hashPayload } from './token.js';
+import { payloadOf, issueToken, hashToken } from './token.js';
 
 /**
  * @typedef {Object} SessionRecord
@@ -12,7 +12,7 @@ import { payloadOf, issueToken, hashPayload } from './token.js';
  * @property {string} userId       user id, stored as a string
  * @property {string} type         'access' (all requests) | 'refresh' (only /refresh)
  * @property {string} family       family id shared by the access and refresh records
- * @property {string} payloadHash  hash of the issued payload (hashPayload)
+ * @property {string} tokenHash    hash of the EXACT issued token string, wrapper included (hashToken)
  * @property {number} createdAt    epoch segundos
  * @property {number} expiresAt    expiry time in epoch seconds
  * @property {boolean} revoked     whether the record has been revoked
@@ -57,7 +57,7 @@ function createSessionRow(schema, user, type, family, ttlSeconds) {
         userId: String(user.id),
         type: type,
         family: family,
-        payloadHash: issued.payloadHash,
+        tokenHash: issued.tokenHash,
         createdAt: now,
         expiresAt: now + ttlSeconds,
         revoked: false,
@@ -105,8 +105,10 @@ export function validateSession(schema, token, ignoreExpiry, expectType) {
     // A rota declara o tipo de credencial que aceita.
     if (expectType && session.type !== expectType) return { error: 'invalid_token', status: 401 };
     if (session.revoked) return { error: 'invalid_token', status: 401 };
-    // Alterações ao payload produzem um hash diferente e invalidam o token.
-    if (hashPayload(JSON.stringify(payload)) !== session.payloadHash) {
+    // Adulteração: o hash é sobre a STRING COMPLETA apresentada no header —
+    // qualquer byte alterado (payload OU invólucro 'mrg'/'mock') produz um hash
+    // diferente do registado na emissão => 401 invalid_token (T01/T09/T13).
+    if (hashToken(token) !== session.tokenHash) {
         return { error: 'invalid_token', status: 401 };
     }
     // A validade é determinada pelo registry e pelo relógio do servidor.

@@ -20,6 +20,7 @@
 // que um backend real faz, e o ProfileView sai limpo para o login.
 import { send, parseBody, guard, publicUser, usernameTaken } from '../helpers.js';
 import { revokeUserSessions } from '../sessions.js';
+import { hashPassword } from '../password.js';
 
 const USERNAME_RE = /^[a-zA-Z0-9_.-]{3,24}$/;
 
@@ -70,10 +71,13 @@ export function register(server, ctx) {
             if (typeof body.password !== 'string' || body.password.length < 4) {
                 return send422(Mirage, 'password', 'mínimo 4 caracteres');
             }
-            patch.password = body.password;
+            // SÓ o hash é gravado (sal derivado do username corrente — o sal
+            // viaja dentro da string PHC, por isso mudar o username depois não
+            // invalida o hash).
+            patch.passwordHash = hashPassword(g.user.username, body.password);
         }
         // patch vazio (nada mudou) é aceite: 200 com o perfil actual.
-        const passwordChanged = patch.password !== undefined;
+        const passwordChanged = patch.passwordHash !== undefined;
         g.user.update(patch);
         // T05: credencial rodada => todas as sessões do utilizador
         // revogadas, inclusive a corrente. A resposta chega ao cliente (200),

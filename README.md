@@ -43,20 +43,22 @@ em `src/`.
 
 ## Features
 
-- Sessões com autoridade no servidor, par access/refresh, rotação, deteção de reutilização
-  e revogação por família;
-- Refresh automático single-flight;
+- Sessões com autoridade no servidor, par access/refresh, rotação, deteção de reutilização,
+  revogação por família e integridade do token completo (hash de emissão — token adulterado
+  no localStorage = 401 e logout imediato);
+- Refresh automático single-flight — só para `token_expired`; credencial quebrada (`invalid_token`) não se "cura": expulsa;
 - RBAC/ABAC server-driven com CASL e política editável/reordenável;
 - CRUD factory no mock para todos os recursos com seed;
 - Rota de Perfil, guards de rotas e layouts por feature;
+- Tema claro/escuro com tokens CSS (spec Slate/Navy), navbar fixa no topo com toggle, persistência e follow do SO;
 - API mock MirageJS completa;
-- Matriz de intrusão T01–T12 e verificação de sintaxe.
+- Matriz de intrusão T01–T13 e verificação de sintaxe.
 
 ## Instalação
 
 ### Pré-requisitos
 
-- Um servidor HTTP local, como VS Code Live Server, `python3 -m http.server` ou `php -S localhost:8080`;
+- um servidor HTTP local, como VS Code Live Server, `python3 -m http.server` ou `php -S localhost:8080`;
 - Node.js `>=18` apenas para executar `npm run check`.
 
 ### Clonar
@@ -102,7 +104,7 @@ Detalhes: [`docs/00-arranque.md`](docs/00-arranque.md) ·
 │   └── mock/                 Mirage, tokens, sessões, CRUD, rotas e seeds
 ├── docs/                     Documentação, um ficheiro por assunto
 └── scripts/
-    ├── intrusion-matrix.mjs  Matriz T01–T12 contra o código real
+    ├── intrusion-matrix.mjs  Matriz T01–T13 contra o código real
     └── syntax-check.mjs      Verificação de sintaxe dos .vue/.js
 ```
 

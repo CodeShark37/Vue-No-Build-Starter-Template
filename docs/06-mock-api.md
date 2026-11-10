@@ -1,20 +1,37 @@
 # 06 — Mock API (MirageJS)
-> **Navegação:** [README português](../README.md) · [README english](../README.en.md) · [Anterior](05-login-e-permissoes.md) · [Seguinte](07-producao.md) · [English](06-mock-api.en.md)
+> **Navegação:** [README português](../README.md) · [README inglês](../README.en.md) · [Anterior](05-login-e-permissoes.md) · [Seguinte](07-producao.md) · [English](06-mock-api.en.md)
 
 Com `mock: true` no `env.js` a app arranca um servidor falso que **interpreta os XHR do axios antes de chegarem à rede** — `this.$api` / `this.$http` desenvolvem-se e testam-se de ponta a ponta sem backend, e o resto da app não distingue. (`vendor-dev/mirage.min.js` é injectado pelo `env.js`; a fábrica vive em `dev/mock/index.js` — o único módulo que conhece o MirageJS, tal como `core/loader.js` é o único que conhece o sfc-loader.)
 
 Organização:
 
-```text
-├── dev/
-│   └── mock/
-│       ├── index.js        Mirage, modelos, seeds, rotas e persistência da BD
-│       ├── token.js        Codec do fake-JWT e integridade do payload
-│       ├── sessions.js     Registry de sessões, rotação, revogação e validação
-│       ├── helpers.js      Respostas, autenticação, paginação e política CASL
-│       ├── crud.js         Fábrica CRUD e metadados server-driven
-│       ├── routes/         Endpoints de auth, perfil, permissões e recursos
-│       └── seeds/          Dados determinísticos de users, posts, books e regras
+```
+dev/mock/
+  index.js           fábrica magra: modelos (user, post, book, rule, session) + seeds + registo de rotas
+                     + PERSISTÊNCIA da BD entre reloads (dump em localStorage, ver em baixo)
+  token.js           codec do fake-JWT 'mrg.<payload>.mock': issueToken (com jti e typ
+                     access/refresh) / payloadOf / hashToken (integridade do TOKEN COMPLETO
+                     — invólucro incluído — registada na emissão, current behavior)
+  sessions.js        REGISTRY de sessões — a autoridade sobre identidade e ciclo de vida:
+                     createSessionPair (login: PAR access/refresh, mesma family),
+                     rotateSession (refresh com ROTAÇÃO e detecção de reutilização),
+                     revokeSession/revokeFamily (logout e demos), revokeUserSessions
+                     (password nova) e validateSession (o tribunal de TODOS os pedidos:
+                     formato? jti emitido? tipo esperado? revogado? payload intacto?
+                     expirado?)
+  helpers.js         send/parseBody, tokenOf, sessionOf (401, delega no registry), guard
+                     (403), userById/postById, paginate (?page&per_page&sort&order,
+                     server-side) e o MOTOR da política (rulesForUser/materializeRules/
+                     abilityFor — o CASL do cliente, no mock)
+  crud.js            fábrica registerCrud: as 5 rotas de um recurso canónico com a cadeia
+                     de política escrita UMA vez — TODOS os recursos com seed passam por
+                     ela (posts, books, users), com hooks (validate, validateUpdate/
+                     validateDelete, coerce, serialize, guardOpts, extraMeta, afterUpdate);
+                     publica o contrato de INTERFACE na META da listagem — editable (a UI
+                     desenha a edição a partir daí) e sorts {allowed, numeric} (setas de
+                     ordenação e colunas numéricas também)
+  routes/            auth.js  profile.js  permissions.js  users.js  posts.js  books.js
+  seeds/             users.js  posts.js  books.js  permissions.js   (DADOS puros, determinísticos)
 ```
 
 - **Seeds**: 15 posts (3 páginas de 6, autores em round-robin pelos 5 users — todos os roles aparecem na tabela), 7 livros (2 páginas de 6), 5 contas (admin, user, editor, viewer, subadmin — um role por conta), e a política `roleRules` carregada para a BD (model `rule`).
@@ -22,6 +39,7 @@ Organização:
 - **A BD do mock PERSISTE entre reloads** (dev): cada pedido respondido despeja a BD para `localStorage` (hook `handledRequest` do Pretender) e o boot seguinte re-hidrata o dump da mesma assinatura de seeds — mudanças feitas em runtime (revogar uma regra no painel, criar posts/utilizadores) sobrevivem ao F5 e ao acesso directo por URL. A chave do dump inclui a assinatura dos seeds (FNV-1a): **editar um ficheiro de seed muda a assinatura, o dump é descartado e a BD volta ao novo seed** — nunca um dump stale a esconder mudanças. `window.__mockReset()` (no console) apaga o dump e recarrega: voltar ao estado inicial. localStorage indisponível/cheio ⇒ degrada para efémero (re-semeia).
 - **Latência** `config.mirage.timing` (ms) por pedido; **TTLs** `config.mirage.tokenTtl` (access, 120s) e `refreshTtl` (refresh, 7 dias): access expirado → 401 → `/refresh` automático (com rotação).
 - **Sessões**: o token é uma REFERÊNCIA (`jti`) a uma linha do model `session` no registry (`sessions.js`) — emite-se só no login (PAR access/refresh, mesma `family`) e no refresh (rotação), revoga-se no logout (família inteira) e na mudança de password, e o payload do token tem um hash registado na emissão: qualquer adulteração (roles, sub, exp, typ) dá 401. As sessões persistem no dump como o resto da BD.
+- **Passwords dormem HASHEADAS**: a BD do mock guarda só `passwordHash` em formato PHC (`pbkdf2-sha256$<iterações>$<sal>$<hash>` — `dev/mock/password.js`, PBKDF2-HMAC-SHA256 síncrono em JS puro, sal determinístico por username). A password em claro só existe no corpo do pedido e no script de provisionamento (`seeds/users.js`, `demoAccounts`); o login verifica contra o hash em tempo constante e nenhum endpoint devolve a password nem o hash. Num backend real: bcrypt/argon2id com sal aleatório — o formato PHC é o mesmo conceito.
 - **`meta.editable`**: a listagem de TODOS os recursos da fábrica publica a lista branca do PUT — o servidor é a autoridade sobre o que é editável e a UI (`ui/DataTable.vue`) desenha os inputs a partir daí; mudar `editable` em `routes/<recurso>.js` reflecte-se nas vistas sem tocar em nenhum `.vue` (o PUT continua a re-verificar a lista branca de qualquer forma — expor não é delegar).
 - **`meta.sorts`**: o MESMO princípio para a ordenação e o formato numérico — a listagem publica `sorts: {allowed, numeric}` (os `allowedSorts`/`numericSorts` da fábrica) e a DataTable deriva daí as setas de ordenação e a formatação pt-PT das colunas numéricas; a config de colunas das vistas passou a ser SÓ apresentação (`key/label/width/sub/editFields`). Um `?sort=` fora de `allowed` continua a cair no `defaultSort` no servidor — expor não é delegar, aqui também.
 - **`meta.roleCounts` (opção `extraMeta` da fábrica)**: agregados do CONJUNTO inteiro que uma página paginada não consegue derivar, publicados na meta da listagem — o users publica a contagem de utilizadores por role (o resumo "roles existentes" do UsersPanel). A fábrica aceita `extraMeta(schema)` em qualquer recurso: o agregado é do servidor, a vista só desenha.
@@ -72,4 +90,4 @@ No CASL, a **última regra que casa** sobre o mesmo (action, subject) **vence**.
 - **`position`** — a ordem de avaliação é um dado da regra; `GET /api/rules`, `PUT /rules/order` e o motor da política (`rulesForUser` em `helpers.js`) ordenam sempre por `position` (empate → id). Seeds: position = ordem do ficheiro; regra nova: max+1 (nasce a vencer).
 - **`inverted`** — o `cannot` do CASL: `{action:'update', subject:'Post', inverted:true}` NEGA em vez de permitir. Com conditions funciona igual (`cannot` só nos posts alheios, por exemplo). O painel mostra-os com badge vermelho `cannot`.
 
-Combinação de exemplo (o cenário canónico do drag & drop — ver [`05-login-e-permissoes.md`](05-login-e-permissoes.md)): um `cannot update Post` por cima da owner rule tranca todos os updates do user; arrastado para o topo, a owner rule volta a ser a última e o user volta a editar os próprios posts.
+Combinação de exemplo (o cenário canónico do drag & drop — ver `05-login-e-permissoes.md`): um `cannot update Post` por cima da owner rule tranca todos os updates do user; arrastado para o topo, a owner rule volta a ser a última e o user volta a editar os próprios posts.

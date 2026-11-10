@@ -17,7 +17,7 @@
 /**
  * @typedef {Object} PublicUser
  * Forma pública canónica do perfil — o que TODAS as rotas devolvem
- * (me, login, refresh, admin/users). Nunca inclui password.
+ * (me, login, refresh, admin/users). Nunca inclui password nem o seu hash.
  * @property {string} id
  * @property {string} username
  * @property {string} name
@@ -133,8 +133,9 @@ export function guard(Mirage, schema, request, opts) {
 }
 
 /**
- * Forma pública canónica do perfil — NUNCA devolver attrs do user: inclui a
- * password. É o que TODAS as rotas devolvem (me, login, refresh, admin/users…).
+ * Forma pública canónica do perfil — NUNCA devolver attrs do user: exclui o
+ * passwordHash (fica na BD e nunca sai nas respostas).
+ * É o que TODAS as rotas devolvem (me, login, refresh, admin/users…).
  * @param {Object} user record Mirage do utilizador
  * @returns {PublicUser}
  */

@@ -55,6 +55,13 @@ function toForbidden(to, next) {
 export function requireAuth(to, from, next) {
     const req = requirementsOf(to);
 
+    // 0. Integridade localStorage <-> memória (current behavior): token adulterado no
+    //    DevTools com a app a correr é detectado AQUI, em cada navegação — sem
+    //    esperar por F5 nem pelo 401 do servidor. storageIntact() já limpou a
+    //    sessão se detectou divergência; o passo 1 faz o redirect.
+    if (!auth.storageIntact()) {
+        return next({ path: config.auth.redirect, query: { redirect: to.fullPath }, replace: true });
+    }
     // 1. Sem sessão onde a sessão é exigida (roles exigem, logo também entram aqui).
     if ((req.needsAuth || req.perm) && !auth.isLoggedIn()) return toLogin(to, next);
     // 2. Guest com sessão: nada para fazer no login.
