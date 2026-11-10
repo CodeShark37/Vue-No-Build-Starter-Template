@@ -5,33 +5,16 @@ Com `mock: true` no `env.js` a app arranca um servidor falso que **interpreta os
 
 Organização:
 
-```
-dev/mock/
-  index.js           fábrica magra: modelos (user, post, book, rule, session) + seeds + registo de rotas
-                     + PERSISTÊNCIA da BD entre reloads (dump em localStorage, ver em baixo)
-  token.js           codec do fake-JWT 'mrg.<payload>.mock': issueToken (com jti e typ
-                     access/refresh) / payloadOf / hashPayload (integridade do payload
-                     registada na emissão)
-  sessions.js        REGISTRY de sessões — a autoridade sobre identidade e ciclo de vida:
-                     createSessionPair (login: PAR access/refresh, mesma family),
-                     rotateSession (refresh com ROTAÇÃO e detecção de reutilização),
-                     revokeSession/revokeFamily (logout e demos), revokeUserSessions
-                     (password nova) e validateSession (o tribunal de TODOS os pedidos:
-                     formato? jti emitido? tipo esperado? revogado? payload intacto?
-                     expirado?)
-  helpers.js         send/parseBody, tokenOf, sessionOf (401, delega no registry), guard
-                     (403), userById/postById, paginate (?page&per_page&sort&order,
-                     server-side) e o MOTOR da política (rulesForUser/materializeRules/
-                     abilityFor — o CASL do cliente, no mock)
-  crud.js            fábrica registerCrud: as 5 rotas de um recurso canónico com a cadeia
-                     de política escrita UMA vez — TODOS os recursos com seed passam por
-                     ela (posts, books, users), com hooks (validate, validateUpdate/
-                     validateDelete, coerce, serialize, guardOpts, extraMeta, afterUpdate);
-                     publica o contrato de INTERFACE na META da listagem — editable (a UI
-                     desenha a edição a partir daí) e sorts {allowed, numeric} (setas de
-                     ordenação e colunas numéricas também)
-  routes/            auth.js  profile.js  permissions.js  users.js  posts.js  books.js
-  seeds/             users.js  posts.js  books.js  permissions.js   (DADOS puros, determinísticos)
+```text
+├── dev/
+│   └── mock/
+│       ├── index.js        Mirage, modelos, seeds, rotas e persistência da BD
+│       ├── token.js        Codec do fake-JWT e integridade do payload
+│       ├── sessions.js     Registry de sessões, rotação, revogação e validação
+│       ├── helpers.js      Respostas, autenticação, paginação e política CASL
+│       ├── crud.js         Fábrica CRUD e metadados server-driven
+│       ├── routes/         Endpoints de auth, perfil, permissões e recursos
+│       └── seeds/          Dados determinísticos de users, posts, books e regras
 ```
 
 - **Seeds**: 15 posts (3 páginas de 6, autores em round-robin pelos 5 users — todos os roles aparecem na tabela), 7 livros (2 páginas de 6), 5 contas (admin, user, editor, viewer, subadmin — um role por conta), e a política `roleRules` carregada para a BD (model `rule`).

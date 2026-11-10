@@ -5,33 +5,16 @@ With `mock: true` in `env.js`, the app starts a server that **intercepts Axios X
 
 Organization:
 
-```
-dev/mock/
-  index.js           thin factory: models (user, post, book, rule, session) + seeds + registration of routes
-                     + DATABASE PERSISTENCE across reloads (localStorage dump; see below)
-  token.js           codec of the fake-JWT 'mrg.<payload>.mock': issueToken (with jti and typ
-                     access/refresh) / payloadOf / hashPayload (payload integrity
-                     recorded at issuance)
-  sessions.js        session REGISTRY — authority for identity and lifecycle:
-                     createSessionPair (login: access/refresh pair, same family),
-                     rotateSession (refresh with rotation and detection of reuse),
-                     revokeSession/revokeFamily (logout and demos), revokeUserSessions
-                     (new password) and validateSession (the arbiter for every request:
-                     format? issued jti? expected type? revoked? intact payload?
-                     expired?)
-  helpers.js         send/parseBody, tokenOf, sessionOf (401, delegates to the registry), guard
-                     (403), userById/postById, paginate (?page&per_page&sort&order,
-                     server-side) and the policy ENGINE (rulesForUser/materializeRules/
-                     abilityFor — the client CASL implementation, in the mock)
-  crud.js            factory registerCrud: the five routes for a canonical resource with one policy chain
-                     of policy written once — all the resources with seed pass by
-                     it (posts, books, and users), with hooks (validate, validateUpdate/
-                     validateDelete, coerce, serialize, guardOpts, extraMeta, afterUpdate);
-                     publishes the interface contract in listing META — editable (a UI
-                     draws the editor from it) and sorts {allowed, numeric} (arrows of
-                     sorting and columns numeric also)
-  routes/            auth.js  profile.js  permissions.js  users.js  posts.js  books.js
-  seeds/             users.js  posts.js  books.js  permissions.js   (pure, deterministic data)
+```text
+├── dev/
+│   └── mock/
+│       ├── index.js        Mirage, models, seeds, routes, and database persistence
+│       ├── token.js        Fake-JWT codec and payload integrity
+│       ├── sessions.js     Session registry, rotation, revocation, and validation
+│       ├── helpers.js      Responses, authentication, pagination, and CASL policy
+│       ├── crud.js         CRUD factory and server-driven metadata
+│       ├── routes/         Auth, profile, permissions, and resource endpoints
+│       └── seeds/          Deterministic users, posts, books, and policy data
 ```
 
 - **Seeds**: 15 posts (3 pages of 6, authors assigned round-robin across the 5 users), 7 books (2 pages of 6), 5 accounts (admin, user, editor, viewer, and subadmin), and the `roleRules` policy loaded into the `rule` model.
