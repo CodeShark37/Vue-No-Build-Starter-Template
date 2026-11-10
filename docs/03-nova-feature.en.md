@@ -65,10 +65,9 @@ const features = [site, auth, content, admin];
 That is all: `main.js` passes the routes to the router, and `this.$api.<name>` is created
 here. No other file registers `$api` entries.
 
-## The fast path (add a second data resource)
+## Adding a second data resource
 
-The code has a deliberate “didactic path” and “fast path.” Posts and books use the same
-chain: `registerCrud` in the mock, `makeApi` on the client, and `ui/DataTable.vue` in the
+Posts and books use the same chain: `registerCrud` in the mock, `makeApi` on the client, and `ui/DataTable.vue` in the
 view. To add a resource:
 
 1. **Mock.** Instead of copying the policy chain into several files, register the five routes

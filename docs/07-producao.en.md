@@ -15,14 +15,13 @@ window.ENV = {
 `env.js` is the classic script that runs before the vendors. It injects `vue.min.js` (or
 `vue.dev.js`) and `vendor-dev/mirage.min.js` with `document.write` at its own position,
 which preserves the `defer` ordering. `src/core/config.js` reads `window.ENV` and derives
-the remaining settings (root, cache, and auth). in the other file requiress to change for the
-deployment.
+the remaining settings (root, cache, and auth). No other file needs to change for deployment.
 
 ## What to delete (or not copy) into the deployment
 
 ```
 vendor-dev/   mirage.min.js + vue.dev.js   (development only)
-dev/          servedr mock completo       (development only)
+dev/          complete mock server        (development only)
 ```
 
 With `mock: false`, `env.js` does not inject the Mirage script. Still, not copying these
@@ -41,8 +40,8 @@ downloading or cloning:
 sha256sum vendor/*.js vendor-dev/*.js
 ```
 
-To update the library, replace the file and update its corresponding line in `VERSIONS.md`
-at the same time commit.
+To update a library, replace the file and update its corresponding line in `VERSIONS.md`
+in the same commit.
 
 ## Compilation cache: the bump rule
 
@@ -50,7 +49,7 @@ The IndexedDB cache uses `version: '11'` in `src/core/config.js`. Editing the `.
 invalidates that file’s entry because its key is the content hash. **Moving or renaming the
 `.vue` file without changing its content requires the manual version bump**: compiled code
 contains the embedded absolute URLs of child components and would otherwise request paths
-that in no longer exist. When in doubt, increase `version`.
+that no longer exist. When in doubt, increase `version`.
 
 ## Router and sub-paths
 
@@ -74,6 +73,6 @@ that in no longer exist. When in doubt, increase `version`.
      with `new Function`. Without `'unsafe-eval'`, this in this no-build architecture cannot start.
    - Confirm that `mock: false` is set and that `dev/` and `vendor-dev/` are absent from the
      server; those directories contain demo passwords in plaintext.
-   - The login form no longer suggests demo credentials otherwise localhost. If the real API
+   - The login form no longer suggests demo credentials outside localhost. If the real API
      uses session cookies, enable `withCredentials` in `core/http.js` and require CSRF
      protection in the backend.

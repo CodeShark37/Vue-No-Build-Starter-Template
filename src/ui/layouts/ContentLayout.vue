@@ -1,15 +1,6 @@
 <template>
     <div>
-        <!-- Cabeçalho da zona PINADO COMO UNIDADE (navbar + abas): sticky no
-             wrapper e não nas peças — a altura da navbar varia (as linhas
-             empilham no ecrã estreito) e medir-lha em JS é custo que o CSS
-             evita. O fundo --bg mascara o conteúdo que passa por baixo.
-             ABAS: a sub-navegação da área vive no CROMO da zona (o mesmo
-             padrão da sidebar do AdminLayout, em versão leve para duas
-             secções). router-link-active destaca a secção corrente (prefixo
-             /content/...). Nada aqui decide permissões: quem chega a
-             /content já passou no guard (requiresAuth no pai) e a API
-             re-verifica — abas são navegação, não segurança. -->
+        <!-- Navbar e abas ficam fixas em conjunto; as abas são apenas navegação. -->
         <header class="pinned">
             <AppNavbar />
             <div class="tabs-holder">
@@ -20,9 +11,7 @@
             </div>
         </header>
 
-        <!-- Conteúdo da secção: mesmo <transition name="page"> dos restantes
-             layouts — troca de VISTA dentro do cromo (a troca de LAYOUT vive
-             no App.vue). -->
+        <!-- Transição das vistas dentro do layout. -->
         <main class="container-content">
             <section class="content-main">
                 <transition name="page" mode="out-in">
@@ -34,15 +23,7 @@
 </template>
 
 <script>
-// Layout da ZONA CONTENT — navbar + abas de secções. É o PAI das rotas
-// /content/* (features/content/index.js): o cromo mostra em QUE zona a vista
-// está (a convenção completa está em docs/09-convencoes-de-rotas.md).
-//
-// Segue o padrão do AdminLayout: os links das abas apontam para rotas concretas
-// da zona — terceira EXCEPÇÃO DOCUMENTADA à regra "ui/ = genéricos" (as outras
-// duas são o AppNavbar e a sidebar do Admin). Se a zona crescer (3+ secções),
-// o upgrade natural é adoptar a sidebar do Admin — o layout é o sítio da troca,
-// nunca as vistas.
+// Layout da zona content: navbar, tabs e transição das vistas.
 import AppNavbar from './AppNavbar.vue';
 
 export default {
@@ -53,9 +34,7 @@ export default {
 </script>
 
 <style scoped>
-/* Cabeçalho da zona (navbar + abas) preso ao topo: sticky na UNIDADE — o
-   topbar do AppNavbar já é sticky, mas dentro deste header o seu sticky fica
-   inerte (o wrapper nunca rola internamente); quem prende aqui é o .pinned. */
+/* Mantém a navbar e as abas fixas como uma unidade. */
 .pinned {
     position: sticky;
     top: 0;
@@ -63,7 +42,7 @@ export default {
     background: var(--bg);
 }
 .tabs-holder {
-    /* Mesma largura do container-content: as abas alinham com o conteúdo. */
+    /* Mantém as abas alinhadas com o conteúdo. */
     max-width: 860px;
     margin: 0 auto;
     padding: 1.25rem 1rem 0;

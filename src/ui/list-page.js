@@ -1,19 +1,6 @@
-// Fábrica do mixin das vistas de LISTA (PostsView, BooksView, UsersPanel): a
-// máquina de leitura server-driven — estado de paginação/ordenação, GET com
-// ?page&per_page&sort&order, recarga pós-mutação com fallback de página vazia,
-// sessão de edição inline — escrita UMA vez e injectada por `mixins`. Antes
-// estas ~9 métodos + o bloco de estado existiam duplicados nas 3 vistas.
-//
-// PORQUÊ UMA FÁBRICA (e não um mixin estático): as três vistas diferem só em
-// 2-3 peças — o endpoint lido (fetch), o rótulo dos erros (label) e extras da
-// meta (apply, ex.: roleCounts do UsersPanel); todo o resto é igual. A fábrica
-// recebe essas peças e devolve o mixin pronto.
-//
-// PORQUÊ `Vue.listPage` (e não `import` nos .vue): regra da 2.ª cópia — os .vue
-// NÃO importam .js locais (o loader compilaria outra instância do módulo). O
-// registo é feito no arranque (app/services.js, grafo NATIVO de ES modules —
-// uma única cópia garantida) e as vistas consomem o construtor global Vue,
-// garantidamente presente: nenhum .vue compila antes do bootstrap.
+// Mixin partilhado pelas vistas de lista. Centraliza paginação, ordenação,
+// recarga pós-mutação e edição inline. É registado como Vue.listPage em
+// app/services.js para evitar uma segunda cópia do módulo nos componentes .vue.
 //
 // Composição (semântica de mixins do Vue 2):
 //  - data: o mixin traz o estado da lista; o que a vista declarar com o MESMO
@@ -23,10 +10,8 @@
 //  - hooks: o created() da vista corre DEPOIS do do mixin — nada a fazer:
 //    a 1.ª leitura é do próprio mixin.
 //
-// O que fica FORA do mixin (de propósito): as MUTAÇÕES (POST/PUT/DELETE), as
-// colunas e o gating $perm — payload, validações e textos 403 de escrita são
-// domínio da vista. O mixin só garante que, depois de cada mutação,
-// reloadRows() repõe o estado REAL do servidor.
+// As mutações, colunas e regras de permissão continuam nas vistas; o mixin
+// apenas repõe o estado real do servidor após cada mutação.
 //
 // Contrato de leitura esperado pelo mixin (o mesmo da DataTable/UiPager):
 //   fetch(query) -> res  com  res.data.data = linhas
