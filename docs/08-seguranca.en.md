@@ -36,7 +36,7 @@ The audit therefore separates three layers:
 
 **Positive findings (demonstrated by EXP3 and EXP5):**
 - All mock reads and writes use the single `registerCrud` chain
-    (`dev/mock/crud.js`): guard 401/403 → CASL policy at the type level → instance-level
+   (`dev/mock/crud.js`): guard 401/403 → CASL policy at the type level → instance-level
   conditions → 404 → 422. PUT and DELETE on another user’s post return 403 even when the UI is bypassed.
 - `PUT /profile` is **self-scoped by design**: it always writes to the current
   session and ignores any `id` in the request body; there is no route for editing another user.
@@ -91,7 +91,8 @@ The audit therefore separates three layers:
 
 - **XSS (proof EXP4)**: zero `v-html`/`innerHTML`/`eval` in the application code
   (verified by grep); Vue 2 escapes every interpolation `{{ }}`; the slots of the
-  DataTable renders components, not raw HTML.- **Structural concern (inherent to the no-build architecture):** vue2-sfc-loader compiles
+  DataTable renders components, not raw HTML.
+- **Structural concern (inherent to the no-build architecture):** vue2-sfc-loader compiles
   `.vue` files in the browser with `new Function`. A CSP without `'unsafe-eval'` prevents the
   application from starting. Templates must therefore come from same-origin deployment files,
   the CSP must include `script-src 'self' 'unsafe-eval'`, and the server must not serve executable
