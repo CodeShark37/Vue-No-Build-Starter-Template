@@ -76,9 +76,6 @@ view. To add a resource:
    seeded resource (order per operation; see docs/08):
 
    ```js
-   // dev/mock/routes/books.js — SIMPLIFIED EXAMPLE inspired by the real file
-   // (the real one includes 'pages' in allowedSorts, numericSorts: ['pages'],
-   // and the Number(body.pages) coercion — see dev/mock/routes/books.js)
    import { registerCrud } from '../crud.js';
    export function register(server, ctx) {
        registerCrud(server, ctx, {
