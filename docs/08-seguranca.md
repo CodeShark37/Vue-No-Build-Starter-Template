@@ -315,10 +315,10 @@ O que a matriz FECHOU (e como):
 
 1. **Tokens**: assinatura verificada no servidor (HS256/RS256); `sub`/`roles`
    do payload só confiáveis APÓS verificação; TTL curto.
-2. **Refresh token separado** do access token, com rotação e revogação
-   (denylist por jti ou revisão de sessão por user); logout revoga. *(O mock
-   já demonstra o ciclo completo: par access/refresh com TTLs próprios,
-   rotação, revogação de família e detecção de reutilização.)*
+2. **No backend real, manter o refresh token separado** do access token, com
+   rotação e revogação (denylist por jti ou revisão de sessão por user); logout
+   revoga. *(Esta proteção já está aplicada no mock: par access/refresh com TTLs
+   próprios, rotação, revogação de família e detecção de reutilização.)*
 3. **Passwords**: argon2id/bcrypt + salt; política real (comprimento,
    haveibeenpwned); rate limiting + lockout progressivo no `/login`; MFA onde
    fizer sentido.

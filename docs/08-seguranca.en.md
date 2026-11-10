@@ -303,10 +303,11 @@ The matrix closed the following gaps:
 
 1. **Tokens:** verify the signature on the server (HS256/RS256); `sub`/`roles`
    trust payload roles only after verification; TTL short.
-2. **Separate refresh token** from the access token, with rotation and revocation
-   (denylist by jti or a per-user session revision); logout revokes it. *(The mock
-   already demonstrates the complete cycle: access/refresh pair with separate TTLs,
-   rotation, family revocation, and reuse detection.)*
+2. **The real backend must keep the refresh token separate** from the access token,
+   with rotation and revocation (denylist by jti or a per-user session revision);
+   logout revokes it. *(This protection is already implemented in the mock:
+   access/refresh pair with separate TTLs, rotation, family revocation, and reuse
+   detection.)*
 3. **Passwords**: argon2id/bcrypt + salt; a real password policy (length and Have I Been Pwned checks); rate limiting + progressive lockout in `/login`; MFA where
    appropriate.
 4. **Authorization**: replicate the `registerCrud` chain (401 → 403 role → 403
