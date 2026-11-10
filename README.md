@@ -104,6 +104,7 @@ Detalhes: [`docs/00-arranque.md`](docs/00-arranque.md) ·
 │   └── mock/                 Mirage, tokens, sessões, CRUD, rotas e seeds
 ├── docs/                     Documentação, um ficheiro por assunto
 └── scripts/
+    ├── hash-vectors.mjs      Vectores de teste do hash de passwords (PBKDF2)
     ├── intrusion-matrix.mjs  Matriz T01–T13 contra o código real
     └── syntax-check.mjs      Verificação de sintaxe dos .vue/.js
 ```

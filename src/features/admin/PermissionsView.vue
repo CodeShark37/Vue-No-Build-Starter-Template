@@ -17,7 +17,7 @@
 
 <script>
 // Vista orquestradora da zona /admin/permissions (features/admin/index.js: filha
-// de /admin, que já exige requiresAuth + roles ['admin']). Título + painel; sem
+// de /admin — o pai exige só requiresAuth; o roles ['admin'] é desta filha). Título + painel; sem
 // lógica de dados — quem fala com a API é o RulesPanel. O contraste didáctico
 // fica em /admin/stats: lá vê-se a MESMA política materializada por utilizador
 // (UserPermissions), aqui edita-se a tabela crua.

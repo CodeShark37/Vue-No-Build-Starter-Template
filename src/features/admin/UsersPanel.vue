@@ -7,7 +7,8 @@
             edita pelo role admin — o botão de editar nem aparece para o resto),
             <strong>422</strong> com validação falhada. Os botões seguem a MESMA
             política via <code>$perm.can(action, 'User')</code>. O <code>username</code> é
-            imutável (a autoria dos posts e as owner rules da política referem-no); ninguém
+            imutável AQUI (a política referencia os posts por authorId, e o próprio
+            utilizador pode renomeá-lo no PUT /profile); ninguém
             elimina a própria conta nem altera as suas próprias roles (422, mesmo contornando
             a UI — esconder o botão é só UX). Um role sem regras no seed de permissões entra
             <strong>fail-closed</strong>: sem permissões até as receber.</p>

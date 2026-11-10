@@ -2,8 +2,8 @@
     <UiPanel title="Permissões por utilizador (GET /api/permissions/:id)">
         <p class="hint">Escolhe um utilizador e vê as regras que o SERVIDOR lhe entrega, já
             <strong>materializadas com os dados dele</strong>: o seed guarda o placeholder
-            <code>${user.username}</code> e a mesma linha chega a cada um com o SEU valor
-            (aqui o <code>author</code> já é o username real). A política é um DADO que o
+            <code>${user.id}</code> e a mesma linha chega a cada um com o SEU valor
+            (aqui o <code>authorId</code> já é o id real dele). A política é um DADO que o
             servidor resolve por utilizador — este painel é a prova, sem nada de editável:
             para MUDAR as regras há CRUD próprio em <code>/admin/permissions</code>
             (o seed <code>dev/mock/seeds/permissions.js</code> é só o estado inicial).</p>

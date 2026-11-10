@@ -46,7 +46,8 @@
 // padrão foi o próprio LayoutDefault: "para uma zona com cromo diferente (ex.:
 // com sidebar), criar LayoutX.vue em ui/layouts/ e usá-lo como component dessa
 // zona — as vistas e os guards não mudam". Nada aqui decide permissões: quem
-// chega a /admin já passou no guard (roles ['admin'] na meta do pai) e a API
+// chega a /admin já passou no guard (requiresAuth no pai; roles ['admin'] em
+// stats/permissions e meta.perm em users) e a API
 // re-verifica — a sidebar não é segurança, é navegação.
 //
 // Contentor MAIS LARGO que o padrão (1000px vs 760px): sidebar + painéis

@@ -104,6 +104,7 @@ Details: [`docs/00-arranque.en.md`](docs/00-arranque.en.md) ·
 │   └── mock/                 Mirage, tokens, sessions, CRUD, routes, and seeds
 ├── docs/                     Documentation, one file per topic
 └── scripts/
+    ├── hash-vectors.mjs      PBKDF2 password-hash test vectors
     ├── intrusion-matrix.mjs  T01–T13 matrix against the real code
     └── syntax-check.mjs      Syntax checks for .vue/.js
 ```
