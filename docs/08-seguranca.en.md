@@ -299,7 +299,7 @@ The matrix closed the following gaps:
    token on the client were removed (they were the only way the client could forge
    the session).
 
-## Checklist of the real backend (that the template cannot give)
+## Additional security controls for the real backend
 
 1. **Tokens:** verify the signature on the server (HS256/RS256); `sub`/`roles`
    trust payload roles only after verification; TTL short.

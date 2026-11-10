@@ -310,7 +310,7 @@ O que a matriz FECHOU (e como):
    token no cliente saíram (eram a única porta por onde o cliente falsificava
    uma sessão).
 
-## Checklist do backend REAL (o que o template não pode dar)
+## Controlos de segurança complementares para o backend real
 
 1. **Tokens**: assinatura verificada no servidor (HS256/RS256); `sub`/`roles`
    do payload só confiáveis APÓS verificação; TTL curto.
