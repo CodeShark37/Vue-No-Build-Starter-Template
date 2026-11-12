@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h2>Perfil <span class="tag">rota protegida · zona /app · self-service</span></h2>
+        <h2>Perfil <span class="tag">rota protegida · feature auth · self-service</span></h2>
         <p class="explain">A rota a que o NOME no navbar aponta (v12.6): aqui fica TUDO o que é da
             tua sessão — o token, o tempo que lhe resta e as demos dos fluxos 401 — e a gestão da
             TUA conta. O servidor só escreve no utilizador da sessão (<code>PUT /profile</code>):
@@ -20,8 +20,8 @@
                 </p>
                 <p class="identity">Roles: <span v-for="r in profile.roles" :key="r" class="badge"
                     :class="r === 'admin' ? 'badge-admin' : 'badge-user'">{{ r }}</span>
-                    — geridos na zona admin (mudar as próprias roles seria auto-escalada:
-                    aqui e na API, isso é 422).</p>
+                    — geridos na zona admin (o <code>PUT /profile</code> ignora qualquer
+                    campo <code>roles</code>: mudar as próprias roles nunca passa por aqui).</p>
             </template>
 
             <!-- Gestão da própria conta: nome, username e password (vazio = manter).

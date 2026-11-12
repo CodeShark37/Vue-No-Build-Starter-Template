@@ -82,7 +82,7 @@
 // fieldDisabled). Nada de User, Post ou Book aqui dentro: o domínio é sempre
 // da vista.
 //
-// REGRAS DE COMPILADOR (vue2-sfc-loader 0.8.4) — respeitar SEMPRE:
+// REGRAS DE COMPILADOR (vue2-sfc-loader 0.9.5) — respeitar SEMPRE:
 //  1. Comentário HTML ENTRE v-if e v-else -> componente inteiro sem render.
 //     Toda a documentação vive neste <script>; o <template> fica sem comentários.
 //  2. <template v-else> dentro do fallback de um <slot> -> o compilador do

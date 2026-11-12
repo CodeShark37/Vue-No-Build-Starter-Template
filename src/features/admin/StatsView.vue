@@ -1,9 +1,11 @@
 <template>
     <div>
         <h2>Admin (rota com roles)</h2>
-        <p>Esta zona declara <code>meta: { requiresAuth: true, roles: ['admin'] }</code> no <strong>pai</strong>
-            (<code>/admin</code> em <code>features/admin/index.js</code>) — todos os filhos herdam.
-            Sem o role, o guard redirige para <code>/403</code> <strong>sem fazer logout</strong>.</p>
+        <p>Esta vista declara <code>meta: { roles: ['admin'] }</code> no <strong>filho</strong>
+            (<code>/admin/stats</code> em <code>features/admin/index.js</code>) — o pai <code>/admin</code>
+            só exige sessão (<code>requiresAuth</code>); <code>/admin/users</code> abre por
+            <code>meta.perm</code> (política CASL). Sem o role, o guard redirige para
+            <code>/403</code> <strong>sem fazer logout</strong>.</p>
         <p v-if="loading">A carregar estatísticas… (GET /api/admin/stats)</p>
         <div v-else-if="stats">
             <p><strong>{{ stats.users }}</strong> utilizadores registados</p>

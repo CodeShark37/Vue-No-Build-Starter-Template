@@ -10,7 +10,7 @@
 - **Login**: `POST /login` → PAR access/refresh NOVO no registry → `setSession(token, user, refreshToken)` → o guard devolve o utilizador a `?redirect=` (guardado pelo próprio guard).
 - **Logout real**: botão "Sair" na navbar (junto do nome) — `POST /logout` **REVOGA a sessão no servidor** (o token antigo dá 401 em qualquer pedido seguinte) + `clearSession()` + `/login`.
 - **Guest**: `meta: { guest: true }` no `/login` manda para a raiz quem já tem sessão.
-- **Perfil**: o NOME do utilizador na navbar é o link para `/profile` — a rota que concentra as informações da sessão (token, tempo que falta, simular expirado/revogado — o `SessionPanel` vive aqui) e a gestão da PRÓPRIA conta: `PUT /profile` muda nome, username e password (vazio = manter). Self-scoped por construção: o servidor escreve só no utilizador da sessão; as contas dos outros continuam na zona admin, e as roles são intocáveis por aqui (auto-escalada → 422). Mudar a password REVOGA todas as sessões da conta (inclusive a corrente) — a app sai limpa para o login.
+- **Perfil**: o NOME do utilizador na navbar é o link para `/profile` — a rota que concentra as informações da sessão (token, tempo que falta, simular expirado/revogado — o `SessionPanel` vive aqui) e a gestão da PRÓPRIA conta: `PUT /profile` muda nome, username e password (vazio = manter). Self-scoped por construção: o servidor escreve só no utilizador da sessão; as contas dos outros continuam na zona admin, e as roles são intocáveis por aqui (qualquer `roles` no body do `PUT /profile` é simplesmente ignorado). Mudar a password REVOGA todas as sessões da conta (inclusive a corrente) — a app sai limpa para o login.
 
 ## Fluxo do token (espelha um backend JWT real)
 
@@ -50,7 +50,7 @@ A regra owner, explicada:
 - Contornar a UI não muda nada: a política vale NO SERVIDOR — PUT/DELETE num post alheio continua **403**, e sem regra `read` nem `GET /posts` passa (o mock constrói a mesma Ability CASL do cliente, em `helpers.abilityFor`). Os botões são UX; a API é a autoridade.
 - **Zonas vs CASL a propósito**: rotas usam `meta.roles` (declarativo); CASL governa acções de objecto (`update Post #7`). Duas camadas, cada uma no seu sítio.
 - **Navbar: o link é navegação, não política** — `Recursos` (posts e livros) é SEMPRE visível (até a guest: clicar nele sem sessão cai no login com `?redirect=`). O que a política governa é o RECURSO: a tabela mostra/esconde acções por `$perm.can(...)` e a API responde 403 — esconder o link seria esconder a rota inteira, e é o recurso que tem permissão.
-- **A própria conta é self-service**: `GET/PUT /api/profile` — gerir a TUA conta é direito da sessão autenticada (401 sem ela); gerir as contas DOS OUTROS é a zona admin (`/api/admin/users` — a regra sobre `User` decide: o admin gere tudo, o sub-admin gere contas comuns). Roles nunca no perfil: dar-se admin a si próprio seria auto-escalada (422).
+- **A própria conta é self-service**: `GET/PUT /api/profile` — gerir a TUA conta é direito da sessão autenticada (401 sem ela); gerir as contas DOS OUTROS é a zona admin (`/api/admin/users` — a regra sobre `User` decide: o admin gere tudo, o sub-admin gere contas comuns). Roles nunca no perfil: o `PUT /profile` ignora qualquer campo `roles` do body — dar-se admin a si próprio nunca passa (a mudança de roles vive na zona admin).
 
 ## Inspecção e edição da política (só admin)
 
